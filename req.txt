@@ -1,0 +1,190 @@
+# Project: AI Branding Wizard
+
+## 1. Overall Software Architecture
+
+### 1.1. High-Level Components
+    *   **Frontend:** NextJS (React framework) for a responsive, dynamic UI.
+    *   **Backend:** Python/FastAPI for high-performance API endpoints.
+    *   **Database:** Google Firestore for storing user data, temporary data, and generated insights.
+    *   **Containerization & Deployment:** Docker containers deployed via Google Cloud Run for easy scalability.
+
+### 1.2. AI Integrations
+    *   **Abstraction:** Business logic code must use abstract classes for AI services.
+    *   **Pluggability:** Connection to specific LLM or AI provider APIs must be done via plug-ins for easy swapping.
+    *   **Prompt Management:** All AI prompts must NOT be placed directly in the code. They must be stored in separate files within a `/ai/prompts/` directory (relative to the backend service) for easy editing.
+    *   **Initial AI Service Stack:**
+        *   Text Processing: OpenRouter API using meta-llama/llama-4-maverick model.
+        *   Audio-to-Text: ElevenLabs.
+
+### 1.3. External Integrations
+    *   **Analytics:** Google Tag Manager.
+    *   **Surveys:** Google Forms (programmatic creation via Google Forms API, or Google Apps Script).
+    *   **Email Delivery (OTP):** MailerLite API.
+    *   **Payment Processing:** PortaBilling API (for credit card and PayPal).
+    *   **Integration Approach:** Plugin-based integration for flexibility where applicable.
+
+## 2. General Application Flow & UI/UX
+
+### 2.1. Application Flow
+    *   The application must guide users through a multi-step wizard process.
+    *   The sequence of wizard steps must NOT be hard-coded.
+    *   A separate configuration file (e.g., `wizard_flow.json`) must define the sequence of front-end components for the wizard. This file primarily dictates the order in which components are displayed; individual components will manage their own API calls, UI logic, etc.
+
+### 2.2. UI Look and Feel (Application UI)
+    *   **Responsiveness:** The UI must be responsive and work on both mobile and desktop devices.
+    *   **Styling:** The UI design (logo, styles, etc.) for the application itself must be based on `brandician.eu`.
+    *   **Color Specifications (Application UI):**
+        *   Primary Color: `#4B0082` (Deep Muted Purple)
+        *   Secondary Background Color: `#FFFFFF` (White)
+        *   Tertiary Background Color: `#F5F5F5` (Light Gray)
+        *   Primary Text Color: `#333333` (Dark Gray)
+        *   Secondary Text Color: `#666666` (Medium Gray)
+    *   **Typography (Application UI):** Default to Open Sans for the application's interface elements.
+
+### 2.3. General UI/UX Principles
+    *   **Error Handling:** Implement robust error handling on both client-side and server-side.
+    *   **User Feedback:** Provide clear user feedback for actions, including loading states, success messages, and error notifications.
+
+## 3. Component Specifications & User Journey
+
+### 3.1. Step 1: User Registration & Preparation
+    *   **Authentication:**
+        *   Support Email/Password registration.
+        *   Support Google OAuth integration.
+        *   Support LinkedIn OAuth integration.
+    *   **Process:**
+        *   User enters name and email.
+        *   Backend sends an OTP (One-Time Password) code to the user's email via MailerLite API.
+        *   User confirms email by entering the OTP code back into the app.
+    *   **Terms Acceptance:** User must agree to clearly outlined Terms of Service.
+    *   **Information Display:** Inform the user about the estimated time for subsequent steps (e.g., "The next step will take about 30 minutes...").
+
+### 3.2. Step 2: Discovery & Strategic Profile (Interactive Questionnaire)
+    *   **UI:** User-friendly interface asking questions one by one.
+    *   **Question Presentation:** For each question, display the question text and a hint to help the user formulate a better answer.
+    *   **Response Capture:** User's response is captured via microphone.
+    *   **AI Transcription:**
+        *   The captured audio is transcribed into text using ElevenLabs.
+    *   **AI Enhancement:**
+        *   The transcribed text is enhanced by an LLM (OpenRouter with meta-llama/llama-4-maverick) to produce a version "as if written by an expert in the field."
+        *   The prompt used for enhancement will be stored externally (see 1.2).
+    *   **User Review & Selection:**
+        *   The user is shown both the original transcription and the AI-enhanced version.
+        *   The user can edit both versions.
+        *   The user must choose which version to save for that question.
+    *   **Progression:** Clicking "Proceed" saves the current result and moves to the next question or step.
+    *   **Question Data Structure:**
+        *   The list of questions must be stored as a separate set of files.
+        *   Files must start with a numeric value defining their order (e.g., `01_question.txt`, `02_question.txt`).
+        *   Each question file must contain:
+            *   Question text
+            *   Hint text
+            *   The specific prompt to be used when enhancing the answer for this question.
+
+### 3.3. Step 3: Executive Summary Generation
+    *   **Automation:** Automatically generate an executive summary based on the approved Discovery Questionnaire results using an AI prompt.
+    *   **User Review:** Allow users to review and edit the generated executive summary for accuracy and clarity.
+    *   **Save:** Save the final approved version of the executive summary.
+
+### 3.4. Step 4: Jobs-To-Be-Done (JTBD) Hypothesis
+    *   **AI Generation:** Generate JTBD candidates using AI (specific prompt + results from previous steps).
+    *   **User Rating & Selection:**
+        *   The user rates the suggested JTBDs on a scale (e.g., from "totally irrelevant" to "crucial").
+        *   The system (or user) picks the 3 JTBDs with the highest scores.
+    *   **User Refinement:** Allow the user to adjust the text definition of the selected JTBDs to fix any inconsistencies.
+    *   **Archetype & Survey Generation:**
+        *   Generate a draft brand archetype using AI.
+        *   Generate survey questions based on the archetype and JTBDs using AI. The AI prompt for survey generation should be designed to return the survey questions in a structured JSON format suitable for programmatic form creation.
+    *   **User Review (Survey Questions):**
+        *   Show the user the archetype (read-only).
+        *   Show the user the survey questions (each in its own input element).
+        *   Allow the user to edit the survey questions for clarity.
+    *   **Survey Creation & Distribution:**
+        *   Programmatically create the survey in Google Forms using the finalized questions (leveraging the structured JSON output from the AI and Google Forms API or Google Apps Script).
+        *   Present the user with the Google Forms survey URL.
+        *   Provide an option for the user to copy the URL to their clipboard to send to potential customers.
+
+### 3.5. Step 5: Jobs-To-Be-Done (JTBD) Analysis
+    *   **Status Display:** When the customer returns to the site while survey data is being collected, display the current state as "collecting survey data."
+    *   **Proceed Option:** The user must have an option to click a "proceed" button to initiate the analysis (launching the next part of the wizard).
+    *   **AI Analysis:**
+        *   Use AI to analyze the submitted survey results (assumed CSV file from Google Forms, or direct API access if feasible).
+        *   Determine whether the results confirm or reject the JTBD hypothesis and brand archetype.
+    *   **Results Presentation:**
+        *   Show the results for the match of the archetype and each JTBD.
+        *   Include a comprehensive visual presentation of insights, highlighting:
+            *   Functional Drivers: Practical jobs and measurable outcomes.
+            *   Emotional Drivers: Underlying emotions and psychological rewards.
+            *   Social Drivers: Social needs, identity considerations, community influences.
+    *   **Iteration Option:** The customer must have an option to return to "Step 3: Executive summary generation" to change their input and repeat the process from that point.
+    *   **Progression:** Alternatively, the customer can click "proceed" to move to the next phase.
+
+### 3.6. Step 6: Brand Identity Generation
+    *   **Business Name Selection:**
+        *   Suggest AI-generated business name alternatives.
+        *   Allow the customer to adjust the prompt and generate new suggestions.
+        *   Allow the customer to pick an AI-generated name or enter their own name.
+    *   **Dynamic Brand Guidelines (AI Generated):**
+        *   Generate brand assets via AI, including:
+            *   Brand archetypes
+            *   Mission statement
+            *   Vision statement
+            *   Value proposition
+            *   Validated brand name options (from the selection above)
+            *   Language, voice, and tone guides.
+    *   **Visual Assets (AI Generated for the Brand):**
+        *   **AI-Suggested Typography:** The AI will suggest suitable typography (e.g., font families, weights, pairings) based on the brand's archetype, JTBD, and other generated data.
+        *   **AI-Suggested Color Schemes:** The AI will suggest appropriate color palettes (primary, secondary, accent colors) based on the brand's archetype, JTBD, and other generated data.
+        *   **AI-Generated Logo:** AI generates a logo consistent with the suggested typography and color scheme.
+        *   **User Customization & Re-generation:** Allow the user to:
+            *   Enter a prompt to re-generate visual assets (logo, typography suggestions, color schemes).
+            *   Potentially pick from multiple AI-generated alternatives for typography and color schemes.
+            *   Fine-tune or adjust AI suggestions where feasible (e.g., select a different font from a suggested family, slightly adjust a suggested color).
+        *   **Human Assistance:** Show a button for "Request a human to help" (optional human designer involvement). (Future Implementation)
+    *   **Results Display:** Show the generated brand identity elements on the screen.
+    *   **Download Indication:** Inform the customer they will be able to download all results at the concluding step.
+
+### 3.7. Step 7: Feedback / Payment
+    *   **Customer Feedback:**
+        *   Ask the customer for feedback (e.g., NPS - Net Promoter Score, or another simple method).
+        *   Ask them to provide a short testimonial.
+    *   **Payment ("Pay what you want"):**
+        *   Show an option "Pay what you want."
+        *   Allow the customer to enter the amount they want to pay.
+        *   Provide payment options via PortaBilling API: Credit Card and PayPal.
+
+### 3.8. Step 8: Conclusion
+    *   **Downloadable Assets:**
+        *   Provide downloadable assets, including:
+            *   Brand book as a PDF.
+            *   Assets suitable for design tools (e.g., Figma templates, individual asset files like SVGs for logos, JSON for brand guidelines data).
+            *   A generated prompt suitable for AI app generation tools (e.g., for bolt.new, Google AI Studio) to create applications adhering to the defined branding.
+    *   **Social Sharing:** Offer options for social media sharing.
+
+## 4. Infrastructure & Security
+
+    *   **Cloud Deployment:** Dockerized application hosted on Google Cloud Run.
+    *   **Database Security:** Secure data management and storage using Google Firestore.
+    *   **Analytics Integration:** Google Tag Manager integrated for tracking user interaction and events.
+    *   **Compliance:** The application must be GDPR and data privacy compliant.
+
+## 5. Source code
+Front-end
+We use Typescript + Vite
+#### Project structure
+  components/ – contains all reusable components used in the application.
+[name_of_page] - folder with components specific to the some page (example: "dashboard" folder).
+ui/ – stateless UI components without business logic.
+  lib/ – helper utilities and libraries used throughout the application.
+axios.ts – Axios configuration for API requests.
+store.ts – global state management (Zustand).
+utils.ts – utility functions.
+  pages/ – all application pages. 
+  routes/ – defines application routes.
+  constants.ts – file with constants used across the project.
+  types.ts – TypeScript file containing types and interfaces used in multiple components.
+  index.css – global styles.
+  main.tsx – application entry point.
+  vite-env.d.ts – environment configuration for Vite.
+
+
