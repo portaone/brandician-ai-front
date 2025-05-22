@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
@@ -6,7 +6,13 @@ import { useBrandStore } from '../../store/brand';
 const ExplanationScreen: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { updateBrandStatus, currentBrand, isLoading } = useBrandStore();
+  const { updateBrandStatus, currentBrand, isLoading, selectBrand } = useBrandStore();
+
+  useEffect(() => {
+    if (brandId && (!currentBrand || currentBrand.id !== brandId)) {
+      selectBrand(brandId);
+    }
+  }, [brandId, currentBrand, selectBrand]);
 
   const handleProceed = async () => {
     if (!brandId) return;
@@ -32,6 +38,7 @@ const ExplanationScreen: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-lg shadow-lg p-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Process overview</h2>
             <div className="space-y-6 text-neutral-600">
               <p>
                 We will build a brand identity and brand access for your business. Your brand identity is more than just a logo or color scheme—it's your archetype, your tone of voice, your promise to customers, and your ability to meet their needs.

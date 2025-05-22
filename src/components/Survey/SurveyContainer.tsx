@@ -147,13 +147,21 @@ const SurveyContainer: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <p className="text-red-600">{surveyError}</p>
-        <button
-          onClick={handleRetry}
-          className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium"
-        >
-          <RefreshCw className="h-5 w-5 mr-2" />
-          Try Again
-        </button>
+        <div className="flex space-x-4">
+          <button
+            onClick={handleRetry}
+            className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium"
+          >
+            <RefreshCw className="h-5 w-5 mr-2" />
+            Try Again
+          </button>
+          <button
+            onClick={() => navigate('/brands')}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium"
+          >
+            Exit
+          </button>
+        </div>
       </div>
     );
   }

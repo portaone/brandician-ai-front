@@ -36,11 +36,11 @@ const QuestionnaireContainer: React.FC = () => {
 
   useEffect(() => {
     if (questions.length > 0 && answers && currentQuestionIndex === -1) {
-      const answeredQuestions = new Map(answers.map(a => [a.question, a]));
-      const firstUnansweredIndex = questions.findIndex(q => !answeredQuestions.has(q.id));
-      
+      const firstUnansweredIndex = questions.findIndex(q => !(q.id in answers));
       if (firstUnansweredIndex === -1) {
         setShowSummary(true);
+      } else {
+        setCurrentQuestionIndex(firstUnansweredIndex);
       }
     }
   }, [questions, answers, currentQuestionIndex]);
@@ -127,13 +127,36 @@ const QuestionnaireContainer: React.FC = () => {
     setCurrentQuestionIndex(0);
   };
 
+  const handleSaveExit = async () => {
+    // Save the current answer if it is not empty and has changed
+    if (currentQuestion && currentAnswerObj && currentAnswerObj.answer !== undefined && currentAnswerObj.answer.trim() !== "") {
+      // Already saved, just exit
+      navigate('/brands');
+      return;
+    }
+    if (currentQuestion && currentAnswerObj?.answer === undefined && currentQuestionIndex !== -1) {
+      // If the answer is not saved yet, save it
+      const answerToSave = currentAnswerObj?.answer || "";
+      if (answerToSave.trim() !== "") {
+        await submitAnswer(
+          brandId,
+          currentQuestion.id,
+          answerToSave,
+          currentQuestion.text
+        );
+      }
+    }
+    navigate('/brands');
+  };
+
   const progress = currentQuestionIndex === -1 ? 0 : ((currentQuestionIndex + 1) / questions.length) * 100;
   const currentQuestion = questions[currentQuestionIndex];
-  const currentAnswerObj = answers.find(a => a.question === currentQuestion?.id);
+  const typedAnswers: Record<string, any> = answers || {};
+  const currentAnswerObj = currentQuestion ? typedAnswers[currentQuestion.id] : undefined;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100">
-      <QuestionnaireHeader progress={progress} />
+      <QuestionnaireHeader progress={progress} onSaveExit={handleSaveExit} />
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">

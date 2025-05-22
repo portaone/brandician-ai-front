@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader, ArrowRight } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
@@ -19,11 +19,15 @@ const BrandSummary: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(true);
   const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
+  const [errorState, setError] = useState<string | null>(null);
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
     const initializeSummary = async () => {
       if (!brandId) return;
-      
+      if (hasInitialized.current) return;
+      hasInitialized.current = true;
+
       try {
         console.log('🔄 Initializing summary for brand:', brandId);
         await selectBrand(brandId);
@@ -55,7 +59,7 @@ const BrandSummary: React.FC = () => {
     };
 
     initializeSummary();
-  }, [brandId, selectBrand, generateBrandSummary, loadSummary, hasAttemptedGeneration]);
+  }, [brandId, selectBrand, generateBrandSummary, loadSummary]);
 
   useEffect(() => {
     if (currentBrand?.summary) {
@@ -96,8 +100,35 @@ const BrandSummary: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-600">{error}</div>
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="text-red-600 mb-4">{error}</div>
+        <div className="flex space-x-4">
+          <button
+            onClick={() => {
+              setIsGenerating(true);
+              setError(null);
+              setHasAttemptedGeneration(false);
+              // Re-run the summary generation
+              (async () => {
+                if (brandId) {
+                  try {
+                    await generateBrandSummary(brandId);
+                  } catch (e) {}
+                  setIsGenerating(false);
+                }
+              })();
+            }}
+            className="px-4 py-2 bg-primary-600 text-white rounded-md"
+          >
+            Try again
+          </button>
+          <button
+            onClick={() => navigate('/brands')}
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700"
+          >
+            Exit
+          </button>
+        </div>
       </div>
     );
   }
@@ -132,7 +163,13 @@ const BrandSummary: React.FC = () => {
               />
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex justify-between items-center">
+              <button
+                onClick={() => navigate(`/brands/${brandId}/questionnaire`)}
+                className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
+              >
+                Change my answers
+              </button>
               <button
                 onClick={handleProceed}
                 disabled={isSubmitting || !summary || !summary.trim()}

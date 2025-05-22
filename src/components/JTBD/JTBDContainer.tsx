@@ -31,8 +31,8 @@ const JTBDContainer: React.FC = () => {
       const jtbdData = currentBrand.jtbd;
       if (jtbdData.personas) {
         const personasArray = Object.entries(jtbdData.personas).map(([id, data]) => ({
-          id,
           ...data,
+          id: data.id ?? id,
         }));
         setPersonas(personasArray);
       }
@@ -137,8 +137,27 @@ const JTBDContainer: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-600">
-        {error}
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="text-red-600 mb-4">{error}</div>
+        <div className="flex space-x-4">
+          <button
+            onClick={async () => {
+              if (brandId) {
+                await selectBrand(brandId);
+                await loadJTBD(brandId);
+              }
+            }}
+            className="px-4 py-2 bg-primary-600 text-white rounded-md"
+          >
+            Try again
+          </button>
+          <button
+            onClick={() => navigate('/brands')}
+            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700"
+          >
+            Exit
+          </button>
+        </div>
       </div>
     );
   }

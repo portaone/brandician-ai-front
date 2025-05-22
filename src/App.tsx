@@ -66,7 +66,7 @@ const App: React.FC = () => {
             }
           />
           <Route
-            path="/questionnaire/:brandId"
+            path="/brands/:brandId/questionnaire"
             element={
               <AuthGuard>
                 <QuestionnaireContainer />

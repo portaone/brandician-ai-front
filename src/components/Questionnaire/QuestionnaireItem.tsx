@@ -36,10 +36,14 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [recordingError, setRecordingError] = useState<string | null>(null);
   const [hasBeenEdited, setHasBeenEdited] = useState(false);
+  const [augmentationError, setAugmentationError] = useState<string | null>(null);
+  const [noEnhancementNeeded, setNoEnhancementNeeded] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const enhancementTimeoutRef = useRef<number>();
+  const MAX_RECORDING_DURATION_MS = 180000; // 3 minutes
+  const recordingTimeoutRef = useRef<number | null>(null);
 
   // Update answer when currentAnswer changes (e.g., when navigating)
   useEffect(() => {
@@ -53,6 +57,9 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     return () => {
       if (enhancementTimeoutRef.current) {
         clearTimeout(enhancementTimeoutRef.current);
+      }
+      if (recordingTimeoutRef.current) {
+        clearTimeout(recordingTimeoutRef.current);
       }
     };
   }, []);
@@ -91,6 +98,11 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
       mediaRecorder.start();
       setIsRecording(true);
       console.log('🎤 Recording started');
+
+      // Set timeout to stop after 3 minutes
+      recordingTimeoutRef.current = window.setTimeout(() => {
+        stopRecording();
+      }, MAX_RECORDING_DURATION_MS);
     } catch (error) {
       console.error('🔴 Failed to start recording:', error);
       setRecordingError('Failed to access microphone. Please ensure you have granted microphone permissions.');
@@ -102,6 +114,11 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
       console.log('🎤 Stopping recording...');
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      // Clear the timeout if user stops early
+      if (recordingTimeoutRef.current) {
+        clearTimeout(recordingTimeoutRef.current);
+        recordingTimeoutRef.current = null;
+      }
     }
   };
 
@@ -160,8 +177,14 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
         textLength: text.trim().length, 
         hasBeenEdited 
       });
+      if (!!answerId && text.trim().length > 0 && !hasBeenEdited) {
+        setNoEnhancementNeeded(true);
+        setAugmentationError(null);
+        setAiEnhancedAnswer('');
+      }
       return;
     }
+    setNoEnhancementNeeded(false);
     
     // Clear any pending enhancement request
     if (enhancementTimeoutRef.current) {
@@ -179,8 +202,13 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
         try {
           console.log('🎯 Calling augmentAnswer API:', { brandId, answerId, text });
           const enhancedAnswer = await brands.augmentAnswer(brandId, answerId, text);
-          console.log('✅ Got enhanced answer:', enhancedAnswer);
-          setAiEnhancedAnswer(enhancedAnswer.answer);
+          if (enhancedAnswer && enhancedAnswer.status === 'Invalid answer') {
+            setAugmentationError(enhancedAnswer.explanation || 'Invalid answer');
+            setAiEnhancedAnswer('');
+          } else {
+            setAugmentationError(null);
+            setAiEnhancedAnswer(enhancedAnswer.answer);
+          }
         } catch (error: any) {
           console.error('🔴 Failed to enhance answer:', error);
           if (error.response) {
@@ -211,8 +239,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
 
   const handleSubmit = async () => {
     const finalAnswer = useAiAnswer ? aiEnhancedAnswer : answer;
-    if (!finalAnswer.trim()) return;
-    
+    if (!finalAnswer.trim() || augmentationError) return;
     setIsSubmitting(true);
     try {
       await onNext(finalAnswer);
@@ -284,14 +311,19 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
           
           <div className="relative">
             <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-gray-700 min-h-[100px]">
-              {aiEnhancedAnswer || (
+              {noEnhancementNeeded ? (
+                <span className="text-gray-500">Your answer seems to be very thorough, no need to further enhance it</span>
+              ) : augmentationError ? (
+                <span className="text-red-500">{augmentationError}</span>
+              ) : aiEnhancedAnswer ? (
+                aiEnhancedAnswer
+              ) : (
                 <span className="text-gray-400">
                   AI enhancement will appear here...
                 </span>
               )}
             </div>
-            
-            {aiEnhancedAnswer && (
+            {aiEnhancedAnswer && !augmentationError && !noEnhancementNeeded && (
               <div className="mt-2 flex items-center">
                 <input
                   type="checkbox"
@@ -327,7 +359,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={!answer.trim() || isSubmitting || isProcessing}
+          disabled={!answer.trim() || isSubmitting || isProcessing || !!augmentationError}
           className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
         >
           {isSubmitting ? (
