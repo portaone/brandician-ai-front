@@ -6,48 +6,50 @@ export type BrandStatus =
   | 'create_survey'
   | 'strategy'
   | 'identity'
+  | 'collect_feedback'
+  | 'feedback_review'
   | 'complete';
 
 export const BRAND_STATUS_CONFIG = {
   new_brand: {
     next: 'questionnaire',
-    path: '/explanation',
-    description: 'New Brand'
+    path: '/explanation'
   },
   questionnaire: {
     next: 'summary',
-    path: '/questionnaire',
-    description: 'Brand Questionnaire'
+    path: '/questionnaire'
   },
   summary: {
     next: 'jtbd',
-    path: '/summary',
-    description: 'Brand Summary'
+    path: '/summary'
   },
   jtbd: {
     next: 'create_survey',
-    path: '/jtbd',
-    description: 'Jobs To Be Done'
+    path: '/jtbd'
   },
   create_survey: {
     next: 'strategy',
-    path: '/survey',
-    description: 'Creating Survey'
+    path: '/survey'
   },
   strategy: {
     next: 'identity',
-    path: '/strategy',
-    description: 'Brand Strategy'
+    path: '/strategy'
   },
   identity: {
+    next: 'collect_feedback',
+    path: '/identity'
+  },
+  collect_feedback: {
+    next: 'feedback_review',
+    path: '/collect-feedback'
+  },
+  feedback_review: {
     next: 'complete',
-    path: '/identity',
-    description: 'Brand Identity'
+    path: '/feedback-review'
   },
   complete: {
     next: null,
-    path: '/complete',
-    description: 'Complete'
+    path: '/complete'
   },
 } as const;
 
@@ -60,6 +62,3 @@ export const getStatusPath = (status: BrandStatus, brandId: string): string => {
   return `/brands/${brandId}${basePath}`;
 };
 
-export const getStatusDescription = (status: BrandStatus): string => {
-  return BRAND_STATUS_CONFIG[status]?.description || 'Unknown Status';
-};

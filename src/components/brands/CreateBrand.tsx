@@ -13,7 +13,7 @@ const CreateBrand: React.FC = () => {
     e.preventDefault();
     try {
       const brand = await createBrand(name, description);
-      navigate(`/questionnaire/${brand.id}`);
+      navigate(`/brands/${brand.id}/explanation`);
     } catch (error) {
       console.error('Failed to create brand:', error);
     }

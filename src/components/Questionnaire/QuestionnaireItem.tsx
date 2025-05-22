@@ -39,7 +39,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const enhancementTimeoutRef = useRef<NodeJS.Timeout>();
+  const enhancementTimeoutRef = useRef<number>();
 
   // Update answer when currentAnswer changes (e.g., when navigating)
   useEffect(() => {
@@ -147,36 +147,64 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   };
 
   const requestAiEnhancement = async (text: string) => {
-    if (!answerId || !text.trim() || !hasBeenEdited) return;
+    console.log('🔍 Starting requestAiEnhancement:', { 
+      answerId, 
+      textLength: text.trim().length, 
+      hasBeenEdited,
+      isEnhancing 
+    });
+
+    if (!answerId || !text.trim() || !hasBeenEdited) {
+      console.log('⚠️ Skipping enhancement:', { 
+        hasAnswerId: !!answerId, 
+        textLength: text.trim().length, 
+        hasBeenEdited 
+      });
+      return;
+    }
     
     // Clear any pending enhancement request
     if (enhancementTimeoutRef.current) {
+      console.log('🧹 Clearing previous timeout');
       clearTimeout(enhancementTimeoutRef.current);
     }
     
     // Set a new timeout for the enhancement request
+    console.log('⏰ Setting new timeout for enhancement');
     enhancementTimeoutRef.current = setTimeout(async () => {
+      console.log('⏰ Timeout triggered, checking isEnhancing:', isEnhancing);
       if (!isEnhancing) {
+        console.log('🚀 Starting enhancement process');
         setIsEnhancing(true);
         try {
+          console.log('🎯 Calling augmentAnswer API:', { brandId, answerId, text });
           const enhancedAnswer = await brands.augmentAnswer(brandId, answerId, text);
+          console.log('✅ Got enhanced answer:', enhancedAnswer);
           setAiEnhancedAnswer(enhancedAnswer.answer);
-        } catch (error) {
-          console.error('Failed to enhance answer:', error);
+        } catch (error: any) {
+          console.error('🔴 Failed to enhance answer:', error);
+          if (error.response) {
+            console.error('Response data:', error.response.data);
+            console.error('Response status:', error.response.status);
+          }
         } finally {
           setIsEnhancing(false);
         }
+      } else {
+        console.log('⏳ Enhancement already in progress, skipping');
       }
-    }, 1000); // Wait for 1 second of inactivity before making the request
+    }, 1000);
   };
 
   const handleAnswerChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newAnswer = e.target.value;
+    console.log('📝 Answer changed:', { newAnswer, length: newAnswer.trim().length });
     setAnswer(newAnswer);
     setHasBeenEdited(true);
     
     // Request AI enhancement if the answer is long enough
     if (newAnswer.trim().length > 10) {
+      console.log('🤖 Requesting AI enhancement for answer');
       requestAiEnhancement(newAnswer);
     }
   };

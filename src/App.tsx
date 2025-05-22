@@ -13,6 +13,8 @@ import ExplanationScreen from './components/brands/ExplanationScreen';
 import QuestionnaireContainer from './components/Questionnaire/QuestionnaireContainer';
 import JTBDContainer from './components/JTBD/JTBDContainer';
 import SurveyContainer from './components/Survey/SurveyContainer';
+import CollectFeedbackContainer from './components/CollectFeedback/CollectFeedbackContainer';
+import BrandSummary from './components/BrandSummary/BrandSummary';
 import './index.css';
 
 const App: React.FC = () => {
@@ -84,6 +86,22 @@ const App: React.FC = () => {
             element={
               <AuthGuard>
                 <SurveyContainer />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/brands/:brandId/collect-feedback"
+            element={
+              <AuthGuard>
+                <CollectFeedbackContainer />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/brands/:brandId/summary"
+            element={
+              <AuthGuard>
+                <BrandSummary />
               </AuthGuard>
             }
           />

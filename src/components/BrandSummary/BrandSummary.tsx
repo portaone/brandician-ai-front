@@ -6,15 +6,56 @@ import { useBrandStore } from '../../store/brand';
 const BrandSummary: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { currentBrand, selectBrand, updateBrandSummary, isLoading, error } = useBrandStore();
+  const { 
+    currentBrand, 
+    selectBrand, 
+    updateBrandSummary, 
+    generateBrandSummary,
+    loadSummary,
+    isLoading, 
+    error 
+  } = useBrandStore();
   const [summary, setSummary] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(true);
+  const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
 
   useEffect(() => {
-    if (brandId) {
-      selectBrand(brandId);
-    }
-  }, [brandId, selectBrand]);
+    const initializeSummary = async () => {
+      if (!brandId) return;
+      
+      try {
+        console.log('🔄 Initializing summary for brand:', brandId);
+        await selectBrand(brandId);
+        
+        // Try to load existing summary first
+        try {
+          const existingSummary = await loadSummary(brandId);
+          if (existingSummary) {
+            console.log('📝 Using existing summary');
+            setSummary(existingSummary);
+            setIsGenerating(false);
+            return;
+          }
+        } catch (error) {
+          console.log('No existing summary found, will generate new one');
+        }
+        
+        // Only generate summary if we haven't tried before
+        if (!hasAttemptedGeneration) {
+          console.log('📝 Generating new summary...');
+          setHasAttemptedGeneration(true);
+          await generateBrandSummary(brandId);
+        }
+      } catch (error) {
+        console.error('❌ Failed to initialize summary:', error);
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    initializeSummary();
+  }, [brandId, selectBrand, generateBrandSummary, loadSummary, hasAttemptedGeneration]);
 
   useEffect(() => {
     if (currentBrand?.summary) {
@@ -40,10 +81,15 @@ const BrandSummary: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isGenerating) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin text-primary-600 text-2xl">⟳</div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-lg text-gray-600">
+            {isGenerating ? 'Generating brand summary...' : 'Loading...'}
+          </p>
+        </div>
       </div>
     );
   }

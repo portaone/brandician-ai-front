@@ -18,7 +18,9 @@ const QuestionnaireContainer: React.FC = () => {
     submitAnswer,
     updateBrandStatus,
     isLoading,
-    error 
+    error,
+    loadQuestions,
+    loadAnswers
   } = useBrandStore();
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1); // Start at -1 for intro screen
@@ -27,8 +29,10 @@ const QuestionnaireContainer: React.FC = () => {
   useEffect(() => {
     if (brandId) {
       selectBrand(brandId);
+      loadQuestions(brandId);
+      loadAnswers(brandId);
     }
-  }, [brandId, selectBrand]);
+  }, [brandId, selectBrand, loadQuestions, loadAnswers]);
 
   useEffect(() => {
     if (questions.length > 0 && answers && currentQuestionIndex === -1) {
@@ -99,11 +103,22 @@ const QuestionnaireContainer: React.FC = () => {
     if (!currentBrand.current_status || !brandId) return;
     
     try {
-      await brands.updateStatus(brandId, 'summary');
+      console.log('🔄 Starting brand summary generation...');
+      console.log('Current brand status:', currentBrand.current_status);
+      
+      // First update the status on the server
+      const updatedBrand = await brands.updateStatus(brandId, 'summary');
+      console.log('✅ Server status updated:', updatedBrand);
+      
+      // Then update local state
       await updateBrandStatus(brandId, 'summary');
+      console.log('✅ Local state updated');
+      
+      // Finally navigate
+      console.log('🚀 Navigating to summary page...');
       navigate(`/brands/${brandId}/summary`);
     } catch (error) {
-      console.error('Failed to complete questionnaire:', error);
+      console.error('❌ Failed to complete questionnaire:', error);
       throw error;
     }
   };

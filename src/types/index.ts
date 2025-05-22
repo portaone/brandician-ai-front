@@ -19,6 +19,7 @@ export interface Brand {
   answers?: Record<string, Answer>;
   jtbd?: JTBDList;
   survey?: Survey;
+  summary?: string;
 }
 
 export interface Question {

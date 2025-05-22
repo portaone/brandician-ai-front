@@ -177,6 +177,56 @@ export const brands = {
     });
     return response.data;
   },
+
+  processAudio: async (brandId: string, answerId: string, audioBlob: Blob) => {
+    const formData = new FormData();
+    formData.append('audio_file', audioBlob, 'recording.webm');  // Changed from 'audio' to 'audio_file' to match API spec
+
+    const response = await api.post(
+      `/api/v1.0/brands/${brandId}/answers/${answerId}/audio`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
+
+  getAudioProcessingStatus: async (brandId: string, answerId: string, processingId: string) => {
+    const response = await api.get(
+      `/api/v1.0/brands/${brandId}/answers/${answerId}/audio/${processingId}`
+    );
+    return response.data;
+  },
+
+  augmentAnswer: async (brandId: string, answerId: string, text: string) => {
+    console.log('🔍 Augmenting answer:', { brandId, answerId, text });
+    const response = await api.post(
+      `/api/v1.0/brands/${brandId}/answers/${answerId}/augment`,
+      { source_text: text }
+    );
+    console.log('✨ Augmentation response:', response.data);
+    return response.data;
+  },
+
+  generateSummary: async (brandId: string) => {
+    console.log('🔄 Generating summary for brand:', brandId);
+    const response = await api.post(`/api/v1.0/brands/${brandId}/summary`);
+    console.log('✅ Summary generated:', response.data);
+    return response.data;
+  },
+
+  getSummary: async (brandId: string) => {
+    const response = await api.get(`/api/v1.0/brands/${brandId}/summary/`);
+    return response.data;
+  },
+
+  updateSummary: async (brandId: string, summary: string) => {
+    const response = await api.put(`/api/v1.0/brands/${brandId}/summary`, { summary });
+    return response.data;
+  },
 };
 
 export default api;

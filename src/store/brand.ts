@@ -19,6 +19,9 @@ interface BrandState {
   updateBrandStatus: (brandId: string, status: BrandStatus) => Promise<void>;
   loadJTBD: (brandId: string) => Promise<void>;
   updateJTBD: (brandId: string, jtbd: JTBDList) => Promise<void>;
+  generateBrandSummary: (brandId: string) => Promise<void>;
+  updateBrandSummary: (brandId: string, summary: string) => Promise<void>;
+  loadSummary: (brandId: string) => Promise<string>;
 }
 
 export const useBrandStore = create<BrandState>((set, get) => ({
@@ -80,13 +83,13 @@ export const useBrandStore = create<BrandState>((set, get) => ({
   loadAnswers: async (brandId: string) => {
     try {
       const answersData = await brands.getAnswers(brandId);
-      const answers = Object.entries(answersData).map(([questionId, data]) => ({
+      const answers = Object.entries(answersData).map(([questionId, data]: [string, any]) => ({
         id: questionId,
         question: questionId,
         answer: data.answer,
       }));
       set({ answers });
-    } catch (error) {
+    } catch (error: any) {
       set({ error: 'Failed to load answers' });
       throw error;
     }
@@ -156,6 +159,57 @@ export const useBrandStore = create<BrandState>((set, get) => ({
       }));
     } catch (error) {
       set({ isLoading: false, error: 'Failed to update JTBD' });
+      throw error;
+    }
+  },
+
+  generateBrandSummary: async (brandId: string) => {
+    console.log('🔄 Starting brand summary generation in store...');
+    set({ isLoading: true, error: null });
+    try {
+      const updatedBrand = await brands.generateSummary(brandId);
+      console.log('✅ Summary generated in store:', updatedBrand);
+      set((state) => ({
+        brands: state.brands.map(b => b.id === brandId ? updatedBrand : b),
+        currentBrand: state.currentBrand?.id === brandId ? updatedBrand : state.currentBrand,
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      console.error('❌ Failed to generate summary:', error);
+      set({ isLoading: false, error: 'Failed to generate brand summary' });
+      throw error;
+    }
+  },
+
+  loadSummary: async (brandId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const summaryData = await brands.getSummary(brandId);
+      set((state) => ({
+        currentBrand: state.currentBrand ? {
+          ...state.currentBrand,
+          summary: summaryData.summary
+        } : null,
+        isLoading: false,
+      }));
+      return summaryData.summary;
+    } catch (error: any) {
+      set({ isLoading: false, error: 'Failed to load brand summary' });
+      throw error;
+    }
+  },
+
+  updateBrandSummary: async (brandId: string, summary: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const updatedBrand = await brands.updateSummary(brandId, summary);
+      set((state) => ({
+        brands: state.brands.map(b => b.id === brandId ? updatedBrand : b),
+        currentBrand: state.currentBrand?.id === brandId ? updatedBrand : state.currentBrand,
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      set({ isLoading: false, error: 'Failed to update brand summary' });
       throw error;
     }
   },
