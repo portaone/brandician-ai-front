@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useBrandStore } from '../../store/brand';
 import QuestionnaireHeader from './QuestionnaireHeader';
 import QuestionnaireItem from './QuestionnaireItem';
@@ -10,6 +10,7 @@ import { brands } from '../../lib/api';
 const QuestionnaireContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { 
     currentBrand,
     questions,
@@ -26,6 +27,8 @@ const QuestionnaireContainer: React.FC = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1); // Start at -1 for intro screen
   const [showSummary, setShowSummary] = useState(false);
 
+  const typedAnswers: Record<string, any> = answers || {};
+
   useEffect(() => {
     if (brandId) {
       selectBrand(brandId);
@@ -36,6 +39,10 @@ const QuestionnaireContainer: React.FC = () => {
 
   useEffect(() => {
     if (questions.length > 0 && answers && currentQuestionIndex === -1) {
+      if (searchParams.get('summary') === '1') {
+        setShowSummary(true);
+        return;
+      }
       const firstUnansweredIndex = questions.findIndex(q => !(q.id in answers));
       if (firstUnansweredIndex === -1) {
         setShowSummary(true);
@@ -43,7 +50,7 @@ const QuestionnaireContainer: React.FC = () => {
         setCurrentQuestionIndex(firstUnansweredIndex);
       }
     }
-  }, [questions, answers, currentQuestionIndex]);
+  }, [questions, answers, currentQuestionIndex, searchParams]);
 
   if (isLoading) {
     return (
@@ -66,23 +73,31 @@ const QuestionnaireContainer: React.FC = () => {
   const handleNext = async (answer: string) => {
     if (!questions[currentQuestionIndex]) return;
 
-    try {
-      await submitAnswer(
-        brandId,
-        questions[currentQuestionIndex].id,
-        answer,
-        questions[currentQuestionIndex].text
-      );
+    // Get the current answer from the store
+    const currentAnswerObj = typedAnswers[questions[currentQuestionIndex].id];
+    const previousAnswer = currentAnswerObj?.answer ?? "";
 
-      if (currentQuestionIndex === questions.length - 1) {
-        setShowSummary(true);
+    // Only submit if the answer has changed (trimmed)
+    if (answer.trim() !== previousAnswer.trim()) {
+      try {
+        await submitAnswer(
+          brandId,
+          questions[currentQuestionIndex].id,
+          answer,
+          questions[currentQuestionIndex].text
+        );
+      } catch (error) {
+        console.error('Failed to submit answer:', error);
         return;
       }
-
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } catch (error) {
-      console.error('Failed to submit answer:', error);
     }
+
+    if (currentQuestionIndex === questions.length - 1) {
+      setShowSummary(true);
+      return;
+    }
+
+    setCurrentQuestionIndex(currentQuestionIndex + 1);
   };
 
   const handlePrevious = () => {
@@ -151,7 +166,6 @@ const QuestionnaireContainer: React.FC = () => {
 
   const progress = currentQuestionIndex === -1 ? 0 : ((currentQuestionIndex + 1) / questions.length) * 100;
   const currentQuestion = questions[currentQuestionIndex];
-  const typedAnswers: Record<string, any> = answers || {};
   const currentAnswerObj = currentQuestion ? typedAnswers[currentQuestion.id] : undefined;
 
   return (

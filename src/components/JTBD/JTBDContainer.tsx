@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader, ArrowRight, X, Edit2 } from 'lucide-react';
+import { Loader, ArrowRight, X, Edit2, RefreshCw } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { JTBD, JTBDImportance, JTBD_IMPORTANCE_LABELS } from '../../types';
 
@@ -15,6 +15,7 @@ const JTBDContainer: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>('rating');
   const [editingPersona, setEditingPersona] = useState<JTBD | null>(null);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -127,6 +128,18 @@ const JTBDContainer: React.FC = () => {
     }
   };
 
+  const handleRegeneratePersonas = async () => {
+    if (!brandId) return;
+    setIsRegenerating(true);
+    try {
+      await loadJTBD(brandId);
+    } catch (error) {
+      // Optionally show error
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -199,7 +212,8 @@ const JTBDContainer: React.FC = () => {
             <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
               <p className="text-neutral-600 mb-6">
                 Rate the importance of each persona for your business. You need to rate at least 3 personas
-                to proceed. Remove any personas that are not applicable to your business.
+                to proceed. If some things are not correct about the persona - do not worry, you will
+                have a chance to edit the persona later. Remove any personas that are not applicable to your business.
               </p>
 
               <div className="space-y-6">
@@ -244,13 +258,29 @@ const JTBDContainer: React.FC = () => {
                   </div>
                 ))}
               </div>
+              <div className="flex justify-between items-center mt-8">
+                <button
+                  type="button"
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+                  onClick={handleRegeneratePersonas}
+                  disabled={isRegenerating || isLoading}
+                >
+                  {isRegenerating ? (
+                    <Loader className="animate-spin h-5 w-5 mr-2" />
+                  ) : (
+                    <RefreshCw className="h-5 w-5 mr-2" />
+                  )}
+                  Generate new personas
+                </button>
+
+              </div>
             </div>
           )}
 
           {currentStep === 'editing' && (
             <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
               <p className="text-neutral-600 mb-6">
-                Edit the descriptions of your selected personas to better match your business context.
+                Edit the descriptions of your top 3selected personas to better match your business context.
               </p>
 
               {editingPersona ? (
@@ -378,8 +408,8 @@ const JTBDContainer: React.FC = () => {
               className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting && <Loader className="animate-spin h-5 w-5 mr-2" />}
-              {currentStep === 'rating' && 'Continue to Edit Descriptions'}
-              {currentStep === 'editing' && 'Continue to Functional Drivers'}
+              {currentStep === 'rating' && 'Continue to Edit Personas'}
+              {currentStep === 'editing' && 'Continue to Review Persona\'s Drivers'}
               {currentStep === 'drivers' && 'Proceed to Survey'}
               <ArrowRight className="ml-2 h-5 w-5" />
             </button>

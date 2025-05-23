@@ -10,6 +10,17 @@ export type BrandStatus =
   | 'feedback_review'
   | 'complete';
 
+export const BRAND_STATUS_NEW = 'new_brand';
+export const BRAND_STATUS_QUESTIONNAIRE = 'questionnaire';
+export const BRAND_STATUS_SUMMARY = 'summary';
+export const BRAND_STATUS_JTBD = 'jtbd';
+export const BRAND_STATUS_CREATE_SURVEY = 'create_survey';
+export const BRAND_STATUS_STRATEGY = 'strategy';
+export const BRAND_STATUS_IDENTITY = 'identity';
+export const BRAND_STATUS_COLLECT_FEEDBACK = 'collect_feedback';
+export const BRAND_STATUS_FEEDBACK_REVIEW = 'feedback_review';
+export const BRAND_STATUS_COMPLETE = 'complete';
+
 export const BRAND_STATUS_CONFIG = {
   new_brand: {
     next: 'questionnaire',

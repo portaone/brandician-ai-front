@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { BrandStatus } from './brandStatus';
 import { JTBDList, Survey, SurveyQuestion } from '../types';
+import { BRAND_STATUS_CREATE_SURVEY } from './brandStatus';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const DEBUG = import.meta.env.VITE_DEBUG === 'true';
@@ -156,7 +157,7 @@ export const brands = {
   updateJTBD: async (brandId: string, jtbd: JTBDList) => {
     const response = await api.patch(`/api/v1.0/brands/${brandId}`, {
       jtbd,
-      current_status: 'create_survey'
+      current_status: BRAND_STATUS_CREATE_SURVEY
     });
     return response.data;
   },

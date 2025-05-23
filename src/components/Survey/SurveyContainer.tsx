@@ -4,6 +4,7 @@ import { Plus, Trash2, Edit2, Copy, ArrowRight, Loader, RefreshCw } from 'lucide
 import { useBrandStore } from '../../store/brand';
 import { Survey, SurveyQuestion } from '../../types';
 import { brands } from '../../lib/api';
+import { BRAND_STATUS_COLLECT_FEEDBACK } from '../../lib/brandStatus';
 
 const SurveyContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -100,8 +101,14 @@ const SurveyContainer: React.FC = () => {
     navigator.clipboard.writeText(surveyUrl);
   };
 
-  const handleDone = () => {
+  const handleDone = async () => {
     if (brandId) {
+      // Update brand status to collect_feedback
+      try {
+        await brands.updateStatus(brandId, BRAND_STATUS_COLLECT_FEEDBACK);
+      } catch (e) {
+        // Optionally handle error
+      }
       navigate(`/brands/${brandId}/strategy`);
     }
   };

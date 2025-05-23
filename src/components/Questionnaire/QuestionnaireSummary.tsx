@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Edit2, ArrowRight } from 'lucide-react';
 import { Question, Answer } from '../../types';
 
@@ -17,6 +17,7 @@ const QuestionnaireSummary: React.FC<QuestionnaireSummaryProps> = ({
   onComplete,
 }) => {
   const navigate = useNavigate();
+  const { brandId } = useParams<{ brandId: string }>();
 
   return (
     <div className="bg-white rounded-lg shadow p-6 md:p-8">
@@ -53,7 +54,7 @@ const QuestionnaireSummary: React.FC<QuestionnaireSummaryProps> = ({
         </button>
         
         <button
-          onClick={onComplete}
+          onClick={() => brandId && navigate(`/brands/${brandId}/summary?regenerate=1`)}
           className="flex items-center px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md"
         >
           Generate Brand Summary

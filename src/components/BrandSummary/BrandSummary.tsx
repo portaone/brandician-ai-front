@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Loader, ArrowRight } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 
 const BrandSummary: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { 
     currentBrand, 
@@ -32,6 +33,13 @@ const BrandSummary: React.FC = () => {
         console.log('🔄 Initializing summary for brand:', brandId);
         await selectBrand(brandId);
         
+        // If regenerate=1, always generate a new summary
+        if (searchParams.get('regenerate') === '1') {
+          console.log('📝 Regenerating summary due to query param...');
+          await generateBrandSummary(brandId);
+          setIsGenerating(false);
+          return;
+        }
         // Try to load existing summary first
         try {
           const existingSummary = await loadSummary(brandId);
@@ -44,7 +52,6 @@ const BrandSummary: React.FC = () => {
         } catch (error) {
           console.log('No existing summary found, will generate new one');
         }
-        
         // Only generate summary if we haven't tried before
         if (!hasAttemptedGeneration) {
           console.log('📝 Generating new summary...');
@@ -59,7 +66,7 @@ const BrandSummary: React.FC = () => {
     };
 
     initializeSummary();
-  }, [brandId, selectBrand, generateBrandSummary, loadSummary]);
+  }, [brandId, selectBrand, generateBrandSummary, loadSummary, searchParams]);
 
   useEffect(() => {
     if (currentBrand?.summary) {
@@ -165,7 +172,7 @@ const BrandSummary: React.FC = () => {
 
             <div className="flex justify-between items-center">
               <button
-                onClick={() => navigate(`/brands/${brandId}/questionnaire`)}
+                onClick={() => navigate(`/brands/${brandId}/questionnaire?summary=1`)}
                 className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
               >
                 Change my answers
