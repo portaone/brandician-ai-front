@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { BrandStatus } from './brandStatus';
-import { JTBDList, Survey, SurveyQuestion } from '../types';
+import { JTBDList, Survey, SurveyQuestion, SubmissionLink, SurveyStatus, Feedback } from '../types';
 import { BRAND_STATUS_CREATE_SURVEY } from './brandStatus';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -13,6 +13,24 @@ const logApiCall = (type: string, url: string, data?: any, response?: any) => {
   console.log('URL:', url);
   if (data) console.log('Request Data:', data);
   if (response) console.log('Response:', response);
+  console.groupEnd();
+};
+
+// Enhanced error logging for connection issues
+const logConnectionError = (error: any, url: string) => {
+  console.group('🔴 Connection Error Details');
+  console.log('Target URL:', `${API_URL}${url}`);
+  console.log('Error Code:', error.code);
+  console.log('Error Message:', error.message);
+  
+  if (error.code === 'ERR_CONNECTION_REFUSED') {
+    console.log('💡 Troubleshooting:');
+    console.log('   - Check if the backend server is running');
+    console.log('   - Verify the API URL in your .env file');
+    console.log('   - Current API_URL:', API_URL);
+    console.log('   - Expected format: http://localhost:PORT (e.g., http://localhost:8000)');
+  }
+  
   console.groupEnd();
 };
 
@@ -46,12 +64,17 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    if (DEBUG) {
-      console.error('🔴 API Error:', {
-        url: originalRequest.url,
-        status: error.response?.status,
-        data: error.response?.data
-      });
+    // Enhanced error logging with connection diagnostics
+    if (DEBUG || error.code === 'ERR_CONNECTION_REFUSED' || !error.response) {
+      if (!error.response) {
+        logConnectionError(error, originalRequest.url || '');
+      } else {
+        console.error('🔴 API Error:', {
+          url: originalRequest.url,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+      }
     }
     
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -167,7 +190,12 @@ export const brands = {
     return response.data;
   },
 
-  saveSurvey: async (brandId: string, survey: Survey) => {
+  getSurvey: async (brandId: string) => {
+    const response = await api.get(`/api/v1.0/brands/${brandId}/survey/`);
+    return response.data;
+  },
+
+  saveSurvey: async (brandId: string, survey: Survey): Promise<SubmissionLink> => {
     // Only send the questions array when saving the survey
     const response = await api.put(`/api/v1.0/brands/${brandId}/survey/`, {
       questions: survey.questions.map(q => ({
@@ -226,6 +254,16 @@ export const brands = {
 
   updateSummary: async (brandId: string, summary: string) => {
     const response = await api.put(`/api/v1.0/brands/${brandId}/summary`, { summary });
+    return response.data;
+  },
+
+  getSurveyStatus: async (brandId: string) => {
+    const response = await api.get(`/api/v1.0/brands/${brandId}/survey/status/`);
+    return response.data;
+  },
+
+  analyzeFeedback: async (brandId: string) => {
+    const response = await api.post(`/api/v1.0/brands/${brandId}/feedback/`);
     return response.data;
   },
 };

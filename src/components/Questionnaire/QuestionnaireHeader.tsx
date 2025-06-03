@@ -21,10 +21,10 @@ const QuestionnaireHeader: React.FC<QuestionnaireHeaderProps> = ({ progress, onS
                 Analysis
               </div>
               <div className={`px-3 py-1 rounded-full text-sm font-medium ${progress >= 60 ? 'bg-primary-100 text-primary-800' : 'bg-neutral-100 text-neutral-400'}`}>
-                Strategy
+                Survey
               </div>
               <div className={`px-3 py-1 rounded-full text-sm font-medium ${progress >= 80 ? 'bg-primary-100 text-primary-800' : 'bg-neutral-100 text-neutral-400'}`}>
-                Identity
+                Assets
               </div>
               <div className={`px-3 py-1 rounded-full text-sm font-medium ${progress >= 100 ? 'bg-primary-100 text-primary-800' : 'bg-neutral-100 text-neutral-400'}`}>
                 Review

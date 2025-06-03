@@ -80,3 +80,24 @@ export interface Survey {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface SubmissionLink {
+  url: string;
+  expires_at?: string;
+  created_at?: string;
+}
+
+export interface SurveyStatus {
+  status: string;
+  number_of_responses: number;
+  min_responses_required?: number;
+  last_response_date?: string;
+}
+
+export interface Feedback {
+  status: string;
+  number_of_responses: number;
+  results_link?: string;
+  feedback?: string;
+  can_proceed: boolean;
+}

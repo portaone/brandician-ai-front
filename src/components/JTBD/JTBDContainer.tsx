@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader, ArrowRight, X, Edit2, RefreshCw } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
@@ -16,10 +16,13 @@ const JTBDContainer: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<Step>('rating');
   const [editingPersona, setEditingPersona] = useState<JTBD | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const isRegeneratingRef = useRef<boolean>(false);
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
     const loadData = async () => {
-      if (brandId) {
+      if (brandId && !hasInitialized.current) {
+        hasInitialized.current = true;
         await selectBrand(brandId);
         await loadJTBD(brandId);
       }
@@ -130,6 +133,8 @@ const JTBDContainer: React.FC = () => {
 
   const handleRegeneratePersonas = async () => {
     if (!brandId) return;
+    if (isRegeneratingRef.current) return;
+    isRegeneratingRef.current = true;
     setIsRegenerating(true);
     try {
       await loadJTBD(brandId);
@@ -137,6 +142,7 @@ const JTBDContainer: React.FC = () => {
       // Optionally show error
     } finally {
       setIsRegenerating(false);
+      isRegeneratingRef.current = false;
     }
   };
 
@@ -155,6 +161,7 @@ const JTBDContainer: React.FC = () => {
         <div className="flex space-x-4">
           <button
             onClick={async () => {
+              hasInitialized.current = false;
               if (brandId) {
                 await selectBrand(brandId);
                 await loadJTBD(brandId);
@@ -280,7 +287,7 @@ const JTBDContainer: React.FC = () => {
           {currentStep === 'editing' && (
             <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
               <p className="text-neutral-600 mb-6">
-                Edit the descriptions of your top 3selected personas to better match your business context.
+                Edit the descriptions of your top 3 selected personas to better match your business context.
               </p>
 
               {editingPersona ? (
@@ -356,15 +363,16 @@ const JTBDContainer: React.FC = () => {
           {currentStep === 'drivers' && (
             <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
               <h2 className="text-xl font-medium text-neutral-800 mb-2">
-                Functional Drivers
+                Functional, Emotional and Social Drivers
               </h2>
               <p className="text-neutral-600 mb-6">
-                Review the functional drivers that motivate your personas to engage with your brand. Did we get everything right? Did we miss something important?
+                Review the factors that motivate your personas to engage with your brand.
+                Did we get everything right? Did we miss something important?
               </p>
               <textarea
                 value={drivers}
                 onChange={handleDriversChange}
-                className="w-full min-h-[200px] p-4 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full min-h-[300px] p-4 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Enter your functional drivers, with each driver on a new line..."
               />
             </div>

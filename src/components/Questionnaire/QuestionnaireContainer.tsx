@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useBrandStore } from '../../store/brand';
 import QuestionnaireHeader from './QuestionnaireHeader';
@@ -26,31 +26,58 @@ const QuestionnaireContainer: React.FC = () => {
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1); // Start at -1 for intro screen
   const [showSummary, setShowSummary] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const typedAnswers: Record<string, any> = answers || {};
+  const typedAnswers: Record<string, any> = useMemo(() => {
+    if (!answers) return {};
+    
+    const answersMap: Record<string, any> = {};
+    answers.forEach(answer => {
+      answersMap[answer.question] = answer;
+    });
+    return answersMap;
+  }, [answers]);
 
   useEffect(() => {
+    console.log('🔄 Loading brand data for brandId:', brandId);
     if (brandId) {
       selectBrand(brandId);
       loadQuestions(brandId);
       loadAnswers(brandId);
     }
-  }, [brandId, selectBrand, loadQuestions, loadAnswers]);
+  }, [brandId]); // Removed function dependencies to prevent duplicate calls
 
   useEffect(() => {
-    if (questions.length > 0 && answers && currentQuestionIndex === -1) {
+    console.log('🔍 Checking navigation logic:', {
+      questionsLength: questions.length,
+      answersExists: !!answers,
+      answersLength: answers?.length || 0,
+      currentQuestionIndex,
+      summaryParam: searchParams.get('summary'),
+      typedAnswersKeys: Object.keys(typedAnswers)
+    });
+
+    if (questions.length > 0 && answers !== null && answers !== undefined && currentQuestionIndex === -1) {
       if (searchParams.get('summary') === '1') {
+        console.log('📄 Showing summary due to URL parameter');
         setShowSummary(true);
         return;
       }
-      const firstUnansweredIndex = questions.findIndex(q => !(q.id in answers));
+      
+      const firstUnansweredIndex = questions.findIndex(q => !(q.id in typedAnswers));
+      console.log('🎯 First unanswered question index:', firstUnansweredIndex);
+      
       if (firstUnansweredIndex === -1) {
+        // All questions are answered
+        console.log('✅ All questions answered, showing summary');
         setShowSummary(true);
       } else {
+        // Found first unanswered question
+        console.log('📝 Setting current question index to:', firstUnansweredIndex);
         setCurrentQuestionIndex(firstUnansweredIndex);
       }
     }
-  }, [questions, answers, currentQuestionIndex, searchParams]);
+  }, [questions, answers, currentQuestionIndex, searchParams, typedAnswers]);
 
   if (isLoading) {
     return (
@@ -73,6 +100,9 @@ const QuestionnaireContainer: React.FC = () => {
   const handleNext = async (answer: string) => {
     if (!questions[currentQuestionIndex]) return;
 
+    // Clear any previous submit errors
+    setSubmitError(null);
+
     // Get the current answer from the store
     const currentAnswerObj = typedAnswers[questions[currentQuestionIndex].id];
     const previousAnswer = currentAnswerObj?.answer ?? "";
@@ -86,8 +116,9 @@ const QuestionnaireContainer: React.FC = () => {
           answer,
           questions[currentQuestionIndex].text
         );
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to submit answer:', error);
+        setSubmitError(error?.response?.data?.message || error?.message || 'Failed to submit answer. Please try again.');
         return;
       }
     }
@@ -98,6 +129,11 @@ const QuestionnaireContainer: React.FC = () => {
     }
 
     setCurrentQuestionIndex(currentQuestionIndex + 1);
+  };
+
+  const handleRetrySubmit = () => {
+    setSubmitError(null);
+    // The user can now try clicking Next again
   };
 
   const handlePrevious = () => {
@@ -221,7 +257,7 @@ const QuestionnaireContainer: React.FC = () => {
                 </div>
 
                 <p className="text-sm">
-                  The questionnaire takes about 15-20 minutes to complete. Your answers will be used to generate your brand strategy and identity.
+                  The questionnaire takes about 15-20 minutes to complete. Your answers will be used to generate your brand assets and final brand package.
                 </p>
               </div>
 
@@ -273,6 +309,8 @@ const QuestionnaireContainer: React.FC = () => {
                   currentAnswer={currentAnswerObj?.answer}
                   brandId={brandId}
                   answerId={currentQuestion.id}
+                  submitError={submitError}
+                  onRetrySubmit={handleRetrySubmit}
                 />
               ) : null}
             </>

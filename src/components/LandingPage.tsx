@@ -73,7 +73,9 @@ const LandingPage: React.FC = () => {
 
             <motion.div 
               className="md:w-1/2 flex justify-center"
-              variants={fadeIn}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
             >
               <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
                 <div className="bg-neutral-50 p-4 rounded-md mb-4">
@@ -259,22 +261,13 @@ const LandingPage: React.FC = () => {
                 Value-Based Pricing
               </h3>
               <p className="text-lg text-neutral-600 mb-8">
-                We believe in the value of our service so much that we let you decide what it's worth to you after seeing the results.
+                We believe in the value of our service so much that we let you decide what it's worth to you
+                after seeing the final results (chosen archetype, tone of voice, brand assets, etc.) - and 
+                set <strong>your own price!</strong>.
               </p>
-              <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-6 mb-8">
-                <div className="bg-white p-5 rounded-lg shadow-sm flex flex-col items-center">
-                  <span className="text-primary-600 font-bold text-xl">$0</span>
-                  <span className="text-neutral-500">Free option</span>
-                </div>
-                <div className="bg-white p-5 rounded-lg shadow-sm flex flex-col items-center border-2 border-primary-400">
-                  <span className="text-primary-600 font-bold text-xl">$149</span>
-                  <span className="text-neutral-500">Suggested value</span>
-                </div>
-                <div className="bg-white p-5 rounded-lg shadow-sm flex flex-col items-center">
-                  <span className="text-primary-600 font-bold text-xl">$299+</span>
-                  <span className="text-neutral-500">Premium support</span>
-                </div>
-              </div>
+              <p className="text-lg text-neutral-600 mb-8">And yes, it means you can pay <strong>ZERO </strong> 
+                 if the cash situation is tight at the moment!
+              </p>
               <Link
                 to="/register"
                 className="inline-block bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-8 rounded-md transition-colors"

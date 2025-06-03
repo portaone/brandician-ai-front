@@ -3,6 +3,46 @@ import { persist } from 'zustand/middleware';
 import { auth } from '../lib/api';
 import { User } from '../types';
 
+// Helper function to get user-friendly error messages
+const getErrorMessage = (error: any): string => {
+  // Check for network/connection errors
+  if (error.code === 'ECONNREFUSED' || error.code === 'ERR_CONNECTION_REFUSED' || 
+      error.message?.includes('ERR_CONNECTION_REFUSED') || 
+      error.message?.includes('Network Error') ||
+      !error.response) {
+    return 'Unable to connect to the server. Please check your internet connection or try again later.';
+  }
+  
+  // Check for server errors (5xx)
+  if (error.response?.status >= 500) {
+    return 'The server is experiencing issues. Please try again later.';
+  }
+  
+  // Check for client errors (4xx)
+  if (error.response?.status >= 400 && error.response?.status < 500) {
+    const serverMessage = error.response?.data?.message || error.response?.data?.detail;
+    if (serverMessage) {
+      return serverMessage;
+    }
+    
+    switch (error.response?.status) {
+      case 400:
+        return 'Invalid request. Please check your input and try again.';
+      case 401:
+        return 'Invalid credentials. Please check your email and try again.';
+      case 403:
+        return 'Access denied. Please contact support if this persists.';
+      case 404:
+        return 'Service not found. Please try again later.';
+      default:
+        return 'An error occurred. Please try again.';
+    }
+  }
+  
+  // Default fallback
+  return 'An unexpected error occurred. Please try again.';
+};
+
 interface AuthState {
   user: User | null;
   isLoading: boolean;
@@ -13,6 +53,7 @@ interface AuthState {
   login: (email: string) => Promise<string>;
   logout: () => void;
   loadUser: () => Promise<void>;
+  clearError: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -30,7 +71,8 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: false, otpId: otp_id });
           return otp_id;
         } catch (error) {
-          set({ isLoading: false, error: 'Registration failed' });
+          const errorMessage = getErrorMessage(error);
+          set({ isLoading: false, error: errorMessage });
           throw error;
         }
       },
@@ -42,7 +84,8 @@ export const useAuthStore = create<AuthState>()(
           const user = await auth.getCurrentUser();
           set({ user, isLoading: false, otpId: null });
         } catch (error) {
-          set({ isLoading: false, error: 'OTP verification failed' });
+          const errorMessage = getErrorMessage(error);
+          set({ isLoading: false, error: errorMessage });
           throw error;
         }
       },
@@ -54,7 +97,8 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: false, otpId: otp_id });
           return otp_id;
         } catch (error) {
-          set({ isLoading: false, error: 'Login failed' });
+          const errorMessage = getErrorMessage(error);
+          set({ isLoading: false, error: errorMessage });
           throw error;
         }
       },
@@ -62,7 +106,7 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        set({ user: null, otpId: null });
+        set({ user: null, otpId: null, error: null });
       },
       
       loadUser: async () => {
@@ -76,6 +120,10 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           set({ isLoading: false, user: null });
         }
+      },
+      
+      clearError: () => {
+        set({ error: null });
       },
     }),
     {

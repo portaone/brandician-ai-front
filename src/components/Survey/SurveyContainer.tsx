@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Edit2, Copy, ArrowRight, Loader, RefreshCw } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
-import { Survey, SurveyQuestion } from '../../types';
+import { Survey, SurveyQuestion, SurveyStatus } from '../../types';
 import { brands } from '../../lib/api';
 import { BRAND_STATUS_COLLECT_FEEDBACK } from '../../lib/brandStatus';
 
@@ -12,33 +12,90 @@ const SurveyContainer: React.FC = () => {
   const { currentBrand, selectBrand, isLoading: isBrandLoading, error: brandError } = useBrandStore();
   
   const [survey, setSurvey] = useState<Survey | null>(null);
+  const [surveyStatus, setSurveyStatus] = useState<SurveyStatus | null>(null);
   const [editingQuestion, setEditingQuestion] = useState<SurveyQuestion | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingSurvey, setIsLoadingSurvey] = useState(false);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
   const [surveyError, setSurveyError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<'load' | 'save' | null>(null);
   const [surveyUrl, setSurveyUrl] = useState<string>('');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<string>('');
 
   useEffect(() => {
+    let isMounted = true;
+    
     const loadData = async () => {
       if (!brandId || isLoadingSurvey) return;
       
       try {
         setIsLoadingSurvey(true);
         setSurveyError(null);
+        setErrorType(null);
         await selectBrand(brandId);
-        const draftSurvey = await brands.getSurveyDraft(brandId);
-        setSurvey(draftSurvey);
+        
+        if (isMounted) {
+          // First try to get existing saved survey
+          try {
+            const existingSurvey = await brands.getSurvey(brandId);
+            // If we get a survey with results, show success screen
+            if (existingSurvey?.results?.url) {
+              setSurvey(existingSurvey);
+              setSurveyUrl(existingSurvey.results.url);
+              setShowSuccess(true);
+              return;
+            }
+          } catch (existingSurveyError) {
+            // Survey doesn't exist or no results, continue to draft
+            console.log('No existing survey found, loading draft...');
+          }
+          
+          // If no existing survey or no results, get draft for editing
+          const draftSurvey = await brands.getSurveyDraft(brandId);
+          setSurvey(draftSurvey);
+        }
       } catch (error: any) {
-        console.error('Failed to load survey data:', error);
-        setSurveyError(error?.response?.data?.message || 'Failed to load survey. Please try again.');
+        if (isMounted) {
+          console.error('Failed to load survey data:', error);
+          setSurveyError(error?.response?.data?.message || 'Failed to load survey. Please try again.');
+          setErrorType('load');
+        }
       } finally {
-        setIsLoadingSurvey(false);
+        if (isMounted) {
+          setIsLoadingSurvey(false);
+        }
       }
     };
 
     loadData();
-  }, [brandId, selectBrand]); // Removed isLoadingSurvey from dependencies
+
+    return () => {
+      isMounted = false;
+    };
+  }, [brandId]);
+
+  const loadSurveyStatus = async () => {
+    if (!brandId || isLoadingStatus) return;
+
+    try {
+      setIsLoadingStatus(true);
+      const status = await brands.getSurveyStatus(brandId);
+      setSurveyStatus(status);
+    } catch (error: any) {
+      console.error('Failed to load survey status:', error);
+      // Don't set error for status loading as it's not critical
+    } finally {
+      setIsLoadingStatus(false);
+    }
+  };
+
+  // Load survey status when showing success screen
+  useEffect(() => {
+    if (showSuccess && brandId) {
+      loadSurveyStatus();
+    }
+  }, [showSuccess, brandId]);
 
   const handleAddQuestion = () => {
     setEditingQuestion({
@@ -86,19 +143,39 @@ const SurveyContainer: React.FC = () => {
     
     setIsSubmitting(true);
     try {
-      await brands.saveSurvey(brandId, survey);
-      setSurveyUrl(`${window.location.origin}/survey/${brandId}`);
+      const response = await brands.saveSurvey(brandId, survey);
+      
+      // Extract URL from SubmissionLink object
+      if (response && response.url) {
+        console.log('✅ Survey saved successfully, URL received:', response.url);
+        setSurveyUrl(response.url);
+      } else {
+        console.warn('⚠️ No URL found in response, using fallback. Response:', response);
+        setSurveyUrl(`${window.location.origin}/survey/${brandId}`);
+      }
+      
       setShowSuccess(true);
+      setSurveyError(null);
+      setErrorType(null);
     } catch (error: any) {
       console.error('Failed to save survey:', error);
       setSurveyError(error?.response?.data?.message || 'Failed to save survey. Please try again.');
+      setErrorType('save');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCopyUrl = () => {
-    navigator.clipboard.writeText(surveyUrl);
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(surveyUrl);
+      setCopyFeedback('Copied!');
+      setTimeout(() => setCopyFeedback(''), 2000);
+    } catch (error) {
+      console.error('Failed to copy URL:', error);
+      setCopyFeedback('Failed to copy');
+      setTimeout(() => setCopyFeedback(''), 2000);
+    }
   };
 
   const handleDone = async () => {
@@ -109,29 +186,43 @@ const SurveyContainer: React.FC = () => {
       } catch (e) {
         // Optionally handle error
       }
-      navigate(`/brands/${brandId}/strategy`);
+      navigate(`/brands/${brandId}/collect-feedback`);
+    }
+  };
+
+  const handleCheckStatus = () => {
+    if (brandId) {
+      navigate(`/brands/${brandId}/collect-feedback`);
     }
   };
 
   const handleRetry = () => {
-    const loadData = async () => {
-      if (!brandId || isLoadingSurvey) return;
-      
-      try {
-        setIsLoadingSurvey(true);
-        setSurveyError(null);
-        await selectBrand(brandId);
-        const draftSurvey = await brands.getSurveyDraft(brandId);
-        setSurvey(draftSurvey);
-      } catch (error: any) {
-        console.error('Failed to load survey data:', error);
-        setSurveyError(error?.response?.data?.message || 'Failed to load survey. Please try again.');
-      } finally {
-        setIsLoadingSurvey(false);
-      }
-    };
+    if (errorType === 'save') {
+      // Retry saving the current survey data
+      handleSaveSurvey();
+    } else {
+      // Retry loading survey from server
+      const loadData = async () => {
+        if (!brandId || isLoadingSurvey) return;
+        
+        try {
+          setIsLoadingSurvey(true);
+          setSurveyError(null);
+          setErrorType(null);
+          await selectBrand(brandId);
+          const draftSurvey = await brands.getSurveyDraft(brandId);
+          setSurvey(draftSurvey);
+        } catch (error: any) {
+          console.error('Failed to load survey data:', error);
+          setSurveyError(error?.response?.data?.message || 'Failed to load survey. Please try again.');
+          setErrorType('load');
+        } finally {
+          setIsLoadingSurvey(false);
+        }
+      };
 
-    loadData();
+      loadData();
+    }
   };
 
   if (isBrandLoading || (isLoadingSurvey && !surveyError)) {
@@ -157,10 +248,12 @@ const SurveyContainer: React.FC = () => {
         <div className="flex space-x-4">
           <button
             onClick={handleRetry}
-            className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium"
+            disabled={isSubmitting || isLoadingSurvey}
+            className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50"
           >
+            {(isSubmitting || isLoadingSurvey) && <Loader className="animate-spin h-5 w-5 mr-2" />}
             <RefreshCw className="h-5 w-5 mr-2" />
-            Try Again
+            {errorType === 'save' ? 'Retry Save' : 'Try Again'}
           </button>
           <button
             onClick={() => navigate('/brands')}
@@ -267,6 +360,30 @@ const SurveyContainer: React.FC = () => {
                 Survey Created Successfully!
               </h2>
               
+              {/* Survey Status Section */}
+              {isLoadingStatus ? (
+                <div className="mb-6 p-4 bg-neutral-50 border border-neutral-200 rounded-lg">
+                  <div className="flex items-center">
+                    <Loader className="animate-spin h-5 w-5 mr-2 text-primary-600" />
+                    <span className="text-neutral-600">Loading survey status...</span>
+                  </div>
+                </div>
+              ) : surveyStatus ? (
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <h3 className="text-lg font-medium text-green-800 mb-2">Survey Status</h3>
+                  <div className="space-y-2">
+                    <p className="text-green-700">
+                      <span className="font-semibold">{surveyStatus.number_of_responses}</span> people have completed your survey
+                    </p>
+                    {surveyStatus.last_response_date && (
+                      <p className="text-green-600 text-sm">
+                        Last response: {new Date(surveyStatus.last_response_date).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+              
               <div className="mb-6">
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Survey URL
@@ -280,19 +397,31 @@ const SurveyContainer: React.FC = () => {
                   />
                   <button
                     onClick={handleCopyUrl}
-                    className="px-4 py-2 bg-neutral-100 border border-l-0 border-neutral-300 rounded-r-md hover:bg-neutral-200"
+                    className="px-4 py-2 bg-neutral-100 border border-l-0 border-neutral-300 rounded-r-md hover:bg-neutral-200 relative"
                   >
-                    <Copy className="h-5 w-5" />
+                    {copyFeedback ? (
+                      <span className="text-xs font-medium text-green-600">{copyFeedback}</span>
+                    ) : (
+                      <Copy className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
               </div>
 
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-blue-800 text-sm">
+                  Please copy the survey URL to clipboard and send it to your potential customers to complete. 
+                  Try to have as many people engaged as possible, since the more feedback we receive, 
+                  the better we will understand the potential customer perception of your brand and can make necessary adjustments.
+                </p>
+              </div>
+
               <div className="flex justify-end">
                 <button
-                  onClick={handleDone}
+                  onClick={surveyStatus ? handleDone : handleCheckStatus}
                   className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium"
                 >
-                  Done for Now
+                  {surveyStatus ? 'Close the survey and analyze the results' : 'Check survey status'}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </button>
               </div>

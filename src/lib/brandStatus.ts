@@ -4,10 +4,10 @@ export type BrandStatus =
   | 'summary'
   | 'jtbd'
   | 'create_survey'
-  | 'strategy'
-  | 'identity'
   | 'collect_feedback'
   | 'feedback_review'
+  | 'create_assets'
+  | 'payment'
   | 'complete';
 
 export const BRAND_STATUS_NEW = 'new_brand';
@@ -15,10 +15,10 @@ export const BRAND_STATUS_QUESTIONNAIRE = 'questionnaire';
 export const BRAND_STATUS_SUMMARY = 'summary';
 export const BRAND_STATUS_JTBD = 'jtbd';
 export const BRAND_STATUS_CREATE_SURVEY = 'create_survey';
-export const BRAND_STATUS_STRATEGY = 'strategy';
-export const BRAND_STATUS_IDENTITY = 'identity';
 export const BRAND_STATUS_COLLECT_FEEDBACK = 'collect_feedback';
 export const BRAND_STATUS_FEEDBACK_REVIEW = 'feedback_review';
+export const BRAND_STATUS_CREATE_ASSETS = 'create_assets';
+export const BRAND_STATUS_PAYMENT = 'payment';
 export const BRAND_STATUS_COMPLETE = 'complete';
 
 export const BRAND_STATUS_CONFIG = {
@@ -39,24 +39,24 @@ export const BRAND_STATUS_CONFIG = {
     path: '/jtbd'
   },
   create_survey: {
-    next: 'strategy',
-    path: '/survey'
-  },
-  strategy: {
-    next: 'identity',
-    path: '/strategy'
-  },
-  identity: {
     next: 'collect_feedback',
-    path: '/identity'
+    path: '/survey'
   },
   collect_feedback: {
     next: 'feedback_review',
     path: '/collect-feedback'
   },
   feedback_review: {
-    next: 'complete',
+    next: 'create_assets',
     path: '/feedback-review'
+  },
+  create_assets: {
+    next: 'payment',
+    path: '/create-assets'
+  },
+  payment: {
+    next: 'complete',
+    path: '/payment'
   },
   complete: {
     next: null,

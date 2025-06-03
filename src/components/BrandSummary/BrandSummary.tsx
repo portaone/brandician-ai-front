@@ -21,6 +21,7 @@ const BrandSummary: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(true);
   const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
   const [errorState, setError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<'generation' | 'save' | null>(null);
   const hasInitialized = useRef(false);
 
   useEffect(() => {
@@ -60,6 +61,8 @@ const BrandSummary: React.FC = () => {
         }
       } catch (error) {
         console.error('❌ Failed to initialize summary:', error);
+        setError('Failed to generate summary. Please try again.');
+        setErrorType('generation');
       } finally {
         setIsGenerating(false);
       }
@@ -82,11 +85,15 @@ const BrandSummary: React.FC = () => {
     if (!brandId || !summary || !summary.trim()) return;
 
     setIsSubmitting(true);
+    setError(null);
+    setErrorType(null);
     try {
       await updateBrandSummary(brandId, summary);
       navigate(`/brands/${brandId}/jtbd`);
     } catch (error) {
       console.error('Failed to update summary:', error);
+      setError('Failed to save summary. Please try again.');
+      setErrorType('save');
     } finally {
       setIsSubmitting(false);
     }
@@ -105,29 +112,50 @@ const BrandSummary: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (errorState) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="text-red-600 mb-4">{error}</div>
+        <div className="text-red-600 mb-4">{errorState}</div>
         <div className="flex space-x-4">
           <button
-            onClick={() => {
-              setIsGenerating(true);
+            onClick={async () => {
               setError(null);
-              setHasAttemptedGeneration(false);
-              // Re-run the summary generation
-              (async () => {
-                if (brandId) {
-                  try {
+              setErrorType(null);
+              
+              if (errorType === 'save') {
+                // Retry saving the current summary
+                setIsSubmitting(true);
+                try {
+                  await updateBrandSummary(brandId!, summary);
+                  navigate(`/brands/${brandId}/jtbd`);
+                } catch (error) {
+                  console.error('Failed to update summary:', error);
+                  setError('Failed to save summary. Please try again.');
+                  setErrorType('save');
+                } finally {
+                  setIsSubmitting(false);
+                }
+              } else {
+                // Retry generating a new summary
+                setIsGenerating(true);
+                setHasAttemptedGeneration(false);
+                try {
+                  if (brandId) {
                     await generateBrandSummary(brandId);
-                  } catch (e) {}
+                  }
+                } catch (error) {
+                  console.error('Failed to generate summary:', error);
+                  setError('Failed to generate summary. Please try again.');
+                  setErrorType('generation');
+                } finally {
                   setIsGenerating(false);
                 }
-              })();
+              }
             }}
-            className="px-4 py-2 bg-primary-600 text-white rounded-md"
+            disabled={isSubmitting}
+            className="px-4 py-2 bg-primary-600 text-white rounded-md disabled:opacity-50"
           >
-            Try again
+            {isSubmitting ? 'Saving...' : 'Try again'}
           </button>
           <button
             onClick={() => navigate('/brands')}

@@ -19,7 +19,7 @@ const ExplanationScreen: React.FC = () => {
     
     try {
       await updateBrandStatus(brandId, 'questionnaire');
-      navigate(`/questionnaire/${brandId}`);
+      navigate(`/brands/${brandId}/questionnaire`);
     } catch (error) {
       console.error('Failed to update brand status:', error);
     }

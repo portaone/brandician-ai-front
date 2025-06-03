@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, ArrowRight, Mic, MicOff, Loader, Wand2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Mic, MicOff, Loader, Wand2, Copy, RefreshCw, AlertCircle } from 'lucide-react';
 import { brands } from '../../lib/api';
 
 interface QuestionnaireItemProps {
@@ -13,6 +13,8 @@ interface QuestionnaireItemProps {
   currentAnswer?: string;
   brandId: string;
   answerId?: string;
+  submitError?: string | null;
+  onRetrySubmit?: () => void;
 }
 
 const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
@@ -25,7 +27,9 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   isLastQuestion,
   currentAnswer,
   brandId,
-  answerId
+  answerId,
+  submitError,
+  onRetrySubmit
 }) => {
   const [answer, setAnswer] = useState(currentAnswer || '');
   const [aiEnhancedAnswer, setAiEnhancedAnswer] = useState('');
@@ -37,7 +41,9 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   const [recordingError, setRecordingError] = useState<string | null>(null);
   const [hasBeenEdited, setHasBeenEdited] = useState(false);
   const [augmentationError, setAugmentationError] = useState<string | null>(null);
+  const [augmentationWarning, setAugmentationWarning] = useState<string | null>(null);
   const [noEnhancementNeeded, setNoEnhancementNeeded] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<string>('');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -51,6 +57,9 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     setAiEnhancedAnswer('');
     setUseAiAnswer(false);
     setHasBeenEdited(false);
+    setAugmentationError(null);
+    setAugmentationWarning(null);
+    setNoEnhancementNeeded(false);
   }, [currentAnswer, question]);
 
   useEffect(() => {
@@ -171,17 +180,15 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
       isEnhancing 
     });
 
-    if (!answerId || !text.trim() || !hasBeenEdited) {
+    if (!answerId || !text.trim()) {
       console.log('⚠️ Skipping enhancement:', { 
         hasAnswerId: !!answerId, 
-        textLength: text.trim().length, 
-        hasBeenEdited 
+        textLength: text.trim().length
       });
-      if (!!answerId && text.trim().length > 0 && !hasBeenEdited) {
-        setNoEnhancementNeeded(true);
-        setAugmentationError(null);
-        setAiEnhancedAnswer('');
-      }
+      setNoEnhancementNeeded(false);
+      setAugmentationError(null);
+      setAugmentationWarning(null);
+      setAiEnhancedAnswer('');
       return;
     }
     setNoEnhancementNeeded(false);
@@ -202,12 +209,32 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
         try {
           console.log('🎯 Calling augmentAnswer API:', { brandId, answerId, text });
           const enhancedAnswer = await brands.augmentAnswer(brandId, answerId, text);
-          if (enhancedAnswer && enhancedAnswer.status === 'Invalid answer') {
+          console.log('🎯 Full API response:', enhancedAnswer);
+          console.log('🎯 Response type:', typeof enhancedAnswer);
+          console.log('🎯 Response keys:', Object.keys(enhancedAnswer || {}));
+          
+          if (enhancedAnswer && (enhancedAnswer.explanation?.includes('CANNOT AUGMENT'))) {
+            console.log('⚠️ Cannot augment answer:', enhancedAnswer.explanation);
+            setAugmentationError(null);
+            setAugmentationWarning(enhancedAnswer.explanation || 'Cannot enhance this answer');
+            setAiEnhancedAnswer('');
+          } else if (enhancedAnswer && (enhancedAnswer.status === 'Invalid answer' || enhancedAnswer.status === 'Meaningless answer')) {
+            console.log('❌ Invalid/Meaningless answer detected:', enhancedAnswer.explanation);
             setAugmentationError(enhancedAnswer.explanation || 'Invalid answer');
+            setAugmentationWarning(null);
+            setAiEnhancedAnswer('');
+          } else if (enhancedAnswer && enhancedAnswer.status === 'Cannot augment') {
+            console.log('⚠️ Cannot augment answer:', enhancedAnswer.explanation);
+            setAugmentationError(null);
+            setAugmentationWarning(enhancedAnswer.explanation || 'Cannot enhance this answer');
             setAiEnhancedAnswer('');
           } else {
+            console.log('✅ Setting enhanced answer:', enhancedAnswer?.answer || enhancedAnswer);
             setAugmentationError(null);
-            setAiEnhancedAnswer(enhancedAnswer.answer);
+            setAugmentationWarning(null);
+            // Try different possible response structures
+            const answerText = enhancedAnswer?.answer || enhancedAnswer?.enhanced_answer || enhancedAnswer?.text || enhancedAnswer;
+            setAiEnhancedAnswer(typeof answerText === 'string' ? answerText : JSON.stringify(answerText));
           }
         } catch (error: any) {
           console.error('🔴 Failed to enhance answer:', error);
@@ -230,10 +257,21 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     setAnswer(newAnswer);
     setHasBeenEdited(true);
     
-    // Request AI enhancement if the answer is long enough
+    // Clear submit error when user starts typing
+    if (onRetrySubmit) {
+      onRetrySubmit();
+    }
+    
+    // Request AI enhancement for quality validation if the answer is long enough
     if (newAnswer.trim().length > 10) {
-      console.log('🤖 Requesting AI enhancement for answer');
+      console.log('🤖 Requesting AI enhancement for answer validation');
       requestAiEnhancement(newAnswer);
+    } else {
+      // Clear enhancement state for short answers
+      setAiEnhancedAnswer('');
+      setAugmentationError(null);
+      setAugmentationWarning(null);
+      setNoEnhancementNeeded(false);
     }
   };
 
@@ -245,6 +283,22 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
       await onNext(finalAnswer);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      // Remove both "SUGGESTED REVISION (fill the blanks):" and "SUGGESTED REVISION:" from the beginning
+      const cleanText = aiEnhancedAnswer
+        .replace(/SUGGESTED REVISION \(fill the blanks\):\s*/i, '')
+        .replace(/SUGGESTED REVISION:\s*/i, '');
+      await navigator.clipboard.writeText(cleanText);
+      setCopyFeedback('Copied!');
+      setTimeout(() => setCopyFeedback(''), 2000);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      setCopyFeedback('Failed to copy');
+      setTimeout(() => setCopyFeedback(''), 2000);
     }
   };
 
@@ -281,6 +335,10 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
           </div>
         </div>
         
+        <p className="mt-2 text-sm text-gray-500">
+          Tired of typing? You can dictate your answers (in English, please) by pressing the microphone icon
+        </p>
+        
         {isProcessing && (
           <div className="mt-2 text-sm text-gray-500 flex items-center">
             <Loader className="animate-spin h-4 w-4 mr-2" />
@@ -315,6 +373,8 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
                 <span className="text-gray-500">Your answer seems to be very thorough, no need to further enhance it</span>
               ) : augmentationError ? (
                 <span className="text-red-500">{augmentationError}</span>
+              ) : augmentationWarning ? (
+                <span className="text-yellow-500">{augmentationWarning}</span>
               ) : aiEnhancedAnswer ? (
                 aiEnhancedAnswer
               ) : (
@@ -323,19 +383,58 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
                 </span>
               )}
             </div>
-            {aiEnhancedAnswer && !augmentationError && !noEnhancementNeeded && (
+            {aiEnhancedAnswer && !augmentationError && !augmentationWarning && !noEnhancementNeeded && (
               <div className="mt-2 flex items-center">
-                <input
-                  type="checkbox"
-                  id="useAiAnswer"
-                  checked={useAiAnswer}
-                  onChange={(e) => setUseAiAnswer(e.target.checked)}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <label htmlFor="useAiAnswer" className="ml-2 text-sm text-gray-700">
-                  Use AI-enhanced version
-                </label>
+                {aiEnhancedAnswer.includes('SUGGESTED REVISION') ? (
+                  <>
+                    <button
+                      onClick={copyToClipboard}
+                      className="p-1 text-blue-600 hover:text-blue-700 transition-colors"
+                      title="Copy to clipboard"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </button>
+                    <span className="ml-2 text-sm text-gray-700">
+                      {copyFeedback || 'Please copy-paste the suggested revision above and fill the blanks'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="checkbox"
+                      id="useAiAnswer"
+                      checked={useAiAnswer}
+                      onChange={(e) => setUseAiAnswer(e.target.checked)}
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="useAiAnswer" className="ml-2 text-sm text-gray-700">
+                      Use AI-enhanced version
+                    </label>
+                  </>
+                )}
               </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Submit Error Display */}
+      {submitError && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center">
+            <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
+            <div className="flex-1">
+              <p className="text-red-700 font-medium">Failed to submit answer</p>
+              <p className="text-red-600 text-sm mt-1">{submitError}</p>
+            </div>
+            {onRetrySubmit && (
+              <button
+                onClick={onRetrySubmit}
+                className="ml-3 inline-flex items-center px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-md text-sm font-medium transition-colors"
+              >
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Clear
+              </button>
             )}
           </div>
         </div>
