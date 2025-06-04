@@ -147,6 +147,11 @@ export const brands = {
     return response.data;
   },
   
+  update: async (brandId: string, updates: any) => {
+    const response = await api.patch(`/api/v1.0/brands/${brandId}`, updates);
+    return response.data;
+  },
+  
   getQuestions: async (brandId: string) => {
     const response = await api.get(`/api/v1.0/brands/${brandId}/questions`);
     return response.data;

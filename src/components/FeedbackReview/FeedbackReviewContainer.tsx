@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Loader, ArrowRight, AlertCircle } from 'lucide-react';
+import { Loader, ArrowRight, AlertCircle, RefreshCw } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { Feedback } from '../../types';
 import { brands } from '../../lib/api';
@@ -15,6 +15,7 @@ const FeedbackReviewContainer: React.FC = () => {
   
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRerunning, setIsRerunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Prevent duplicate API calls
@@ -117,16 +118,16 @@ const FeedbackReviewContainer: React.FC = () => {
     };
   }, [brandId]); // Removed selectBrand from dependencies to reduce re-renders
 
-  const handleGenerateAssets = async () => {
+  const handleProceedToNaming = async () => {
     if (!brandId) return;
     
     try {
-      // Update status to create_assets
-      await brands.updateStatus(brandId, 'create_assets');
-      // Navigate to create assets page
-      navigate(`/brands/${brandId}/create-assets`);
+      // Update status to pick_name
+      await brands.updateStatus(brandId, 'pick_name');
+      // Navigate to brand name selection page
+      navigate(`/brands/${brandId}/pick-name`);
     } catch (error) {
-      console.error('Failed to proceed to asset creation:', error);
+      console.error('Failed to proceed to brand naming:', error);
     }
   };
 
@@ -145,6 +146,52 @@ const FeedbackReviewContainer: React.FC = () => {
     
     // Trigger a re-load by updating a dummy state or just reload the page
     window.location.reload();
+  };
+
+  const handleRerunAnalysis = async () => {
+    if (!brandId || isRerunning) return;
+    
+    setIsRerunning(true);
+    setError(null);
+    
+    try {
+      console.log('🔄 Re-running feedback analysis for brand:', brandId);
+      
+      // Clear cache for fresh analysis
+      const cacheKey = `feedback-${brandId}`;
+      feedbackCache.delete(cacheKey);
+      
+      // Reset local state
+      hasLoadedRef.current = false;
+      isLoadingRef.current = false;
+      
+      // Run fresh analysis
+      const feedbackData = await brands.analyzeFeedback(brandId);
+      console.log('✅ Fresh feedback analysis completed:', feedbackData);
+      
+      setFeedback(feedbackData);
+      hasLoadedRef.current = true;
+      
+      // Cache the new result
+      feedbackCache.set(cacheKey, { loading: false, data: feedbackData });
+      
+    } catch (error: any) {
+      console.error('❌ Failed to re-run feedback analysis:', error);
+      
+      let errorMessage = 'Failed to re-run analysis. Please try again.';
+      
+      if (error?.response?.status === 500) {
+        errorMessage = 'Server error occurred while analyzing feedback. This might be due to insufficient survey responses or a temporary service issue.';
+      } else if (error?.response?.status === 404) {
+        errorMessage = 'No survey data found for this brand.';
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setIsRerunning(false);
+    }
   };
 
   if (isLoading) {
@@ -236,14 +283,27 @@ const FeedbackReviewContainer: React.FC = () => {
                 )}
               </div>
 
-              {/* Action Button */}
-              <div className="flex justify-end">
+              {/* Action Buttons */}
+              <div className="flex justify-between">
                 <button
-                  onClick={handleGenerateAssets}
+                  onClick={handleRerunAnalysis}
+                  disabled={isRerunning}
+                  className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isRerunning ? (
+                    <Loader className="animate-spin h-4 w-4 mr-2" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                  )}
+                  Re-run the analysis
+                </button>
+                
+                <button
+                  onClick={handleProceedToNaming}
                   disabled={!feedback.can_proceed}
                   className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Generate Brand Assets
+                  Pick Brand Name
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </button>
               </div>

@@ -6,6 +6,7 @@ export type BrandStatus =
   | 'create_survey'
   | 'collect_feedback'
   | 'feedback_review'
+  | 'pick_name'
   | 'create_assets'
   | 'payment'
   | 'complete';
@@ -17,6 +18,7 @@ export const BRAND_STATUS_JTBD = 'jtbd';
 export const BRAND_STATUS_CREATE_SURVEY = 'create_survey';
 export const BRAND_STATUS_COLLECT_FEEDBACK = 'collect_feedback';
 export const BRAND_STATUS_FEEDBACK_REVIEW = 'feedback_review';
+export const BRAND_STATUS_PICK_NAME = 'pick_name';
 export const BRAND_STATUS_CREATE_ASSETS = 'create_assets';
 export const BRAND_STATUS_PAYMENT = 'payment';
 export const BRAND_STATUS_COMPLETE = 'complete';
@@ -47,8 +49,12 @@ export const BRAND_STATUS_CONFIG = {
     path: '/collect-feedback'
   },
   feedback_review: {
-    next: 'create_assets',
+    next: 'pick_name',
     path: '/feedback-review'
+  },
+  pick_name: {
+    next: 'create_assets',
+    path: '/pick-name'
   },
   create_assets: {
     next: 'payment',

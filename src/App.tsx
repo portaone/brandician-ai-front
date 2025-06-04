@@ -15,6 +15,7 @@ import JTBDContainer from './components/JTBD/JTBDContainer';
 import SurveyContainer from './components/Survey/SurveyContainer';
 import CollectFeedbackContainer from './components/CollectFeedback/CollectFeedbackContainer';
 import FeedbackReviewContainer from './components/FeedbackReview/FeedbackReviewContainer';
+import BrandNameContainer from './components/BrandName/BrandNameContainer';
 import BrandSummary from './components/BrandSummary/BrandSummary';
 import './index.css';
 
@@ -111,6 +112,14 @@ const App: React.FC = () => {
             element={
               <AuthGuard>
                 <FeedbackReviewContainer />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/brands/:brandId/pick-name"
+            element={
+              <AuthGuard>
+                <BrandNameContainer />
               </AuthGuard>
             }
           />
