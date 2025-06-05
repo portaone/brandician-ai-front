@@ -91,8 +91,9 @@ $envVars = $parsed.spec.template.spec.containers[0].env
 # Extract only VITE_* vars
 $viteVars = $envVars | Where-Object { $_.name -like "NEXT_*" }
 
-# Write them to a .env.build file
-$env_file = ".env.build"
+# Write them to a .env.build file using absolute path
+$env_file = Join-Path $currentDirectory ".env.build"
+Write-Host "Creating environment file at: $env_file"
 @($viteVars | ForEach-Object { "$($_.name)=$($_.value)" }) | Set-Content -Path $env_file
 @($viteVars | ForEach-Object { "$($_.name)=$($_.value)" }) | Write-Output 
 Write-Output "Environment file $env_file"
@@ -100,7 +101,19 @@ Get-Content -Path $env_file
 Write-Output "Edit the file if needed and press enter to continue..."
 $response = Read-Host
 
-#cd app
+# Ensure the file exists and has content before proceeding
+if (-not (Test-Path $env_file)) {
+    Write-Error "Environment file $env_file was not created. Aborting deployment."
+    exit 1
+}
+
+if ((Get-Content $env_file).Length -eq 0) {
+    Write-Error "Environment file $env_file is empty. Aborting deployment."
+    exit 1
+}
+
+Write-Output "Building Docker image from directory: $currentDirectory"
+Set-Location $currentDirectory
 docker build -t $tag .
 
 if (-not $repo_region) {

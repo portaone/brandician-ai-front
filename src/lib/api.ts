@@ -1,9 +1,18 @@
 import axios from 'axios';
 import { BrandStatus } from './brandStatus';
-import { JTBDList, Survey, SurveyQuestion, SubmissionLink, SurveyStatus, Feedback } from '../types';
+import { 
+  JTBDList, 
+  Survey, 
+  SurveyQuestion, 
+  SubmissionLink, 
+  SurveyStatus, 
+  Feedback,
+  AdjustObject 
+} from '../types';
 import { BRAND_STATUS_CREATE_SURVEY } from './brandStatus';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_PREFIX = '/api/v1.0';
 const DEBUG = import.meta.env.VITE_DEBUG === 'true';
 
 const logApiCall = (type: string, url: string, data?: any, response?: any) => {
@@ -34,6 +43,7 @@ const logConnectionError = (error: any, url: string) => {
   console.groupEnd();
 };
 
+// Create axios instance with base URL
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -41,6 +51,10 @@ const api = axios.create({
   },
 });
 
+// Helper function to build API paths
+const apiPath = (path: string) => `${API_PREFIX}${path}`;
+
+// Add request interceptor for auth token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
   if (token) {
@@ -54,6 +68,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Add response interceptor for token refresh
 api.interceptors.response.use(
   (response) => {
     if (DEBUG) {
@@ -85,7 +100,7 @@ api.interceptors.response.use(
           throw new Error('No refresh token');
         }
         
-        const response = await api.post('/api/v1.0/auth/token/refresh', {
+        const response = await api.post(apiPath('/auth/token/refresh'), {
           refresh_token: refreshToken,
         });
         
@@ -133,57 +148,77 @@ export const auth = {
 
 export const brands = {
   list: async () => {
-    const response = await api.get('/api/v1.0/brands');
+    const response = await api.get(apiPath('/brands'));
     return response.data;
   },
   
   create: async (name: string, description?: string) => {
-    const response = await api.post('/api/v1.0/brands', { name, description });
+    const response = await api.post(apiPath('/brands'), { name, description });
     return response.data;
   },
   
   get: async (brandId: string) => {
-    const response = await api.get(`/api/v1.0/brands/${brandId}`);
+    const response = await api.get(apiPath(`/brands/${brandId}`));
     return response.data;
   },
   
   update: async (brandId: string, updates: any) => {
-    const response = await api.patch(`/api/v1.0/brands/${brandId}`, updates);
+    const response = await api.put(apiPath(`/brands/${brandId}`), updates);
     return response.data;
   },
   
-  getQuestions: async (brandId: string) => {
-    const response = await api.get(`/api/v1.0/brands/${brandId}/questions`);
+  patch: async (brandId: string, updates: any) => {
+    const response = await api.patch(apiPath(`/brands/${brandId}`), updates);
     return response.data;
   },
   
-  getAnswers: async (brandId: string) => {
-    const response = await api.get(`/api/v1.0/brands/${brandId}/answers/`);
-    return response.data;
-  },
-  
-  submitAnswer: async (brandId: string, questionId: string, answer: string, question: string) => {
-    const response = await api.put(`/api/v1.0/brands/${brandId}/answers/${questionId}`, {
-      answer,
-      question
-    });
-    return response.data;
+  delete: async (brandId: string) => {
+    await api.delete(apiPath(`/brands/${brandId}`));
   },
   
   updateStatus: async (brandId: string, status: BrandStatus) => {
-    const response = await api.patch(`/api/v1.0/brands/${brandId}`, { 
-      current_status: status 
+    const response = await api.put(apiPath(`/brands/${brandId}/status`), null, {
+      params: { status }
     });
     return response.data;
   },
 
+  getQuestions: async (brandId: string) => {
+    const response = await api.get(apiPath(`/brands/${brandId}/questions`));
+    return response.data;
+  },
+
+  getQuestion: async (brandId: string, questionId: string) => {
+    const response = await api.get(apiPath(`/brands/${brandId}/questions/${questionId}`));
+    return response.data;
+  },
+
+  getAnswers: async (brandId: string) => {
+    const response = await api.get(apiPath(`/brands/${brandId}/answers/`));
+    return response.data;
+  },
+
+  getAnswer: async (brandId: string, answerId: string) => {
+    const response = await api.get(apiPath(`/brands/${brandId}/answers/${answerId}`));
+    return response.data;
+  },
+
+  updateAnswer: async (brandId: string, answerId: string, answer: { question: string; answer: string }) => {
+    const response = await api.put(apiPath(`/brands/${brandId}/answers/${answerId}`), answer);
+    return response.data;
+  },
+
+  deleteAnswer: async (brandId: string, answerId: string) => {
+    await api.delete(apiPath(`/brands/${brandId}/answers/${answerId}`));
+  },
+
   getJTBD: async (brandId: string) => {
-    const response = await api.post(`/api/v1.0/brands/${brandId}/jtbd/`);
+    const response = await api.post(apiPath(`/brands/${brandId}/jtbd/`));
     return response.data;
   },
 
   updateJTBD: async (brandId: string, jtbd: JTBDList) => {
-    const response = await api.patch(`/api/v1.0/brands/${brandId}`, {
+    const response = await api.patch(apiPath(`/brands/${brandId}`), {
       jtbd,
       current_status: BRAND_STATUS_CREATE_SURVEY
     });
@@ -191,85 +226,105 @@ export const brands = {
   },
 
   getSurveyDraft: async (brandId: string) => {
-    const response = await api.post(`/api/v1.0/brands/${brandId}/survey/`);
+    const response = await api.post(apiPath(`/brands/${brandId}/survey/`));
     return response.data;
   },
 
   getSurvey: async (brandId: string) => {
-    const response = await api.get(`/api/v1.0/brands/${brandId}/survey/`);
+    const response = await api.get(apiPath(`/brands/${brandId}/survey`));
     return response.data;
   },
 
   saveSurvey: async (brandId: string, survey: Survey): Promise<SubmissionLink> => {
-    // Only send the questions array when saving the survey
-    const response = await api.put(`/api/v1.0/brands/${brandId}/survey/`, {
-      questions: survey.questions.map(q => ({
-        type: q.type,
-        text: q.text,
-        options: q.options
-      }))
+    const response = await api.put(apiPath(`/brands/${brandId}/survey`), survey);
+    return response.data;
+  },
+
+  processAudio: async (brandId: string, answerId: string, audioFile: File) => {
+    const formData = new FormData();
+    formData.append('audio_file', audioFile);
+    const response = await api.post(apiPath(`/brands/${brandId}/answers/${answerId}/audio`), formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     return response.data;
   },
 
-  processAudio: async (brandId: string, answerId: string, audioBlob: Blob) => {
+  processAudioBatch: async (brandId: string, answerId: string, audioFile: File) => {
     const formData = new FormData();
-    formData.append('audio_file', audioBlob, 'recording.webm');  // Changed from 'audio' to 'audio_file' to match API spec
-
-    const response = await api.post(
-      `/api/v1.0/brands/${brandId}/answers/${answerId}/audio`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
+    formData.append('audio_file', audioFile);
+    const response = await api.post(apiPath(`/brands/${brandId}/answers/${answerId}/audio-batch`), formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
   getAudioProcessingStatus: async (brandId: string, answerId: string, processingId: string) => {
-    const response = await api.get(
-      `/api/v1.0/brands/${brandId}/answers/${answerId}/audio/${processingId}`
-    );
+    const response = await api.get(apiPath(`/brands/${brandId}/answers/${answerId}/audio/${processingId}`));
     return response.data;
   },
 
-  augmentAnswer: async (brandId: string, answerId: string, text: string) => {
-    console.log('🔍 Augmenting answer:', { brandId, answerId, text });
-    const response = await api.post(
-      `/api/v1.0/brands/${brandId}/answers/${answerId}/augment`,
-      { source_text: text }
-    );
-    console.log('✨ Augmentation response:', response.data);
+  augmentAnswer: async (brandId: string, answerId: string, sourceText: string, style?: string, language?: string) => {
+    const response = await api.post(apiPath(`/brands/${brandId}/answers/${answerId}/augment`), {
+      source_text: sourceText,
+      style,
+      language,
+    });
     return response.data;
   },
 
   generateSummary: async (brandId: string) => {
     console.log('🔄 Generating summary for brand:', brandId);
-    const response = await api.post(`/api/v1.0/brands/${brandId}/summary`);
+    const response = await api.post(apiPath(`/brands/${brandId}/summary`));
     console.log('✅ Summary generated:', response.data);
     return response.data;
   },
 
   getSummary: async (brandId: string) => {
-    const response = await api.get(`/api/v1.0/brands/${brandId}/summary/`);
+    const response = await api.get(apiPath(`/brands/${brandId}/summary/`));
     return response.data;
   },
 
   updateSummary: async (brandId: string, summary: string) => {
-    const response = await api.put(`/api/v1.0/brands/${brandId}/summary`, { summary });
+    const response = await api.put(apiPath(`/brands/${brandId}/summary`), { summary });
     return response.data;
   },
 
   getSurveyStatus: async (brandId: string) => {
-    const response = await api.get(`/api/v1.0/brands/${brandId}/survey/status/`);
+    const response = await api.get(apiPath(`/brands/${brandId}/survey/status/`));
     return response.data;
   },
 
   analyzeFeedback: async (brandId: string) => {
-    const response = await api.post(`/api/v1.0/brands/${brandId}/feedback/`);
+    const response = await api.post(apiPath(`/brands/${brandId}/feedback`));
     return response.data;
+  },
+
+  adjustSummary: async (brandId: string): Promise<AdjustObject> => {
+    const response = await api.post(apiPath(`/brands/${brandId}/adjust/summary`));
+    return response.data;
+  },
+
+  suggestSurvey: async (brandId: string) => {
+    const response = await api.post(apiPath(`/brands/${brandId}/survey`));
+    return response.data;
+  },
+
+  suggestJTBD: async (brandId: string) => {
+    const response = await api.post(apiPath(`/brands/${brandId}/jtbd`));
+    return response.data;
+  },
+
+  suggestArchetype: async (brandId: string) => {
+    const response = await api.post(apiPath(`/brands/${brandId}/archetype`));
+    return response.data;
+  },
+
+  updateArchetype: async (brandId: string, archetype: string) => {
+    await api.put(apiPath(`/brands/${brandId}/archetype`), { archetype });
   },
 };
 

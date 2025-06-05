@@ -50,7 +50,8 @@ export const BRAND_STATUS_CONFIG = {
   },
   feedback_review: {
     next: 'pick_name',
-    path: '/feedback-review'
+    path: '/feedback-review',
+    description: 'Review and adjust brand elements based on feedback'
   },
   pick_name: {
     next: 'create_assets',

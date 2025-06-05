@@ -101,3 +101,16 @@ export interface Feedback {
   feedback?: string;
   can_proceed: boolean;
 }
+
+export interface FootNote {
+  id: string;
+  text: string;
+  url?: string;
+}
+
+export interface AdjustObject {
+  old_text: string;
+  new_text: string;
+  survey: SurveyStatus;
+  footnotes?: FootNote[];
+}
