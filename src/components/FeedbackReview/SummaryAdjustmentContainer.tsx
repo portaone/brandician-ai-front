@@ -12,49 +12,99 @@ interface SummaryAdjustmentContainerProps {
   onError: (error: string) => void;
 }
 
-// Helper to parse <change> tags and render as React elements
-function parseSummaryText(text: string, onChangeClick: (id: string) => void): React.ReactNode {
-  // Use DOMParser to parse the XML-like string
-  const parser = new DOMParser();
-  // Wrap in a root element to allow parsing fragments
-  const doc = parser.parseFromString(`<root>${text}</root>`, 'text/xml');
-  const root = doc.documentElement;
+// Reusable form for reviewing changes
+interface ChangeReviewFormProps {
+  oldText: string;
+  newText: string;
+  changes: { type: string; content: string; id?: string; t?: string }[];
+  footnotes: { id: string; text: string; url?: string | null }[];
+  onChangeClick: (id: string) => void;
+  explanationRefs: React.MutableRefObject<{ [id: string]: HTMLDivElement | null }>;
+}
 
-  function renderNode(node: ChildNode, key: number): React.ReactNode {
-    if (node.nodeType === Node.TEXT_NODE) {
-      return node.textContent;
+const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({ oldText, newText, changes, footnotes, onChangeClick, explanationRefs }) => {
+  function renderChanges() {
+    if (!changes || changes.length === 0) {
+      return <span>{newText || <em>No changes were suggested.</em>}</span>;
     }
-    if (node.nodeType === Node.ELEMENT_NODE && node.nodeName === 'change') {
-      const el = node as Element;
-      const t = el.getAttribute('t');
-      const id = el.getAttribute('id') || '';
-      const children = Array.from(el.childNodes).map((child, i) => renderNode(child, i));
-      let style = {};
-      let className = 'inline cursor-pointer px-1 rounded transition-colors';
-      let tooltip = 'Click to see the explanation of the suggestion';
-      if (t === 'mod') {
-        style = { fontWeight: 'bold', background: '#f0f6ff', color: '#1d4ed8' };
-      } else if (t === 'del') {
-        style = { textDecoration: 'line-through', background: '#fef2f2', color: '#b91c1c' };
+    return changes.map((seg, i) => {
+      if (seg.type === 'text') {
+        return <span key={i}>{seg.content}</span>;
       }
-      return (
-        <span
-          key={key}
-          style={style}
-          className={className + ' hover:bg-yellow-100'}
-          title={tooltip}
-          onClick={() => onChangeClick(id)}
-        >
-          {children}
-        </span>
-      );
-    }
-    // Fallback: render children
-    return Array.from(node.childNodes).map((child, i) => renderNode(child, i));
+      if (seg.type === 'change') {
+        let style = {};
+        if (seg.t === 'mod') style = { fontWeight: 'bold', background: '#f0f6ff', color: '#1d4ed8' };
+        if (seg.t === 'del') style = { textDecoration: 'line-through', background: '#fef2f2', color: '#b91c1c' };
+        if (seg.t === 'ref') style = { fontStyle: 'italic', background: '#fef9e7', color: '#b26a00' };
+        return (
+          <span
+            key={i}
+            style={style}
+            className="inline cursor-pointer px-1 rounded transition-colors hover:bg-yellow-100"
+            title="Click to see the explanation of the suggestion"
+            onClick={() => seg.id && onChangeClick(seg.id)}
+          >
+            {seg.content}
+          </span>
+        );
+      }
+      return null;
+    });
   }
 
-  return Array.from(root.childNodes).map((node, i) => renderNode(node, i));
-}
+  return (
+    <>
+      {/* Current Summary */}
+      <div>
+        <h3 className="text-xl font-medium text-neutral-800 mb-4">Current Summary</h3>
+        <div className="prose max-w-none">
+          <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-6">
+            <div className="whitespace-pre-wrap text-neutral-700 leading-relaxed">
+              {oldText}
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Proposed Summary */}
+      <div>
+        <h3 className="text-xl font-medium text-neutral-800 mb-4">Proposed Summary</h3>
+        <div className="prose max-w-none">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+            <div className="whitespace-pre-wrap text-neutral-700 leading-relaxed">
+              {renderChanges()}
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Footnotes */}
+      <div className="mb-8">
+        <h3 className="text-lg font-medium text-neutral-800 mb-4">Changes Explained</h3>
+        <div className="space-y-4">
+          {(footnotes ?? []).map((note) => (
+            <div
+              key={note.id}
+              ref={el => (explanationRefs.current[note.id] = el)}
+              className="bg-neutral-50 border border-neutral-200 rounded-lg p-4 transition-all"
+            >
+              <p className="text-neutral-700 font-semibold">Suggestion {note.id}</p>
+              <p className="text-neutral-700">{note.text}</p>
+              {note.url && (
+                <a
+                  href={note.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary-600 hover:text-primary-700 text-sm mt-2 inline-block"
+                >
+                  View source →
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+};
 
 const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
   onComplete,
@@ -70,20 +120,42 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
   const hasLoadedRef = useRef(false);
   const explanationRefs = useRef<{ [id: string]: HTMLDivElement | null }>({});
 
+  // Helper to clear cache and refs for this brand
+  const clearAdjustmentCache = () => {
+    if (brandId) {
+      const cacheKey = `adjustment-${brandId}`;
+      adjustmentCache.delete(cacheKey);
+    }
+    isLoadingRef.current = false;
+    hasLoadedRef.current = false;
+  };
+
+  // Retry handler
+  const handleRetry = () => {
+    setError(null);
+    setAdjustment(null);
+    clearAdjustmentCache();
+    setIsLoading(true);
+    setReloadFlag(flag => !flag);
+  };
+  const [reloadFlag, setReloadFlag] = useState(false);
+
   useEffect(() => {
     let isMounted = true;
     let pollTimer: ReturnType<typeof setInterval> | null = null;
-    
+
     const loadAdjustment = async () => {
       if (!brandId || !isMounted) return;
-      
-      // Check global cache first
+
+      // Robust guard against duplicate/racing API calls
       const cacheKey = `adjustment-${brandId}`;
       const cached = adjustmentCache.get(cacheKey);
-      
+      if (hasLoadedRef.current || isLoadingRef.current) {
+        console.log('🛑 Prevented duplicate summary adjustment call');
+        return;
+      }
       if (cached?.loading) {
-        console.log('⏸️ Summary adjustment already in progress for this brand');
-        // Poll for data until it arrives or component unmounts
+        // Start polling for data
         pollTimer = setInterval(() => {
           const polled = adjustmentCache.get(cacheKey);
           if (polled?.data && isMounted) {
@@ -98,61 +170,42 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
         setIsLoading(true);
         return;
       }
-      
       if (cached?.data) {
         console.log('📋 Using cached adjustment data');
         setAdjustment(cached.data);
         setIsLoading(false);
         return;
       }
-      
-      // Check if we're already loading or have loaded locally
-      if (isLoadingRef.current || hasLoadedRef.current) {
-        console.log('⏸️ Skipping duplicate local adjustment call');
-        setIsLoading(true);
-        return;
-      }
 
-      // Mark as loading in cache
-      adjustmentCache.set(cacheKey, { loading: true });
-      isLoadingRef.current = true;
       setIsLoading(true);
       setError(null);
-      
+
       try {
         console.log('🔄 Loading summary adjustment for brand:', brandId);
         const data = await brands.adjustSummary(brandId);
-        
         if (isMounted) {
           setAdjustment(data);
           hasLoadedRef.current = true;
-          // Cache the successful result
           adjustmentCache.set(cacheKey, { loading: false, data });
         }
       } catch (error: any) {
         if (isMounted) {
           console.error('❌ Failed to load summary adjustment:', error);
-          
           let errorMessage = 'Failed to load summary adjustment. Please try again.';
-          
           if (error?.response?.status === 500) {
             errorMessage = 'Server error occurred while analyzing the summary. Please try again later.';
           } else if (error?.response?.data?.message) {
             errorMessage = error.response.data.message;
           }
-          
           setError(errorMessage);
           onError(errorMessage);
-          // Don't cache errors - allow retries on fresh page loads
-          // Only remove the loading state from cache
-          adjustmentCache.delete(cacheKey);
+          clearAdjustmentCache();
         }
       } finally {
         if (isMounted) {
           setIsLoading(false);
         }
         isLoadingRef.current = false;
-        // Remove loading state from cache (but keep successful data cached)
         const currentCache = adjustmentCache.get(cacheKey);
         if (currentCache?.loading) {
           adjustmentCache.set(cacheKey, { loading: false, data: currentCache.data });
@@ -160,52 +213,49 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
       }
     };
 
-    // Small delay to help prevent React StrictMode duplicates
     const timeoutId = setTimeout(loadAdjustment, 50);
-
-    // Cleanup function
     return () => {
       isMounted = false;
       clearTimeout(timeoutId);
       if (pollTimer) clearInterval(pollTimer);
       isLoadingRef.current = false;
     };
-  }, [brandId, onError]);
+  }, [brandId, onError, reloadFlag]);
 
   const handleAccept = async () => {
     if (!brandId || !adjustment) return;
-
     try {
-      // Update the brand summary with the new text
-      await brands.updateSummary(brandId, adjustment.new_text);
-      // Clear cache after successful update
+      await brands.updateSummary(brandId, adjustment.new_text || '');
       const cacheKey = `adjustment-${brandId}`;
       adjustmentCache.delete(cacheKey);
       onComplete();
     } catch (error: any) {
       console.error('Failed to update summary:', error);
       let errorMessage = 'Failed to update summary. Please try again.';
-      
       if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
-      
       setError(errorMessage);
       onError(errorMessage);
     }
   };
 
   const handleReject = () => {
-    // Clear cache when rejecting the adjustment
     if (brandId) {
       const cacheKey = `adjustment-${brandId}`;
       adjustmentCache.delete(cacheKey);
     }
-    // Simply proceed to the next step without updating
     onComplete();
   };
 
-  // Scroll to explanation by id
+  const handleReevaluate = () => {
+    clearAdjustmentCache();
+    setAdjustment(null);
+    setError(null);
+    setIsLoading(true);
+    setTimeout(() => setReloadFlag(flag => !flag), 0);
+  };
+
   const handleChangeClick = (id: string) => {
     const ref = explanationRefs.current[id];
     if (ref) {
@@ -220,7 +270,7 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
         <div className="flex flex-col items-center">
           <Loader className="animate-spin h-8 w-8 text-primary-600 mb-4" />
-          <p className="text-gray-600">Analyzing brand summary...</p>
+          <p className="text-gray-600">Analyzing feedback for adjusting the brand summary...</p>
         </div>
       </div>
     );
@@ -234,7 +284,7 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
           <h2 className="text-xl font-bold text-gray-900 mb-4">Analysis Failed</h2>
           <p className="text-red-600 mb-6">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={handleRetry}
             className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium"
           >
             Try Again
@@ -272,56 +322,15 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
               </div>
             )}
 
-            {/* Current Summary */}
-            <div>
-              <h3 className="text-xl font-medium text-neutral-800 mb-4">Current Summary</h3>
-              <div className="prose max-w-none">
-                <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-6">
-                  <div className="whitespace-pre-wrap text-neutral-700 leading-relaxed">
-                    {adjustment.old_text}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Proposed Summary */}
-            <div>
-              <h3 className="text-xl font-medium text-neutral-800 mb-4">Proposed Summary</h3>
-              <div className="prose max-w-none">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                  <div className="whitespace-pre-wrap text-neutral-700 leading-relaxed">
-                    {parseSummaryText(adjustment.new_text, handleChangeClick)}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Footnotes */}
-            <div className="mb-8">
-              <h3 className="text-lg font-medium text-neutral-800 mb-4">Changes Explained</h3>
-              <div className="space-y-4">
-                {(adjustment.footnotes ?? []).map((note) => (
-                  <div
-                    key={note.id}
-                    ref={el => (explanationRefs.current[note.id] = el)}
-                    className="bg-neutral-50 border border-neutral-200 rounded-lg p-4 transition-all"
-                  >
-                    <p className="text-neutral-700 font-semibold">Suggestion {note.id}</p>
-                    <p className="text-neutral-700">{note.text}</p>
-                    {note.url && (
-                      <a
-                        href={note.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary-600 hover:text-primary-700 text-sm mt-2 inline-block"
-                      >
-                        View source →
-                      </a>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Use the reusable ChangeReviewForm for summary review */}
+            <ChangeReviewForm
+              oldText={adjustment.old_text}
+              newText={adjustment.new_text}
+              changes={adjustment.changes ?? []}
+              footnotes={adjustment.footnotes ?? []}
+              onChangeClick={handleChangeClick}
+              explanationRefs={explanationRefs}
+            />
 
             {/* Action Buttons */}
             <div className="flex justify-end space-x-4">
@@ -330,6 +339,13 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
                 className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
               >
                 Keep Current Summary
+              </button>
+              <button
+                onClick={handleReevaluate}
+                disabled={isLoading}
+                className="px-6 py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Re-evaluate
               </button>
               <button
                 onClick={handleAccept}

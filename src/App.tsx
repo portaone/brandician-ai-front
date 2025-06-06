@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from './store/auth';
 import TopMenu from './components/common/TopMenu';
@@ -17,7 +17,17 @@ import CollectFeedbackContainer from './components/CollectFeedback/CollectFeedba
 import FeedbackReviewFlowContainer from './components/FeedbackReview/FeedbackReviewFlowContainer';
 import BrandNameContainer from './components/BrandName/BrandNameContainer';
 import BrandSummary from './components/BrandSummary/BrandSummary';
+import MarkdownPage from './components/MarkdownPage';
+import Footer from './components/common/Footer';
+import CookieConsent from './components/common/CookieConsent';
+import BrandAssets from './components/BrandAssets/BrandAssets';
 import './index.css';
+
+function BrandAssetsWrapper() {
+  const { brandId } = useParams();
+  if (!brandId) return null;
+  return <BrandAssets brandId={brandId} />;
+}
 
 const App: React.FC = () => {
   const { loadUser, user } = useAuthStore();
@@ -123,9 +133,27 @@ const App: React.FC = () => {
               </AuthGuard>
             }
           />
+          <Route
+            path="/brands/:brandId/create-assets"
+            element={
+              <AuthGuard>
+                <BrandAssetsWrapper />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/terms"
+            element={<MarkdownPage filePath="/terms-of-use.md" />}
+          />
+          <Route
+            path="/cookies"
+            element={<MarkdownPage filePath="/cookies.md" />}
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>
+      <CookieConsent />
+      <Footer />
     </Router>
   );
 };

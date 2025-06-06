@@ -177,9 +177,7 @@ export const brands = {
   },
   
   updateStatus: async (brandId: string, status: BrandStatus) => {
-    const response = await api.put(apiPath(`/brands/${brandId}/status`), null, {
-      params: { status }
-    });
+    const response = await api.put(apiPath(`/brands/${brandId}/status`), { status });
     return response.data;
   },
 
@@ -325,6 +323,29 @@ export const brands = {
 
   updateArchetype: async (brandId: string, archetype: string) => {
     await api.put(apiPath(`/brands/${brandId}/archetype`), { archetype });
+  },
+
+  adjustArchetype: async (brandId: string) => {
+    const response = await api.put(apiPath(`/brands/${brandId}/adjust/archetype`));
+    return response.data;
+  },
+
+  suggestArchetypeAdjustment: async (brandId: string) => {
+    const response = await api.post(apiPath(`/brands/${brandId}/adjust/archetype`));
+    return response.data;
+  },
+
+  produceAssets: async (brandId: string) => {
+    const response = await api.post(apiPath(`/brands/${brandId}/produce-assets/`));
+    return response.data;
+  },
+
+  submitAnswer: async (brandId: string, answerId: string, answer: string, question: string) => {
+    const response = await api.put(apiPath(`/brands/${brandId}/answers/${answerId}`), {
+      question,
+      answer,
+    });
+    return response.data;
   },
 };
 

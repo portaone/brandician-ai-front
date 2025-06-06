@@ -1,0 +1,1 @@
+.\deploy.ps1 brandician-front --region europe-west1

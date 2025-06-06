@@ -7,12 +7,9 @@ interface AuthGuardProps {
 }
 
 const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
-  const { user, loadUser, isLoading } = useAuthStore();
+  // User loading is handled globally in App.tsx to avoid duplicate requests
+  const { user, isLoading } = useAuthStore();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    loadUser();
-  }, [loadUser]);
 
   useEffect(() => {
     if (!isLoading && !user) {

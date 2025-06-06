@@ -113,4 +113,5 @@ export interface AdjustObject {
   new_text: string;
   survey: SurveyStatus;
   footnotes?: FootNote[];
+  changes?: { type: string; content: string; id?: string; t?: string }[];
 }

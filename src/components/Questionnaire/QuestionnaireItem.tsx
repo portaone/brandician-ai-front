@@ -141,7 +141,8 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     setIsProcessing(true);
     try {
       console.log('🎤 Uploading audio file...');
-      const { id: processingId } = await brands.processAudio(brandId, answerId, audioBlob);
+      const file = new File([audioBlob], 'recording.webm', { type: audioBlob.type });
+      const { id: processingId } = await brands.processAudio(brandId, answerId, file);
       console.log('🎤 Got processing ID:', processingId);
       
       const checkStatus = async () => {

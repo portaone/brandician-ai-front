@@ -3,10 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Loader, ArrowRight, RefreshCw, Check, Plus, X } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { brands } from '../../lib/api';
+import BrandAssets from '../BrandAssets/BrandAssets';
 
 interface BrandNameSuggestion {
   name: string;
   rationale?: string;
+  domains_available?: string[];
 }
 
 const BrandNameContainer: React.FC = () => {
@@ -22,6 +24,7 @@ const BrandNameContainer: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAssets, setShowAssets] = useState(false);
 
   useEffect(() => {
     const loadBrandAndSuggestions = async () => {
@@ -57,11 +60,11 @@ const BrandNameContainer: React.FC = () => {
       
       // Mock suggestions for demonstration
       const mockSuggestions: BrandNameSuggestion[] = [
-        { name: "VineVibe", rationale: "Combines wine culture with positive energy" },
-        { name: "TerroirTaste", rationale: "Emphasizes the unique characteristics of wine regions" },
-        { name: "SommSelect", rationale: "Professional wine selection expertise" },
-        { name: "CellarCraft", rationale: "Artisanal approach to wine curation" },
-        { name: "WineWise", rationale: "Smart, knowledgeable wine recommendations" },
+        { name: "VineVibe", rationale: "Combines wine culture with positive energy", domains_available: ["vinevibe.com", "winevibe.com"] },
+        { name: "TerroirTaste", rationale: "Emphasizes the unique characteristics of wine regions", domains_available: ["terroirtaste.com"] },
+        { name: "SommSelect", rationale: "Professional wine selection expertise", domains_available: ["sommselect.com"] },
+        { name: "CellarCraft", rationale: "Artisanal approach to wine curation", domains_available: ["cellarcraft.com"] },
+        { name: "WineWise", rationale: "Smart, knowledgeable wine recommendations", domains_available: ["winewise.com"] },
       ];
       
       setSuggestions(mockSuggestions);
@@ -91,14 +94,13 @@ const BrandNameContainer: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      // Update brand with selected name
-      await brands.update(brandId, { name: selectedName });
-      
+      // Update brand with selected name using PATCH and 'brand_name' attribute
+      await brands.patch(brandId, { brand_name: selectedName });
       // Update status to create_assets
       await brands.updateStatus(brandId, 'create_assets');
-      
-      // Navigate to create assets page
-      navigate(`/brands/${brandId}/create-assets`);
+      // Show BrandAssets component
+      setShowAssets(true);
+      // Optionally, navigate(`/brands/${brandId}/create-assets`);
     } catch (error) {
       console.error('Failed to proceed to asset creation:', error);
       setError('Failed to save brand name and proceed');
@@ -118,6 +120,10 @@ const BrandNameContainer: React.FC = () => {
     );
   }
 
+  if (showAssets && brandId) {
+    return <BrandAssets brandId={brandId} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
       <div className="container mx-auto px-4">
@@ -134,11 +140,23 @@ const BrandNameContainer: React.FC = () => {
               </p>
               
               {currentBrand && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h3 className="font-medium text-blue-800 mb-2">Current Brand: {currentBrand.name}</h3>
-                  <p className="text-blue-700 text-sm">
-                    You can keep this name or choose a new one from the suggestions below.
-                  </p>
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+                  <div>
+                    <h3 className="font-medium text-blue-800 mb-2">Current Brand: {currentBrand.name}</h3>
+                    <p className="text-blue-700 text-sm">
+                      You can keep this name or choose a new one from the suggestions below.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleSelectName(currentBrand.name)}
+                    className={`ml-4 px-4 py-2 rounded-lg font-medium transition-colors ${
+                      selectedName === currentBrand.name
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-white text-primary-600 border border-primary-600 hover:bg-primary-50'
+                    }`}
+                  >
+                    {selectedName === currentBrand.name ? '✓ Keeping Current Name' : 'Keep Current Name'}
+                  </button>
                 </div>
               )}
             </div>
@@ -180,6 +198,19 @@ const BrandNameContainer: React.FC = () => {
                     </div>
                     {suggestion.rationale && (
                       <p className="text-sm text-gray-600 mt-1">{suggestion.rationale}</p>
+                    )}
+                    {/* Show available domains as green badges if they contain a dot */}
+                    {Array.isArray(suggestion.domains_available) && suggestion.domains_available.some(domain => domain.includes('.')) && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {suggestion.domains_available.filter(domain => domain.includes('.')).map((domain, i) => (
+                          <span
+                            key={i}
+                            className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono"
+                          >
+                            {domain}
+                          </span>
+                        ))}
+                      </div>
                     )}
                   </div>
                 ))}

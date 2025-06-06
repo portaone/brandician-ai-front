@@ -8,6 +8,15 @@ import { brands } from '../../lib/api';
 // Global cache to prevent duplicate API calls across component instances
 const feedbackCache = new Map<string, { loading: boolean; data?: Feedback; error?: string }>();
 
+function fixChangeTags(text: string): string {
+  // Replace <change id=1 t=mod> with <change id="1" t="mod">
+  return text.replace(/<change ([^>]+)>/g, (match, attrs) => {
+    // Add quotes to all attribute values
+    const fixedAttrs = attrs.replace(/(\\w+)=([^"'][^\\s>]*)/g, '$1="$2"');
+    return `<change ${fixedAttrs}>`;
+  });
+}
+
 const FeedbackReviewContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
@@ -21,6 +30,8 @@ const FeedbackReviewContainer: React.FC = () => {
   // Prevent duplicate API calls
   const isLoadingRef = useRef(false);
   const hasLoadedRef = useRef(false);
+  // Dummy state to force reload
+  const [reloadFlag, setReloadFlag] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -116,7 +127,7 @@ const FeedbackReviewContainer: React.FC = () => {
       clearTimeout(timeoutId);
       isLoadingRef.current = false;
     };
-  }, [brandId]); // Removed selectBrand from dependencies to reduce re-renders
+  }, [brandId, reloadFlag]); // Add reloadFlag to dependencies
 
   const handleProceedToNaming = async () => {
     if (!brandId) return;
@@ -137,15 +148,13 @@ const FeedbackReviewContainer: React.FC = () => {
     isLoadingRef.current = false;
     setError(null);
     setFeedback(null);
-    
     // Clear cache for this brand
     if (brandId) {
       const cacheKey = `feedback-${brandId}`;
       feedbackCache.delete(cacheKey);
     }
-    
-    // Trigger a re-load by updating a dummy state or just reload the page
-    window.location.reload();
+    // Trigger a re-load by updating a dummy state
+    setReloadFlag(flag => !flag);
   };
 
   const handleRerunAnalysis = async () => {

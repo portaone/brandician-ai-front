@@ -8,6 +8,7 @@ const RegisterForm: React.FC = () => {
   const [name, setName] = useState('');
   const [otp, setOtp] = useState('');
   const [otpId, setOtpId] = useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const { register, verifyOTP, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
 
@@ -108,6 +109,24 @@ const RegisterForm: React.FC = () => {
                   <User className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
                 </div>
               </div>
+
+              <div className="flex items-center">
+                <input
+                  id="terms"
+                  name="terms"
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={e => setAcceptedTerms(e.target.checked)}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                  required
+                />
+                <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
+                  I accept Brandician.AI{' '}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary-600 underline">
+                    terms of use
+                  </a>
+                </label>
+              </div>
             </>
           ) : (
             <div>
@@ -160,7 +179,7 @@ const RegisterForm: React.FC = () => {
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || (!otpId && !acceptedTerms)}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
           >
             {isLoading ? (
