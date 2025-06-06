@@ -28,20 +28,21 @@ const TopMenu: React.FC = () => {
 
   // Handle Brandician.AI logo click
   const handleLogoClick = (e: React.MouseEvent) => {
+    console.log('Logo clicked: handleLogoClick called');
     e.preventDefault();
-    if (user) {
-      navigate('/brands');
-    } else {
-      navigate('/');
-    }
+    navigate('/', { replace: true });
   };
+
+  useEffect(() => {
+    console.log('Current location:', location.pathname);
+  }, [location]);
 
   return (
     <header className="bg-white border-b border-neutral-200">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <a
-            href={user ? "/brands" : "/"}
+            href="/"
             onClick={handleLogoClick}
             className="flex items-center text-primary-600 hover:text-primary-700"
           >

@@ -340,6 +340,11 @@ export const brands = {
     return response.data;
   },
 
+  pickName: async (brandId: string) => {
+    const response = await api.post(apiPath(`/brands/${brandId}/pick-name/`));
+    return response.data;
+  },
+
   submitAnswer: async (brandId: string, answerId: string, answer: string, question: string) => {
     const response = await api.put(apiPath(`/brands/${brandId}/answers/${answerId}`), {
       question,

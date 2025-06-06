@@ -20,6 +20,9 @@ export interface Brand {
   jtbd?: JTBDList;
   survey?: Survey;
   summary?: string;
+  status_description?: string;
+  draft?: BrandNameSuggestion;
+  alt_options?: BrandNameSuggestion[];
 }
 
 export interface Question {
@@ -114,4 +117,11 @@ export interface AdjustObject {
   survey: SurveyStatus;
   footnotes?: FootNote[];
   changes?: { type: string; content: string; id?: string; t?: string }[];
+}
+
+export interface BrandNameSuggestion {
+  name: string;
+  description: string;
+  domains_available: string[];
+  score: number | null;
 }

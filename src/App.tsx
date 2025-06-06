@@ -41,10 +41,7 @@ const App: React.FC = () => {
       <TopMenu />
       <AnimatePresence mode="wait">
         <Routes>
-          <Route 
-            path="/" 
-            element={user ? <Navigate to="/brands" replace /> : <LandingPage />} 
-          />
+          <Route path="/" element={<LandingPage />} />
           <Route 
             path="/login" 
             element={user ? <Navigate to="/brands" replace /> : <LoginForm />} 

@@ -9,6 +9,14 @@ interface BrandNameSuggestion {
   name: string;
   rationale?: string;
   domains_available?: string[];
+  score: number;
+}
+
+interface BrandName {
+  name: string;
+  description: string;
+  domains_available: string[];
+  score?: number;
 }
 
 const BrandNameContainer: React.FC = () => {
@@ -25,6 +33,7 @@ const BrandNameContainer: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAssets, setShowAssets] = useState(false);
+  const [currentDraft, setCurrentDraft] = useState<BrandName | null>(null);
 
   useEffect(() => {
     const loadBrandAndSuggestions = async () => {
@@ -32,13 +41,22 @@ const BrandNameContainer: React.FC = () => {
 
       setIsLoading(true);
       try {
-        // Load brand data
         await selectBrand(brandId);
-        
-        // Generate initial name suggestions
-        await generateNameSuggestions();
+        // Get name suggestions from the dedicated endpoint
+        const nameOptions = await brands.pickName(brandId);
+        // Store draft separately
+        setCurrentDraft(nameOptions.draft || null);
+        // Only set alt_options as suggestions
+        const altSuggestions = Array.isArray(nameOptions.alt_options)
+          ? nameOptions.alt_options.map((opt: BrandName) => ({
+              name: opt.name,
+              rationale: opt.description,
+              domains_available: opt.domains_available || [],
+              score: opt.score
+            }))
+          : [];
+        setSuggestions(altSuggestions);
       } catch (error) {
-        console.error('Failed to load brand data:', error);
         setError('Failed to load brand information');
       } finally {
         setIsLoading(false);
@@ -46,35 +64,7 @@ const BrandNameContainer: React.FC = () => {
     };
 
     loadBrandAndSuggestions();
-  }, [brandId]);
-
-  const generateNameSuggestions = async () => {
-    if (!brandId || isGenerating) return;
-
-    setIsGenerating(true);
-    setError(null);
-    
-    try {
-      // Mock API call for now - replace with actual API endpoint
-      // const response = await brands.generateBrandNames(brandId);
-      
-      // Mock suggestions for demonstration
-      const mockSuggestions: BrandNameSuggestion[] = [
-        { name: "VineVibe", rationale: "Combines wine culture with positive energy", domains_available: ["vinevibe.com", "winevibe.com"] },
-        { name: "TerroirTaste", rationale: "Emphasizes the unique characteristics of wine regions", domains_available: ["terroirtaste.com"] },
-        { name: "SommSelect", rationale: "Professional wine selection expertise", domains_available: ["sommselect.com"] },
-        { name: "CellarCraft", rationale: "Artisanal approach to wine curation", domains_available: ["cellarcraft.com"] },
-        { name: "WineWise", rationale: "Smart, knowledgeable wine recommendations", domains_available: ["winewise.com"] },
-      ];
-      
-      setSuggestions(mockSuggestions);
-    } catch (error) {
-      console.error('Failed to generate name suggestions:', error);
-      setError('Failed to generate name suggestions');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  }, [brandId, selectBrand]);
 
   const handleSelectName = (name: string) => {
     setSelectedName(name);
@@ -94,10 +84,8 @@ const BrandNameContainer: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      // Update brand with selected name using PATCH and 'brand_name' attribute
-      await brands.patch(brandId, { brand_name: selectedName });
-      // Update status to create_assets
-      await brands.updateStatus(brandId, 'create_assets');
+      // Use the new API endpoint to pick the brand name (no body)
+      await brands.pickName(brandId);
       // Show BrandAssets component
       setShowAssets(true);
       // Optionally, navigate(`/brands/${brandId}/create-assets`);
@@ -106,6 +94,38 @@ const BrandNameContainer: React.FC = () => {
       setError('Failed to save brand name and proceed');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGenerateNewSuggestions = async () => {
+    if (!brandId || isGenerating) return;
+    
+    setIsGenerating(true);
+    try {
+      const nameOptions = await brands.pickName(brandId);
+      
+      const suggestions = [];
+      if (nameOptions.draft) {
+        suggestions.push({
+          name: nameOptions.draft.name,
+          rationale: nameOptions.draft.description,
+          domains_available: nameOptions.draft.domains_available || [],
+          score: nameOptions.draft.score
+        });
+      }
+      if (Array.isArray(nameOptions.alt_options)) {
+        suggestions.push(...nameOptions.alt_options.map((opt: BrandName) => ({
+          name: opt.name,
+          rationale: opt.description,
+          domains_available: opt.domains_available || [],
+          score: opt.score
+        })));
+      }
+      setSuggestions(suggestions);
+    } catch (error) {
+      setError('Failed to generate new suggestions');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -133,40 +153,47 @@ const BrandNameContainer: React.FC = () => {
           </h1>
 
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <div className="mb-6">
-              <p className="text-gray-600 mb-4">
-                Based on your brand analysis and feedback, here are some suggested names for your brand. 
-                You can select one of the suggestions or enter your own custom name.
-              </p>
-              
-              {currentBrand && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium text-blue-800 mb-2">Current Brand: {currentBrand.name}</h3>
-                    <p className="text-blue-700 text-sm">
-                      You can keep this name or choose a new one from the suggestions below.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => handleSelectName(currentBrand.name)}
-                    className={`ml-4 px-4 py-2 rounded-lg font-medium transition-colors ${
-                      selectedName === currentBrand.name
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-white text-primary-600 border border-primary-600 hover:bg-primary-50'
-                    }`}
-                  >
-                    {selectedName === currentBrand.name ? '✓ Keeping Current Name' : 'Keep Current Name'}
-                  </button>
+            {/* Current Brand Name Section */}
+            {currentDraft && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+                <div>
+                  <h3 className="font-medium text-blue-800 mb-2">Current Brand: {currentDraft.name}</h3>
+                  {/* Show available domains for current brand name if any */}
+                  {Array.isArray(currentDraft.domains_available) && currentDraft.domains_available.some((domain: string) => domain.includes('.')) && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {currentDraft.domains_available.filter((domain: string) => domain.includes('.')).map((domain: string, i: number) => (
+                        <span
+                          key={i}
+                          className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono"
+                        >
+                          {domain}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-blue-700 text-sm">
+                    You can keep this name or choose a new one from the suggestions below.
+                  </p>
                 </div>
-              )}
-            </div>
+                <button
+                  onClick={() => handleSelectName(currentDraft.name)}
+                  className={`ml-4 px-4 py-2 rounded-lg font-medium transition-colors ${
+                    selectedName === currentDraft.name
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-white text-primary-600 border border-primary-600 hover:bg-primary-50'
+                  }`}
+                >
+                  {selectedName === currentDraft.name ? '✓ Keeping Current Name' : 'Keep Current Name'}
+                </button>
+              </div>
+            )}
 
             {/* Name Suggestions */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-medium text-neutral-800">Suggested Names</h3>
                 <button
-                  onClick={generateNameSuggestions}
+                  onClick={handleGenerateNewSuggestions}
                   disabled={isGenerating}
                   className="inline-flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >

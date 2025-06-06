@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { brands } from '../../lib/api';
 
 interface BrandAsset {
@@ -24,24 +24,58 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
   const [activeTab, setActiveTab] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Add refs to prevent duplicate calls
+  const isLoadingRef = useRef(false);
+  const hasLoadedRef = useRef(false);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchAssets = async () => {
+      // Prevent duplicate calls
+      if (isLoadingRef.current || hasLoadedRef.current) {
+        console.log('⏸️ Skipping duplicate assets fetch');
+        return;
+      }
+
+      isLoadingRef.current = true;
       setIsLoading(true);
       setError(null);
+      
       try {
+        console.log('🔄 Fetching brand assets for:', brandId);
         const response: BrandAssetsResponse = await brands.produceAssets(brandId);
-        setAssets(response.assets);
-        if (response.assets.length > 0) {
-          setActiveTab(response.assets[0].type);
+        
+        if (isMounted) {
+          setAssets(response.assets);
+          if (response.assets.length > 0) {
+            setActiveTab(response.assets[0].type);
+          }
+          hasLoadedRef.current = true;
         }
       } catch (e) {
-        setError('Failed to load brand assets.');
+        if (isMounted) {
+          console.error('❌ Failed to load brand assets:', e);
+          setError('Failed to load brand assets.');
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
+        isLoadingRef.current = false;
       }
     };
-    fetchAssets();
+
+    // Small delay to help prevent React StrictMode duplicates
+    const timeoutId = setTimeout(fetchAssets, 50);
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      isLoadingRef.current = false;
+    };
   }, [brandId]);
 
   const assetTypes = Array.from(new Set(assets.map(a => a.type)));
