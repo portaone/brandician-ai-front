@@ -57,7 +57,7 @@ const BrandNameContainer: React.FC = () => {
           : [];
         setSuggestions(altSuggestions);
       } catch (error) {
-        setError('Failed to load brand information');
+        setError('Failed to generate brand name suggestions');
       } finally {
         setIsLoading(false);
       }
@@ -129,6 +129,10 @@ const BrandNameContainer: React.FC = () => {
     }
   };
 
+  const handleGetDomains = () => {
+    window.open('https://www.godaddy.com', '_blank');
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
@@ -160,20 +164,26 @@ const BrandNameContainer: React.FC = () => {
                   <h3 className="font-medium text-blue-800 mb-2">Current Brand: {currentDraft.name}</h3>
                   {/* Show available domains for current brand name if any */}
                   {Array.isArray(currentDraft.domains_available) && currentDraft.domains_available.some((domain: string) => domain.includes('.')) && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {currentDraft.domains_available.filter((domain: string) => domain.includes('.')).map((domain: string, i: number) => (
-                        <span
-                          key={i}
-                          className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono"
-                        >
-                          {domain}
-                        </span>
-                      ))}
-                    </div>
+                    <>
+                      <div className="mb-1 font-medium text-blue-700">Domains available:</div>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {currentDraft.domains_available.filter((domain: string) => domain.includes('.')).map((domain: string, i: number) => (
+                          <span
+                            key={i}
+                            className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono"
+                          >
+                            {domain}
+                          </span>
+                        ))}
+                      </div>
+                      <button
+                        onClick={handleGetDomains}
+                        className="mb-2 px-3 py-1 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded text-xs font-medium transition-colors"
+                      >
+                        Get them now!
+                      </button>
+                    </>
                   )}
-                  <p className="text-blue-700 text-sm">
-                    You can keep this name or choose a new one from the suggestions below.
-                  </p>
                 </div>
                 <button
                   onClick={() => handleSelectName(currentDraft.name)}
@@ -228,16 +238,25 @@ const BrandNameContainer: React.FC = () => {
                     )}
                     {/* Show available domains as green badges if they contain a dot */}
                     {Array.isArray(suggestion.domains_available) && suggestion.domains_available.some(domain => domain.includes('.')) && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {suggestion.domains_available.filter(domain => domain.includes('.')).map((domain, i) => (
-                          <span
-                            key={i}
-                            className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono"
-                          >
-                            {domain}
-                          </span>
-                        ))}
-                      </div>
+                      <>
+                        <div className="mt-2 mb-1 font-medium text-green-700">Domains available:</div>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {suggestion.domains_available.filter(domain => domain.includes('.')).map((domain, i) => (
+                            <span
+                              key={i}
+                              className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono"
+                            >
+                              {domain}
+                            </span>
+                          ))}
+                        </div>
+                        <button
+                          onClick={e => { e.stopPropagation(); handleGetDomains(); }}
+                          className="mb-2 px-3 py-1 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded text-xs font-medium transition-colors"
+                        >
+                          Get them now!
+                        </button>
+                      </>
                     )}
                   </div>
                 ))}
