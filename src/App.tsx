@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'rea
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from './store/auth';
 import TopMenu from './components/common/TopMenu';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import LandingPage from './components/LandingPage';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
@@ -17,6 +18,9 @@ import CollectFeedbackContainer from './components/CollectFeedback/CollectFeedba
 import FeedbackReviewFlowContainer from './components/FeedbackReview/FeedbackReviewFlowContainer';
 import BrandNameContainer from './components/BrandName/BrandNameContainer';
 import BrandSummary from './components/BrandSummary/BrandSummary';
+import PaymentContainer from './components/Payment/PaymentContainer';
+import PaymentSuccess from './components/Payment/PaymentSuccess';
+import CompletedContainer from './components/Completed/CompletedContainer';
 import MarkdownPage from './components/MarkdownPage';
 import Footer from './components/common/Footer';
 import CookieConsent from './components/common/CookieConsent';
@@ -37,10 +41,11 @@ const App: React.FC = () => {
   }, [loadUser]);
 
   return (
-    <Router>
-      <TopMenu />
-      <AnimatePresence mode="wait">
-        <Routes>
+    <ErrorBoundary>
+      <Router>
+        <TopMenu />
+        <AnimatePresence mode="wait">
+          <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route 
             path="/login" 
@@ -139,6 +144,30 @@ const App: React.FC = () => {
             }
           />
           <Route
+            path="/brands/:brandId/payment"
+            element={
+              <AuthGuard>
+                <PaymentContainer />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/brands/:brandId/payment/success"
+            element={
+              <AuthGuard>
+                <PaymentSuccess />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/brands/:brandId/completed"
+            element={
+              <AuthGuard>
+                <CompletedContainer />
+              </AuthGuard>
+            }
+          />
+          <Route
             path="/terms"
             element={<MarkdownPage filePath="/terms-of-use.md" />}
           />
@@ -152,6 +181,7 @@ const App: React.FC = () => {
       <CookieConsent />
       <Footer />
     </Router>
+    </ErrorBoundary>
   );
 };
 

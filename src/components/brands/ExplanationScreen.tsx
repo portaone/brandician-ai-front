@@ -2,11 +2,12 @@ import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
+import { navigateAfterProgress } from '../../lib/navigation';
 
 const ExplanationScreen: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { updateBrandStatus, currentBrand, isLoading, selectBrand } = useBrandStore();
+  const { updateBrandStatus, progressBrandStatus, currentBrand, isLoading, selectBrand } = useBrandStore();
 
   useEffect(() => {
     if (brandId && (!currentBrand || currentBrand.id !== brandId)) {
@@ -18,10 +19,10 @@ const ExplanationScreen: React.FC = () => {
     if (!brandId) return;
     
     try {
-      await updateBrandStatus(brandId, 'questionnaire');
-      navigate(`/brands/${brandId}/questionnaire`);
+      const statusUpdate = await progressBrandStatus(brandId);
+      navigateAfterProgress(navigate, brandId, statusUpdate);
     } catch (error) {
-      console.error('Failed to update brand status:', error);
+      console.error('Failed to progress brand status:', error);
     }
   };
 

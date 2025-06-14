@@ -6,7 +6,21 @@ import { Feedback } from '../../types';
 import { brands } from '../../lib/api';
 
 // Global cache to prevent duplicate API calls across component instances
-const feedbackCache = new Map<string, { loading: boolean; data?: Feedback; error?: string }>();
+const feedbackCache = new Map<string, { loading: boolean; data?: Feedback; error?: string; timestamp: number }>();
+
+// Cache cleanup - remove entries older than 10 minutes
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const cleanupCache = () => {
+  const now = Date.now();
+  for (const [key, value] of feedbackCache.entries()) {
+    if (now - value.timestamp > CACHE_TTL) {
+      feedbackCache.delete(key);
+    }
+  }
+};
+
+// Cleanup cache every 5 minutes
+setInterval(cleanupCache, 5 * 60 * 1000);
 
 function fixChangeTags(text: string): string {
   // Replace <change id=1 t=mod> with <change id="1" t="mod">
@@ -20,7 +34,7 @@ function fixChangeTags(text: string): string {
 const FeedbackReviewContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { selectBrand, currentBrand } = useBrandStore();
+  const { selectBrand, currentBrand, progressBrandStatus } = useBrandStore();
   
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,15 +57,21 @@ const FeedbackReviewContainer: React.FC = () => {
       const cacheKey = `feedback-${brandId}`;
       const cached = feedbackCache.get(cacheKey);
       
-      if (cached?.loading) {
-        console.log('⏸️ Feedback analysis already in progress for this brand');
-        return;
-      }
-      
-      if (cached?.data) {
-        console.log('📋 Using cached feedback data');
-        setFeedback(cached.data);
-        return;
+      // Check if cache entry is still valid
+      if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        if (cached.loading) {
+          console.log('⏸️ Feedback analysis already in progress for this brand');
+          return;
+        }
+        
+        if (cached.data) {
+          console.log('📋 Using cached feedback data');
+          setFeedback(cached.data);
+          return;
+        }
+      } else if (cached) {
+        // Remove expired cache entry
+        feedbackCache.delete(cacheKey);
       }
       
       // Check if we're already loading or have loaded locally
@@ -61,7 +81,7 @@ const FeedbackReviewContainer: React.FC = () => {
       }
 
       // Mark as loading in cache
-      feedbackCache.set(cacheKey, { loading: true });
+      feedbackCache.set(cacheKey, { loading: true, timestamp: Date.now() });
       isLoadingRef.current = true;
       setIsLoading(true);
       setError(null);
@@ -83,7 +103,7 @@ const FeedbackReviewContainer: React.FC = () => {
             setFeedback(feedbackData);
             hasLoadedRef.current = true;
             // Cache the successful result
-            feedbackCache.set(cacheKey, { loading: false, data: feedbackData });
+            feedbackCache.set(cacheKey, { loading: false, data: feedbackData, timestamp: Date.now() });
           }
         }
       } catch (error: any) {
@@ -133,9 +153,9 @@ const FeedbackReviewContainer: React.FC = () => {
     if (!brandId) return;
     
     try {
-      // Update status to pick_name
-      await brands.updateStatus(brandId, 'pick_name');
-      // Navigate to brand name selection page
+      // Use proper progress endpoint instead of manual status setting
+      await progressBrandStatus(brandId);
+      // Navigate based on the new status returned by backend
       navigate(`/brands/${brandId}/pick-name`);
     } catch (error) {
       console.error('Failed to proceed to brand naming:', error);

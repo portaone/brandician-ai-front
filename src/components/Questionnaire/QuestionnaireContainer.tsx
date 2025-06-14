@@ -6,6 +6,7 @@ import QuestionnaireItem from './QuestionnaireItem';
 import QuestionnaireSummary from './QuestionnaireSummary';
 import { Brain, ArrowRight } from 'lucide-react';
 import { brands } from '../../lib/api';
+import { navigateAfterProgress } from '../../lib/navigation';
 
 const QuestionnaireContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -18,6 +19,7 @@ const QuestionnaireContainer: React.FC = () => {
     selectBrand,
     submitAnswer,
     updateBrandStatus,
+    progressBrandStatus,
     isLoading,
     error,
     loadQuestions,
@@ -41,11 +43,22 @@ const QuestionnaireContainer: React.FC = () => {
   useEffect(() => {
     console.log('🔄 Loading brand data for brandId:', brandId);
     if (brandId) {
-      selectBrand(brandId);
-      loadQuestions(brandId);
-      loadAnswers(brandId);
+      // Create a single async function to handle all loading
+      const loadAllData = async () => {
+        try {
+          await Promise.all([
+            selectBrand(brandId),
+            loadQuestions(brandId),
+            loadAnswers(brandId)
+          ]);
+        } catch (error) {
+          console.error('Failed to load brand data:', error);
+        }
+      };
+      
+      loadAllData();
     }
-  }, [brandId]); // Removed function dependencies to prevent duplicate calls
+  }, [brandId, selectBrand, loadQuestions, loadAnswers]); // Include proper dependencies
 
   useEffect(() => {
     console.log('🔍 Checking navigation logic:', {
@@ -154,20 +167,16 @@ const QuestionnaireContainer: React.FC = () => {
     if (!currentBrand.current_status || !brandId) return;
     
     try {
-      console.log('🔄 Starting brand summary generation...');
+      console.log('🔄 Starting brand progress...');
       console.log('Current brand status:', currentBrand.current_status);
       
-      // First update the status on the server
-      const updatedBrand = await brands.updateStatus(brandId, 'summary');
-      console.log('✅ Server status updated:', updatedBrand);
+      // Use proper progress endpoint instead of manual status setting
+      const statusUpdate = await progressBrandStatus(brandId);
+      console.log('✅ Brand status progressed');
       
-      // Then update local state
-      await updateBrandStatus(brandId, 'summary');
-      console.log('✅ Local state updated');
-      
-      // Finally navigate
-      console.log('🚀 Navigating to summary page...');
-      navigate(`/brands/${brandId}/summary`);
+      // Navigate based on backend response
+      console.log('🚀 Navigating to next step...');
+      navigateAfterProgress(navigate, brandId, statusUpdate);
     } catch (error) {
       console.error('❌ Failed to complete questionnaire:', error);
       throw error;

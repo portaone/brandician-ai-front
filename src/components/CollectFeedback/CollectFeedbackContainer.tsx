@@ -4,11 +4,12 @@ import { Copy, Loader, RefreshCw } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { SurveyStatus } from '../../types';
 import { brands } from '../../lib/api';
+import { navigateAfterProgress } from '../../lib/navigation';
 
 const CollectFeedbackContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { updateBrandStatus } = useBrandStore();
+  const { updateBrandStatus, progressBrandStatus } = useBrandStore();
   
   const [surveyStatus, setSurveyStatus] = useState<SurveyStatus | null>(null);
   const [surveyUrl, setSurveyUrl] = useState<string>('');
@@ -58,12 +59,12 @@ const CollectFeedbackContainer: React.FC = () => {
     if (!brandId) return;
     
     try {
-      // Update status using the API PUT method
-      await brands.updateStatus(brandId, 'feedback_review');
-      // Navigate to feedback review
-      navigate(`/brands/${brandId}/feedback-review`);
+      // Use proper progress endpoint instead of manual status setting
+      const statusUpdate = await progressBrandStatus(brandId);
+      // Navigate based on backend response
+      navigateAfterProgress(navigate, brandId, statusUpdate);
     } catch (error) {
-      console.error('Failed to update brand status:', error);
+      console.error('Failed to progress brand status:', error);
     }
   };
 

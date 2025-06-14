@@ -1,5 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowRight, CreditCard } from 'lucide-react';
 import { brands } from '../../lib/api';
+import { useBrandStore } from '../../store/brand';
+import { navigateAfterProgress } from '../../lib/navigation';
 
 interface BrandAsset {
   type: string;
@@ -20,10 +24,13 @@ interface BrandAssetsProps {
 }
 
 const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
+  const navigate = useNavigate();
+  const { progressBrandStatus } = useBrandStore();
   const [assets, setAssets] = useState<BrandAsset[]>([]);
   const [activeTab, setActiveTab] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isProgressing, setIsProgressing] = useState(false);
   
   // Add refs to prevent duplicate calls
   const isLoadingRef = useRef(false);
@@ -78,7 +85,24 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
     };
   }, [brandId]);
 
-  const assetTypes = Array.from(new Set(assets.map(a => a.type)));
+  const assetTypes = useMemo(() => 
+    Array.from(new Set(assets.map(a => a.type))), 
+    [assets]
+  );
+
+  const handleProceedToPayment = async () => {
+    if (!brandId || isProgressing) return;
+    
+    setIsProgressing(true);
+    try {
+      const statusUpdate = await progressBrandStatus(brandId);
+      navigateAfterProgress(navigate, brandId, statusUpdate);
+    } catch (error) {
+      console.error('Failed to progress to payment:', error);
+    } finally {
+      setIsProgressing(false);
+    }
+  };
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Generating Brand Assets...</div>;
@@ -106,13 +130,44 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
               </button>
             ))}
           </div>
-          <div>
+          <div className="mb-8">
             {assets.filter(a => a.type === activeTab).map((asset, idx) => (
               <div key={idx} className="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
                 <h2 className="text-xl font-semibold mb-2">{asset.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h2>
                 <pre className="whitespace-pre-wrap text-gray-800 text-sm">{asset.description || asset.content || 'No description.'}</pre>
               </div>
             ))}
+          </div>
+
+          {/* Proceed to Payment Section */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="text-center">
+              <h3 className="text-xl font-semibold text-neutral-800 mb-3">
+                Love what you see? 
+              </h3>
+              <p className="text-neutral-600 mb-6">
+                These brand assets are ready to help your business succeed. 
+                Let's complete your brand journey and get these assets ready for download.
+              </p>
+              <button
+                onClick={handleProceedToPayment}
+                disabled={isProgressing}
+                className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isProgressing ? (
+                  <>
+                    <div className="animate-spin h-5 w-5 mr-2 border-2 border-white border-t-transparent rounded-full"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="h-5 w-5 mr-2" />
+                    Continue to Final Step
+                    <ArrowRight className="h-5 w-5 ml-2" />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

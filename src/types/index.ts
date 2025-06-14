@@ -8,7 +8,7 @@ export interface User {
   updated_at?: string;
 }
 
-export interface Brand {
+export interface BrandReduced {
   id: string;
   user_id: string;
   name: string;
@@ -16,11 +16,18 @@ export interface Brand {
   current_status?: string;
   created_at?: string;
   updated_at?: string;
+  survey_id?: string;
+  brand_name?: string;
+  payment_complete?: boolean;
+}
+
+export interface Brand extends BrandReduced {
   answers?: Record<string, Answer>;
   jtbd?: JTBDList;
   survey?: Survey;
   summary?: string;
   status_description?: string;
+  archetype?: string;
   draft?: BrandNameSuggestion;
   alt_options?: BrandNameSuggestion[];
 }

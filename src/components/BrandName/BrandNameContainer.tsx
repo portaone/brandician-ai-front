@@ -4,6 +4,7 @@ import { Loader, ArrowRight, RefreshCw, Check, Plus, X } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { brands } from '../../lib/api';
 import BrandAssets from '../BrandAssets/BrandAssets';
+import { navigateAfterProgress } from '../../lib/navigation';
 
 interface BrandNameSuggestion {
   name: string;
@@ -22,7 +23,7 @@ interface BrandName {
 const BrandNameContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { selectBrand, currentBrand } = useBrandStore();
+  const { selectBrand, currentBrand, progressBrandStatus } = useBrandStore();
   
   const [suggestions, setSuggestions] = useState<BrandNameSuggestion[]>([]);
   const [selectedName, setSelectedName] = useState<string>('');
@@ -64,7 +65,7 @@ const BrandNameContainer: React.FC = () => {
     };
 
     loadBrandAndSuggestions();
-  }, [brandId, selectBrand]);
+  }, [brandId]);
 
   const handleSelectName = (name: string) => {
     setSelectedName(name);
@@ -84,14 +85,13 @@ const BrandNameContainer: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      // Use the new API endpoint to pick the brand name (no body)
-      await brands.pickName(brandId);
-      // Show BrandAssets component
-      setShowAssets(true);
-      // Optionally, navigate(`/brands/${brandId}/create-assets`);
+      // Use proper progress endpoint instead of calling pickName again
+      const statusUpdate = await progressBrandStatus(brandId);
+      // Navigate to the next step as determined by the backend
+      navigateAfterProgress(navigate, brandId, statusUpdate);
     } catch (error) {
       console.error('Failed to proceed to asset creation:', error);
-      setError('Failed to save brand name and proceed');
+      setError('Failed to progress to asset creation');
     } finally {
       setIsSubmitting(false);
     }
@@ -129,8 +129,17 @@ const BrandNameContainer: React.FC = () => {
     }
   };
 
-  const handleGetDomains = () => {
-    window.open('https://www.godaddy.com', '_blank');
+  const handleGetDomains = async (domains: string[]) => {
+    if (!brandId || domains.length === 0) return;
+    
+    try {
+      const response = await brands.registerDomains(brandId, domains);
+      window.open(response.registration_url, '_blank');
+    } catch (error) {
+      console.error('Failed to get domain registration URL:', error);
+      // Fallback to GoDaddy
+      window.open('https://www.godaddy.com', '_blank');
+    }
   };
 
   if (isLoading) {
@@ -177,7 +186,7 @@ const BrandNameContainer: React.FC = () => {
                         ))}
                       </div>
                       <button
-                        onClick={handleGetDomains}
+                        onClick={() => handleGetDomains(currentDraft.domains_available.filter((domain: string) => domain.includes('.')))}
                         className="mb-2 px-3 py-1 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded text-xs font-medium transition-colors"
                       >
                         Get them now!
@@ -251,7 +260,10 @@ const BrandNameContainer: React.FC = () => {
                           ))}
                         </div>
                         <button
-                          onClick={e => { e.stopPropagation(); handleGetDomains(); }}
+                          onClick={e => { 
+                            e.stopPropagation(); 
+                            handleGetDomains(suggestion.domains_available?.filter(domain => domain.includes('.')) || []);
+                          }}
                           className="mb-2 px-3 py-1 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded text-xs font-medium transition-colors"
                         >
                           Get them now!

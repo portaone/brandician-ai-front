@@ -43,6 +43,34 @@ const logConnectionError = (error: any, url: string) => {
   console.groupEnd();
 };
 
+// Request deduplication system
+const pendingRequests = new Map<string, Promise<any>>();
+
+const createRequestKey = (method: string, url: string, data?: any) => {
+  const dataKey = data ? JSON.stringify(data) : '';
+  return `${method}:${url}:${dataKey}`;
+};
+
+const deduplicate = async <T>(
+  key: string, 
+  requestFn: () => Promise<T>
+): Promise<T> => {
+  if (pendingRequests.has(key)) {
+    if (DEBUG) console.log('🔄 Deduplicating request:', key);
+    return pendingRequests.get(key) as Promise<T>;
+  }
+  
+  const promise = requestFn();
+  pendingRequests.set(key, promise);
+  
+  try {
+    const result = await promise;
+    return result;
+  } finally {
+    pendingRequests.delete(key);
+  }
+};
+
 // Create axios instance with base URL
 const api = axios.create({
   baseURL: API_URL,
@@ -181,6 +209,15 @@ export const brands = {
     return response.data;
   },
 
+  // Proper progress endpoint - use this instead of updateStatus for workflow progression
+  progressStatus: async (brandId: string) => {
+    const key = createRequestKey('POST', apiPath(`/brands/${brandId}/progress/`));
+    return deduplicate(key, async () => {
+      const response = await api.post(apiPath(`/brands/${brandId}/progress/`));
+      return response.data;
+    });
+  },
+
   getQuestions: async (brandId: string) => {
     const response = await api.get(apiPath(`/brands/${brandId}/questions`));
     return response.data;
@@ -194,6 +231,10 @@ export const brands = {
   getAnswers: async (brandId: string) => {
     const response = await api.get(apiPath(`/brands/${brandId}/answers/`));
     return response.data;
+  },
+
+  updateAnswers: async (brandId: string, answers: Record<string, any>) => {
+    await api.put(apiPath(`/brands/${brandId}/answers/`), answers);
   },
 
   getAnswer: async (brandId: string, answerId: string) => {
@@ -211,21 +252,33 @@ export const brands = {
   },
 
   getJTBD: async (brandId: string) => {
-    const response = await api.post(apiPath(`/brands/${brandId}/jtbd/`));
-    return response.data;
+    try {
+      // Try to get existing JTBD first
+      const response = await api.get(apiPath(`/brands/${brandId}/jtbd/`));
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        // If no JTBD exists, suggest new one
+        const key = createRequestKey('POST', apiPath(`/brands/${brandId}/jtbd/`));
+        return deduplicate(key, async () => {
+          const response = await api.post(apiPath(`/brands/${brandId}/jtbd/`));
+          return response.data;
+        });
+      }
+      throw error;
+    }
   },
 
   updateJTBD: async (brandId: string, jtbd: JTBDList) => {
-    const response = await api.patch(apiPath(`/brands/${brandId}`), {
-      jtbd,
-      current_status: BRAND_STATUS_CREATE_SURVEY
-    });
-    return response.data;
+    await api.put(apiPath(`/brands/${brandId}/jtbd/`), jtbd);
   },
 
   getSurveyDraft: async (brandId: string) => {
-    const response = await api.post(apiPath(`/brands/${brandId}/survey/`));
-    return response.data;
+    const key = createRequestKey('POST', apiPath(`/brands/${brandId}/survey/`));
+    return deduplicate(key, async () => {
+      const response = await api.post(apiPath(`/brands/${brandId}/survey/`));
+      return response.data;
+    });
   },
 
   getSurvey: async (brandId: string) => {
@@ -282,13 +335,21 @@ export const brands = {
   },
 
   getSummary: async (brandId: string) => {
-    const response = await api.get(apiPath(`/brands/${brandId}/summary/`));
-    return response.data;
+    try {
+      const response = await api.get(apiPath(`/brands/${brandId}/summary/`));
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        // If no summary exists, generate new one
+        const response = await api.post(apiPath(`/brands/${brandId}/summary/`));
+        return response.data;
+      }
+      throw error;
+    }
   },
 
   updateSummary: async (brandId: string, summary: string) => {
-    const response = await api.put(apiPath(`/brands/${brandId}/summary`), { summary });
-    return response.data;
+    await api.put(apiPath(`/brands/${brandId}/summary/`), { summary });
   },
 
   getSurveyStatus: async (brandId: string) => {
@@ -297,13 +358,19 @@ export const brands = {
   },
 
   analyzeFeedback: async (brandId: string) => {
-    const response = await api.post(apiPath(`/brands/${brandId}/feedback`));
-    return response.data;
+    const key = createRequestKey('POST', apiPath(`/brands/${brandId}/feedback`));
+    return deduplicate(key, async () => {
+      const response = await api.post(apiPath(`/brands/${brandId}/feedback`));
+      return response.data;
+    });
   },
 
   adjustSummary: async (brandId: string): Promise<AdjustObject> => {
-    const response = await api.post(apiPath(`/brands/${brandId}/adjust/summary`));
-    return response.data;
+    const key = createRequestKey('POST', apiPath(`/brands/${brandId}/adjust/summary`));
+    return deduplicate(key, async () => {
+      const response = await api.post(apiPath(`/brands/${brandId}/adjust/summary`));
+      return response.data;
+    });
   },
 
   suggestSurvey: async (brandId: string) => {
@@ -316,13 +383,27 @@ export const brands = {
     return response.data;
   },
 
+  getArchetype: async (brandId: string) => {
+    try {
+      const response = await api.get(apiPath(`/brands/${brandId}/archetype/`));
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        // If no archetype exists, suggest new one
+        const response = await api.post(apiPath(`/brands/${brandId}/archetype/`));
+        return response.data;
+      }
+      throw error;
+    }
+  },
+
   suggestArchetype: async (brandId: string) => {
-    const response = await api.post(apiPath(`/brands/${brandId}/archetype`));
+    const response = await api.post(apiPath(`/brands/${brandId}/archetype/`));
     return response.data;
   },
 
   updateArchetype: async (brandId: string, archetype: string) => {
-    await api.put(apiPath(`/brands/${brandId}/archetype`), { archetype });
+    await api.put(apiPath(`/brands/${brandId}/archetype/`), { archetype });
   },
 
   adjustArchetype: async (brandId: string) => {
@@ -331,24 +412,65 @@ export const brands = {
   },
 
   suggestArchetypeAdjustment: async (brandId: string) => {
-    const response = await api.post(apiPath(`/brands/${brandId}/adjust/archetype`));
-    return response.data;
+    const key = createRequestKey('POST', apiPath(`/brands/${brandId}/adjust/archetype`));
+    return deduplicate(key, async () => {
+      const response = await api.post(apiPath(`/brands/${brandId}/adjust/archetype`));
+      return response.data;
+    });
   },
 
   produceAssets: async (brandId: string) => {
-    const response = await api.post(apiPath(`/brands/${brandId}/produce-assets/`));
-    return response.data;
+    const key = createRequestKey('POST', apiPath(`/brands/${brandId}/produce-assets/`));
+    return deduplicate(key, async () => {
+      const response = await api.post(apiPath(`/brands/${brandId}/produce-assets/`));
+      return response.data;
+    });
   },
 
   pickName: async (brandId: string) => {
-    const response = await api.post(apiPath(`/brands/${brandId}/pick-name/`));
-    return response.data;
+    const key = createRequestKey('POST', apiPath(`/brands/${brandId}/pick-name/`));
+    return deduplicate(key, async () => {
+      const response = await api.post(apiPath(`/brands/${brandId}/pick-name/`));
+      return response.data;
+    });
   },
 
   submitAnswer: async (brandId: string, answerId: string, answer: string, question: string) => {
     const response = await api.put(apiPath(`/brands/${brandId}/answers/${answerId}`), {
       question,
       answer,
+    });
+    return response.data;
+  },
+
+  createPaymentSession: async (brandId: string, amount: number, description?: string) => {
+    const response = await api.post(apiPath('/payments/checkout'), {
+      brand_id: brandId,
+      amount: Math.round(amount * 100), // Convert to cents
+      currency: 'USD',
+      description: description || `Brand creation payment for ${brandId}`
+    });
+    return response.data;
+  },
+
+  getPaymentStatus: async (brandId: string) => {
+    const response = await api.get(apiPath(`/brands/${brandId}/payment-status`));
+    return response.data;
+  },
+
+  listBrandPayments: async (brandId: string) => {
+    const response = await api.get(apiPath(`/brands/${brandId}/payments`));
+    return response.data;
+  },
+
+  getPaymentMethods: async () => {
+    const response = await api.get(apiPath('/payment-methods'));
+    return response.data;
+  },
+
+  registerDomains: async (brandId: string, domains: string[]) => {
+    const response = await api.post(apiPath(`/brands/${brandId}/register-domains/`), {
+      domains
     });
     return response.data;
   },

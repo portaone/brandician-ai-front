@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Edit2, Copy, ArrowRight, Loader, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Edit2, Copy, ArrowRight, Loader, RefreshCw, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { Survey, SurveyQuestion, SurveyStatus } from '../../types';
 import { brands } from '../../lib/api';
-import { BRAND_STATUS_COLLECT_FEEDBACK } from '../../lib/brandStatus';
 
 const SurveyContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { currentBrand, selectBrand, isLoading: isBrandLoading, error: brandError } = useBrandStore();
+  const { currentBrand, selectBrand, isLoading: isBrandLoading, error: brandError, progressBrandStatus } = useBrandStore();
   
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [surveyStatus, setSurveyStatus] = useState<SurveyStatus | null>(null);
@@ -22,6 +21,7 @@ const SurveyContainer: React.FC = () => {
   const [surveyUrl, setSurveyUrl] = useState<string>('');
   const [showSuccess, setShowSuccess] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string>('');
+  const [draggedQuestion, setDraggedQuestion] = useState<number | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -53,6 +53,15 @@ const SurveyContainer: React.FC = () => {
           
           // If no existing survey or no results, get draft for editing
           const draftSurvey = await brands.getSurveyDraft(brandId);
+          
+          // Ensure all questions have sequential numeric IDs
+          if (draftSurvey?.questions) {
+            draftSurvey.questions = draftSurvey.questions.map((question: SurveyQuestion, index: number) => ({
+              ...question,
+              id: question.id || String(index + 1)
+            }));
+          }
+          
           setSurvey(draftSurvey);
         }
       } catch (error: any) {
@@ -98,14 +107,17 @@ const SurveyContainer: React.FC = () => {
   }, [showSuccess, brandId]);
 
   const handleAddQuestion = () => {
+    // Get the next sequential ID
+    const maxId = Math.max(0, ...survey?.questions.map(q => parseInt(q.id || '0') || 0) || [0]);
     setEditingQuestion({
+      id: String(maxId + 1),
       type: 'text',
       text: '',
     });
   };
 
   const handleEditQuestion = (question: SurveyQuestion) => {
-    setEditingQuestion(question);
+    setEditingQuestion({ ...question, options: Array.isArray(question.options) ? [...question.options] : undefined });
   };
 
   const handleDeleteQuestion = (index: number) => {
@@ -120,22 +132,78 @@ const SurveyContainer: React.FC = () => {
     if (!survey) return;
     
     const newQuestions = [...survey.questions];
-    if (editingQuestion && 'id' in editingQuestion) {
-      // Edit existing question
-      const index = newQuestions.findIndex(q => q.id === editingQuestion.id);
-      if (index !== -1) {
-        newQuestions[index] = { ...question, id: editingQuestion.id };
-      }
+    
+    // Check if we're editing an existing question
+    const existingIndex = editingQuestion?.id 
+      ? newQuestions.findIndex(q => q.id === editingQuestion.id)
+      : -1;
+    
+    if (existingIndex !== -1 && editingQuestion?.id) {
+      // Update existing question
+      newQuestions[existingIndex] = { ...question, id: editingQuestion.id };
     } else {
-      // Add new question
+      // This shouldn't happen with our new flow, but handle it gracefully
+      const maxId = Math.max(0, ...newQuestions.map(q => parseInt(q.id || '0') || 0));
       newQuestions.push({
         ...question,
-        id: `new-${Date.now()}`, // Temporary ID for new questions
+        id: String(maxId + 1),
       });
     }
     
     setSurvey({ ...survey, questions: newQuestions });
     setEditingQuestion(null);
+  };
+
+  const handleMoveQuestion = (fromIndex: number, toIndex: number) => {
+    if (!survey || fromIndex === toIndex) return;
+    
+    const newQuestions = [...survey.questions];
+    const [movedQuestion] = newQuestions.splice(fromIndex, 1);
+    newQuestions.splice(toIndex, 0, movedQuestion);
+    
+    setSurvey({ ...survey, questions: newQuestions });
+  };
+
+  const handleMoveUp = (index: number) => {
+    if (index > 0) {
+      handleMoveQuestion(index, index - 1);
+    }
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (survey && index < survey.questions.length - 1) {
+      handleMoveQuestion(index, index + 1);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedQuestion(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', String(index));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedQuestion !== null && draggedQuestion !== dropIndex) {
+      handleMoveQuestion(draggedQuestion, dropIndex);
+    }
+    setDraggedQuestion(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedQuestion(null);
+  };
+
+  const hasEnoughResponses = () => {
+    if (!surveyStatus) return false;
+    const minRequired = surveyStatus.min_responses_required || 0;
+    const currentResponses = surveyStatus.number_of_responses || 0;
+    return currentResponses >= minRequired;
   };
 
   const handleSaveSurvey = async () => {
@@ -180,11 +248,11 @@ const SurveyContainer: React.FC = () => {
 
   const handleDone = async () => {
     if (brandId) {
-      // Update brand status to collect_feedback
+      // Use proper progress endpoint instead of manual status setting
       try {
-        await brands.updateStatus(brandId, BRAND_STATUS_COLLECT_FEEDBACK);
+        await progressBrandStatus(brandId);
       } catch (e) {
-        // Optionally handle error
+        console.error('Failed to progress brand status:', e);
       }
       navigate(`/brands/${brandId}/collect-feedback`);
     }
@@ -211,6 +279,15 @@ const SurveyContainer: React.FC = () => {
           setErrorType(null);
           await selectBrand(brandId);
           const draftSurvey = await brands.getSurveyDraft(brandId);
+          
+          // Ensure all questions have sequential numeric IDs
+          if (draftSurvey?.questions) {
+            draftSurvey.questions = draftSurvey.questions.map((question: SurveyQuestion, index: number) => ({
+              ...question,
+              id: question.id || String(index + 1)
+            }));
+          }
+          
           setSurvey(draftSurvey);
         } catch (error: any) {
           console.error('Failed to load survey data:', error);
@@ -289,46 +366,86 @@ const SurveyContainer: React.FC = () => {
                   {survey?.questions.map((question, index) => (
                     <div 
                       key={question.id || index}
-                      className="border border-neutral-200 rounded-lg p-4"
+                      className={`border border-neutral-200 rounded-lg p-4 transition-all ${
+                        draggedQuestion === index ? 'opacity-50' : ''
+                      }`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, index)}
+                      onDragEnd={handleDragEnd}
                     >
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <div className="text-lg font-medium text-neutral-800 whitespace-pre-wrap">
-                            {question.text}
+                      <div className="flex items-start gap-3">
+                        {/* Drag handle and reorder controls */}
+                        <div className="flex flex-col items-center gap-1 pt-1">
+                          <GripVertical className="h-5 w-5 text-neutral-400 cursor-move" />
+                          <div className="flex flex-col gap-1">
+                            <button
+                              onClick={() => handleMoveUp(index)}
+                              disabled={index === 0}
+                              className="text-neutral-400 hover:text-primary-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move up"
+                            >
+                              <ChevronUp className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleMoveDown(index)}
+                              disabled={!survey || index === survey.questions.length - 1}
+                              className="text-neutral-400 hover:text-primary-600 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                              title="Move down"
+                            >
+                              <ChevronDown className="h-4 w-4" />
+                            </button>
                           </div>
-                          <p className="text-sm text-neutral-500 mt-1">
-                            Type: {question.type}
-                            {question.options && ` • ${question.options.length} options`}
-                          </p>
                         </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleEditQuestion(question)}
-                            className="text-neutral-400 hover:text-primary-600 transition-colors"
-                          >
-                            <Edit2 className="h-5 w-5" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteQuestion(index)}
-                            className="text-neutral-400 hover:text-red-500 transition-colors"
-                          >
-                            <Trash2 className="h-5 w-5" />
-                          </button>
+
+                        {/* Question content */}
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-sm font-medium text-neutral-500">
+                                  Question {index + 1}
+                                </span>
+                              </div>
+                              <div className="text-lg font-medium text-neutral-800 whitespace-pre-wrap">
+                                {question.text}
+                              </div>
+                              <p className="text-sm text-neutral-500 mt-1">
+                                Type: {question.type}
+                                {question.options && ` • ${question.options.length} options`}
+                              </p>
+                            </div>
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEditQuestion(question)}
+                                className="text-neutral-400 hover:text-primary-600 transition-colors"
+                              >
+                                <Edit2 className="h-5 w-5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteQuestion(index)}
+                                className="text-neutral-400 hover:text-red-500 transition-colors"
+                              >
+                                <Trash2 className="h-5 w-5" />
+                              </button>
+                            </div>
+                          </div>
+                          
+                          {question.options && (
+                            <div className="space-y-2">
+                              {question.options.map((option, optionIndex) => (
+                                <div 
+                                  key={optionIndex}
+                                  className="text-neutral-600 pl-4"
+                                >
+                                  • {option}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
-
-                      {question.options && (
-                        <div className="space-y-2">
-                          {question.options.map((option, optionIndex) => (
-                            <div 
-                              key={optionIndex}
-                              className="text-neutral-600 pl-4"
-                            >
-                              • {option}
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   ))}
 
@@ -369,14 +486,28 @@ const SurveyContainer: React.FC = () => {
                   </div>
                 </div>
               ) : surveyStatus ? (
-                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <h3 className="text-lg font-medium text-green-800 mb-2">Survey Status</h3>
+                <div className={`mb-6 p-4 rounded-lg border ${
+                  hasEnoughResponses() 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-yellow-50 border-yellow-200'
+                }`}>
+                  <h3 className={`text-lg font-medium mb-2 ${
+                    hasEnoughResponses() ? 'text-green-800' : 'text-yellow-800'
+                  }`}>
+                    Survey Status
+                  </h3>
                   <div className="space-y-2">
-                    <p className="text-green-700">
-                      <span className="font-semibold">{surveyStatus.number_of_responses}</span> people have completed your survey
+                    <p className={hasEnoughResponses() ? 'text-green-700' : 'text-yellow-700'}>
+                      <span className="font-semibold">{surveyStatus.number_of_responses || 0}</span> of{' '}
+                      <span className="font-semibold">{surveyStatus.min_responses_required || 0}</span> required responses completed
                     </p>
+                    {!hasEnoughResponses() && (
+                      <p className="text-yellow-600 text-sm">
+                        You need {(surveyStatus.min_responses_required || 0) - (surveyStatus.number_of_responses || 0)} more responses to proceed
+                      </p>
+                    )}
                     {surveyStatus.last_response_date && (
-                      <p className="text-green-600 text-sm">
+                      <p className={`text-sm ${hasEnoughResponses() ? 'text-green-600' : 'text-yellow-600'}`}>
                         Last response: {new Date(surveyStatus.last_response_date).toLocaleString()}
                       </p>
                     )}
@@ -418,10 +549,16 @@ const SurveyContainer: React.FC = () => {
 
               <div className="flex justify-end">
                 <button
-                  onClick={surveyStatus ? handleDone : handleCheckStatus}
-                  className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium"
+                  onClick={surveyStatus && hasEnoughResponses() ? handleDone : handleCheckStatus}
+                  disabled={surveyStatus && !hasEnoughResponses()}
+                  className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {surveyStatus ? 'Close the survey and analyze the results' : 'Check survey status'}
+                  {surveyStatus && hasEnoughResponses() 
+                    ? 'Close the survey and analyze the results' 
+                    : surveyStatus && !hasEnoughResponses()
+                    ? `Need at least ${surveyStatus.min_responses_required} responses to proceed`
+                    : 'Check survey status'
+                  }
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </button>
               </div>

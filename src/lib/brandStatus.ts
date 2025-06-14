@@ -11,7 +11,7 @@ export type BrandStatus =
   | 'pick_name'
   | 'create_assets'
   | 'payment'
-  | 'complete';
+  | 'completed';
 
 export const BRAND_STATUS_NEW = 'new_brand';
 export const BRAND_STATUS_QUESTIONNAIRE = 'questionnaire';
@@ -25,7 +25,7 @@ export const BRAND_STATUS_FEEDBACK_REVIEW_ARCHETYPE = 'feedback_review_archetype
 export const BRAND_STATUS_PICK_NAME = 'pick_name';
 export const BRAND_STATUS_CREATE_ASSETS = 'create_assets';
 export const BRAND_STATUS_PAYMENT = 'payment';
-export const BRAND_STATUS_COMPLETE = 'complete';
+export const BRAND_STATUS_COMPLETED = 'completed';
 
 export const BRAND_STATUS_CONFIG = {
   new_brand: {
@@ -78,12 +78,12 @@ export const BRAND_STATUS_CONFIG = {
     description: 'Create brand assets'
   },
   payment: {
-    next: 'complete',
+    next: 'completed',
     path: '/payment'
   },
-  complete: {
+  completed: {
     next: null,
-    path: '/complete'
+    path: '/completed'
   },
 } as const;
 
