@@ -50,6 +50,25 @@ const TopMenu: React.FC = () => {
             <span className="text-lg font-display font-bold text-neutral-800">Brandician.AI</span>
           </a>
           
+          {/* Navigation for landing page */}
+          {location.pathname === '/' && (
+            <nav className="hidden md:flex space-x-6">
+              <a href="#features" className="text-neutral-600 hover:text-primary-600 transition-colors">Features</a>
+              <a href="#how-it-works" className="text-neutral-600 hover:text-primary-600 transition-colors">How It Works</a>
+              <a href="#pricing" className="text-neutral-600 hover:text-primary-600 transition-colors">Pricing</a>
+            </nav>
+          )}
+          
+          {/* Right side content */}
+          {!user && (
+            <Link 
+              to="/register"
+              className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+            >
+              Get Started
+            </Link>
+          )}
+          
           {user && (
             <div className="relative" ref={dropdownRef}>
               <button

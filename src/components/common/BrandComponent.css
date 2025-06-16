@@ -1,0 +1,161 @@
+/* BrandComponent.css - Dynamic styling with CSS custom properties */
+
+.brand-component {
+  /* Component uses CSS custom properties that are set via React inline styles */
+  font-family: inherit;
+}
+
+.brand-card {
+  background-color: var(--brand-background);
+  border: 1px solid var(--brand-border);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+
+.brand-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.brand-header {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.brand-title {
+  color: var(--brand-text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.brand-content {
+  margin-bottom: 24px;
+}
+
+.brand-description {
+  color: var(--brand-text-secondary);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.brand-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.brand-button-primary {
+  background-color: var(--brand-primary);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.brand-button-primary:hover {
+  background-color: var(--brand-hover-primary);
+}
+
+.brand-button-secondary {
+  background-color: transparent;
+  color: var(--brand-secondary);
+  border: 2px solid var(--brand-secondary);
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.brand-button-secondary:hover {
+  background-color: var(--brand-hover-secondary);
+  color: white;
+  border-color: var(--brand-hover-secondary);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .brand-card {
+    padding: 16px;
+  }
+  
+  .brand-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .brand-button-primary,
+  .brand-button-secondary {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Additional utility classes for different variants */
+.brand-component.compact .brand-card {
+  padding: 16px;
+}
+
+.brand-component.compact .brand-title {
+  font-size: 1.25rem;
+}
+
+.brand-component.large .brand-card {
+  padding: 32px;
+}
+
+.brand-component.large .brand-title {
+  font-size: 2rem;
+}
+
+.brand-markdown h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+.brand-markdown h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+}
+.brand-markdown h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+.brand-markdown ul, .brand-markdown ol {
+  margin-left: 1.5em;
+  margin-bottom: 1em;
+}
+.brand-markdown li {
+  margin-bottom: 0.3em;
+}
+.brand-markdown p {
+  margin-bottom: 1em;
+  line-height: 1.7;
+}
+.brand-markdown code, .brand-markdown pre {
+  background: #f5f5f5;
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
+  font-size: 0.95em;
+}
+.brand-markdown span[style*="background"] {
+  display: inline-block;
+  min-width: 60px;
+  text-align: center;
+}

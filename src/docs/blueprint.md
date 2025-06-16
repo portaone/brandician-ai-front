@@ -273,7 +273,7 @@ The application uses Zustand for state management with two main stores:
 
 4. **Routing**
    - Add new routes in `App.tsx`
-   - Update `brandStatus.ts` if adding new brand stages
+   - Update `navigation.ts` if adding new brand stages
 
 ### Best Practices
 

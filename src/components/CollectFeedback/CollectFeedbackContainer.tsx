@@ -156,10 +156,10 @@ const CollectFeedbackContainer: React.FC = () => {
           
           <button
             onClick={handleProceed}
-            disabled={!surveyStatus || surveyStatus.number_of_responses < (surveyStatus.min_responses_required || 20)}
+            disabled={isLoading || !surveyStatus || surveyStatus.number_of_responses < (surveyStatus.min_responses_required || 20)}
             className="px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary-600"
           >
-            Close the survey and analyze the results
+            {isLoading ? 'Loading survey status...' : 'Close the survey and analyze the results'}
           </button>
         </div>
       </div>

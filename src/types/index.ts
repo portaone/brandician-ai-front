@@ -1,4 +1,4 @@
-import { BrandStatus } from '../lib/brandStatus';
+import { BrandStatus } from '../lib/navigation';
 
 export interface User {
   id: string;
@@ -18,7 +18,8 @@ export interface BrandReduced {
   updated_at?: string;
   survey_id?: string;
   brand_name?: string;
-  payment_complete?: boolean;
+  payment_complete?: number;
+  status_description?: string;
 }
 
 export interface Brand extends BrandReduced {
@@ -43,6 +44,28 @@ export interface Answer {
   question: string;
   answer: string;
 }
+
+export interface BrandAssetSummary {
+  id: string;
+  type: BrandAssetType;
+}
+
+export interface BrandAssetsListResponse {
+  assets: BrandAssetSummary[];
+}
+
+export interface BrandAsset {
+  type: BrandAssetType;
+  display_as?: BrandAssetDisplayType;
+  description?: string | null;
+  url?: string | null;
+  content?: string | null;
+  created_at?: string | null;
+}
+
+export type BrandAssetDisplayType = 'text' | 'markdown' | 'html' | 'image';
+
+export type BrandAssetType = 'logo' | 'tagline' | 'visual_style' | 'text_writer_prompt' | 'brand_book' | 'ext_system_asset';
 
 export interface JTBD {
   id: string;
@@ -121,7 +144,7 @@ export interface FootNote {
 export interface AdjustObject {
   old_text: string;
   new_text: string;
-  survey: SurveyStatus;
+  survey?: SurveyStatus;
   footnotes?: FootNote[];
   changes?: { type: string; content: string; id?: string; t?: string }[];
 }

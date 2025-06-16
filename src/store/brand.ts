@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { brands } from '../lib/api';
 import { Brand, Question, Answer, JTBDList } from '../types';
-import { BrandStatus } from '../lib/brandStatus';
+import { BrandStatus } from '../lib/navigation';
 
 interface BrandState {
   brands: Brand[];

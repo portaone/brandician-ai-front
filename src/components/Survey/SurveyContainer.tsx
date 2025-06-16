@@ -550,7 +550,7 @@ const SurveyContainer: React.FC = () => {
               <div className="flex justify-end">
                 <button
                   onClick={surveyStatus && hasEnoughResponses() ? handleDone : handleCheckStatus}
-                  disabled={surveyStatus && !hasEnoughResponses()}
+                  disabled={surveyStatus ? !hasEnoughResponses() : false}
                   className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {surveyStatus && hasEnoughResponses() 

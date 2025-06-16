@@ -18,8 +18,12 @@ import CollectFeedbackContainer from './components/CollectFeedback/CollectFeedba
 import FeedbackReviewFlowContainer from './components/FeedbackReview/FeedbackReviewFlowContainer';
 import BrandNameContainer from './components/BrandName/BrandNameContainer';
 import BrandSummary from './components/BrandSummary/BrandSummary';
+import TestimonialContainer from './components/Testimonial/TestimonialContainer';
 import PaymentContainer from './components/Payment/PaymentContainer';
 import PaymentSuccess from './components/Payment/PaymentSuccess';
+import PaymentCancel from './components/Payment/PaymentCancel';
+import PaymentCancelHandler from './components/Payment/PaymentCancelHandler';
+import PaymentSuccessHandler from './components/Payment/PaymentSuccessHandler';
 import CompletedContainer from './components/Completed/CompletedContainer';
 import MarkdownPage from './components/MarkdownPage';
 import Footer from './components/common/Footer';
@@ -120,6 +124,31 @@ const App: React.FC = () => {
             }
           />
           <Route
+            path="/brands/:brandId/feedback-review/summary"
+            element={
+              <AuthGuard>
+                <FeedbackReviewFlowContainer />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/brands/:brandId/feedback-review/jtbd"
+            element={
+              <AuthGuard>
+                <FeedbackReviewFlowContainer />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/brands/:brandId/feedback-review/archetype"
+            element={
+              <AuthGuard>
+                <FeedbackReviewFlowContainer />
+              </AuthGuard>
+            }
+          />
+          {/* Fallback route for old feedback-review path - redirects to specific step */}
+          <Route
             path="/brands/:brandId/feedback-review"
             element={
               <AuthGuard>
@@ -144,6 +173,14 @@ const App: React.FC = () => {
             }
           />
           <Route
+            path="/brands/:brandId/testimonial"
+            element={
+              <AuthGuard>
+                <TestimonialContainer />
+              </AuthGuard>
+            }
+          />
+          <Route
             path="/brands/:brandId/payment"
             element={
               <AuthGuard>
@@ -156,6 +193,30 @@ const App: React.FC = () => {
             element={
               <AuthGuard>
                 <PaymentSuccess />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/brands/:brandId/payment/cancel"
+            element={
+              <AuthGuard>
+                <PaymentCancel />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/payment/paypal/cancel"
+            element={
+              <AuthGuard>
+                <PaymentCancelHandler />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/payment/paypal/success"
+            element={
+              <AuthGuard>
+                <PaymentSuccessHandler />
               </AuthGuard>
             }
           />

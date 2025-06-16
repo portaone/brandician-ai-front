@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { BrandStatus } from './brandStatus';
+import { BrandStatus } from './navigation';
 import { 
   JTBDList, 
   Survey, 
@@ -9,26 +9,44 @@ import {
   Feedback,
   AdjustObject 
 } from '../types';
-import { BRAND_STATUS_CREATE_SURVEY } from './brandStatus';
+import { BRAND_STATUS_CREATE_SURVEY } from './navigation';
+
+// Extend axios config to include our metadata
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    metadata?: {
+      requestId: string;
+    };
+  }
+}
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const API_PREFIX = '/api/v1.0';
 const DEBUG = import.meta.env.VITE_DEBUG === 'true';
 
-const logApiCall = (type: string, url: string, data?: any, response?: any) => {
-  if (!DEBUG) return;
+// Generate random request ID
+const generateRequestId = (): string => {
+  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
+const logApiCall = (type: string, url: string, requestId: string, data?: any, response?: any) => {
+  console.log(`🌐 [${requestId}] API ${type} ${url}`);
   
-  console.group(`🌐 API ${type}`);
-  console.log('URL:', url);
-  if (data) console.log('Request Data:', data);
-  if (response) console.log('Response:', response);
-  console.groupEnd();
+  if (DEBUG) {
+    console.group(`🌐 [${requestId}] API ${type}`);
+    console.log('URL:', url);
+    console.log('Request ID:', requestId);
+    if (data) console.log('Request Data:', data);
+    if (response) console.log('Response:', response);
+    console.groupEnd();
+  }
 };
 
 // Enhanced error logging for connection issues
-const logConnectionError = (error: any, url: string) => {
-  console.group('🔴 Connection Error Details');
+const logConnectionError = (error: any, url: string, requestId: string) => {
+  console.group(`🔴 [${requestId}] Connection Error Details`);
   console.log('Target URL:', `${API_URL}${url}`);
+  console.log('Request ID:', requestId);
   console.log('Error Code:', error.code);
   console.log('Error Message:', error.message);
   
@@ -56,7 +74,8 @@ const deduplicate = async <T>(
   requestFn: () => Promise<T>
 ): Promise<T> => {
   if (pendingRequests.has(key)) {
-    if (DEBUG) console.log('🔄 Deduplicating request:', key);
+    const requestId = generateRequestId();
+    console.log(`🔄 [${requestId}] Deduplicating request: ${key}`);
     return pendingRequests.get(key) as Promise<T>;
   }
   
@@ -82,16 +101,21 @@ const api = axios.create({
 // Helper function to build API paths
 const apiPath = (path: string) => `${API_PREFIX}${path}`;
 
-// Add request interceptor for auth token
+// Add request interceptor for auth token and request ID
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   
-  if (DEBUG) {
-    logApiCall(config.method?.toUpperCase() || 'REQUEST', config.url || '', config.data);
-  }
+  // Generate and add request ID
+  const requestId = generateRequestId();
+  config.headers['X-Request-ID'] = requestId;
+  
+  // Store request ID in config for later use in response/error logging
+  config.metadata = { requestId };
+  
+  logApiCall(config.method?.toUpperCase() || 'REQUEST', config.url || '', requestId, config.data);
   
   return config;
 });
@@ -99,20 +123,20 @@ api.interceptors.request.use((config) => {
 // Add response interceptor for token refresh
 api.interceptors.response.use(
   (response) => {
-    if (DEBUG) {
-      logApiCall('RESPONSE', response.config.url || '', undefined, response.data);
-    }
+    const requestId = response.config.metadata?.requestId || 'unknown';
+    logApiCall('RESPONSE', response.config.url || '', requestId, undefined, response.data);
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
+    const requestId = originalRequest?.metadata?.requestId || 'unknown';
     
     // Enhanced error logging with connection diagnostics
     if (DEBUG || error.code === 'ERR_CONNECTION_REFUSED' || !error.response) {
       if (!error.response) {
-        logConnectionError(error, originalRequest.url || '');
+        logConnectionError(error, originalRequest.url || '', requestId);
       } else {
-        console.error('🔴 API Error:', {
+        console.error(`🔴 [${requestId}] API Error:`, {
           url: originalRequest.url,
           status: error.response?.status,
           data: error.response?.data
@@ -176,8 +200,11 @@ export const auth = {
 
 export const brands = {
   list: async () => {
-    const response = await api.get(apiPath('/brands'));
-    return response.data;
+    const key = createRequestKey('GET', apiPath('/brands'));
+    return deduplicate(key, async () => {
+      const response = await api.get(apiPath('/brands'));
+      return response.data;
+    });
   },
   
   create: async (name: string, description?: string) => {
@@ -186,8 +213,11 @@ export const brands = {
   },
   
   get: async (brandId: string) => {
-    const response = await api.get(apiPath(`/brands/${brandId}`));
-    return response.data;
+    const key = createRequestKey('GET', apiPath(`/brands/${brandId}`));
+    return deduplicate(key, async () => {
+      const response = await api.get(apiPath(`/brands/${brandId}`));
+      return response.data;
+    });
   },
   
   update: async (brandId: string, updates: any) => {
@@ -271,6 +301,22 @@ export const brands = {
 
   updateJTBD: async (brandId: string, jtbd: JTBDList) => {
     await api.put(apiPath(`/brands/${brandId}/jtbd/`), jtbd);
+  },
+
+  adjustJTBDPersonas: async (brandId: string): Promise<AdjustObject[]> => {
+    const key = createRequestKey('POST', apiPath(`/brands/${brandId}/adjust/jtbd-personas`));
+    return deduplicate(key, async () => {
+      const response = await api.post(apiPath(`/brands/${brandId}/adjust/jtbd-personas`));
+      return response.data;
+    });
+  },
+
+  adjustJTBDDrivers: async (brandId: string): Promise<AdjustObject> => {
+    const key = createRequestKey('POST', apiPath(`/brands/${brandId}/adjust/jtbd-drivers`));
+    return deduplicate(key, async () => {
+      const response = await api.post(apiPath(`/brands/${brandId}/adjust/jtbd-drivers`));
+      return response.data;
+    });
   },
 
   getSurveyDraft: async (brandId: string) => {
@@ -358,9 +404,9 @@ export const brands = {
   },
 
   analyzeFeedback: async (brandId: string) => {
-    const key = createRequestKey('POST', apiPath(`/brands/${brandId}/feedback`));
+    const key = createRequestKey('POST', apiPath(`/brands/${brandId}/survey-feedback`));
     return deduplicate(key, async () => {
-      const response = await api.post(apiPath(`/brands/${brandId}/feedback`));
+      const response = await api.post(apiPath(`/brands/${brandId}/survey-feedback`));
       return response.data;
     });
   },
@@ -427,6 +473,22 @@ export const brands = {
     });
   },
 
+  listAssets: async (brandId: string) => {
+    const key = createRequestKey('GET', apiPath(`/brands/${brandId}/assets/`));
+    return deduplicate(key, async () => {
+      const response = await api.get(apiPath(`/brands/${brandId}/assets/`));
+      return response.data;
+    });
+  },
+
+  getAsset: async (brandId: string, assetId: string) => {
+    const key = createRequestKey('GET', apiPath(`/brands/${brandId}/assets/${assetId}`));
+    return deduplicate(key, async () => {
+      const response = await api.get(apiPath(`/brands/${brandId}/assets/${assetId}`));
+      return response.data;
+    });
+  },
+
   pickName: async (brandId: string) => {
     const key = createRequestKey('POST', apiPath(`/brands/${brandId}/pick-name/`));
     return deduplicate(key, async () => {
@@ -443,10 +505,17 @@ export const brands = {
     return response.data;
   },
 
-  createPaymentSession: async (brandId: string, amount: number, description?: string) => {
-    const response = await api.post(apiPath('/payments/checkout'), {
+  createPaymentSession: async (brandId: string, amount: number, description?: string, paymentMethod?: string) => {
+    const params = new URLSearchParams();
+    if (paymentMethod) {
+      params.append('payment_method', paymentMethod);
+    }
+    
+    const url = apiPath('/payments/checkout') + (params.toString() ? `?${params.toString()}` : '');
+    
+    const response = await api.post(url, {
       brand_id: brandId,
-      amount: Math.round(amount * 100), // Convert to cents
+      amount: Number(amount.toFixed(2)), // Round to 2 decimal places
       currency: 'USD',
       description: description || `Brand creation payment for ${brandId}`
     });
@@ -454,18 +523,27 @@ export const brands = {
   },
 
   getPaymentStatus: async (brandId: string) => {
-    const response = await api.get(apiPath(`/brands/${brandId}/payment-status`));
-    return response.data;
+    const key = createRequestKey('GET', apiPath(`/brands/${brandId}/payment-status`));
+    return deduplicate(key, async () => {
+      const response = await api.get(apiPath(`/brands/${brandId}/payment-status`));
+      return response.data;
+    });
   },
 
   listBrandPayments: async (brandId: string) => {
-    const response = await api.get(apiPath(`/brands/${brandId}/payments`));
-    return response.data;
+    const key = createRequestKey('GET', apiPath(`/brands/${brandId}/payments`));
+    return deduplicate(key, async () => {
+      const response = await api.get(apiPath(`/brands/${brandId}/payments`));
+      return response.data;
+    });
   },
 
   getPaymentMethods: async () => {
-    const response = await api.get(apiPath('/payment-methods'));
-    return response.data;
+    const key = createRequestKey('GET', apiPath('/payment-methods'));
+    return deduplicate(key, async () => {
+      const response = await api.get(apiPath('/payment-methods'));
+      return response.data;
+    });
   },
 
   registerDomains: async (brandId: string, domains: string[]) => {
@@ -473,6 +551,15 @@ export const brands = {
       domains
     });
     return response.data;
+  },
+
+  updateFeedback: async (brandId: string, feedback: {
+    rating?: number;
+    testimonial?: string;
+    suggestion?: string;
+    author?: string;
+  }) => {
+    await api.put(apiPath(`/brands/${brandId}/feedback/`), feedback);
   },
 };
 

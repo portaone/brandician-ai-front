@@ -39,7 +39,7 @@ const PaymentSuccess: React.FC = () => {
               // Still navigate to completed page if progress fails
               navigate(`/brands/${brandId}/completed`);
             }
-          }, 3000); // 3 second delay to show success message
+          }, 2000); // 2 second delay to show success message
           
         } else {
           setPaymentStatus('failed');

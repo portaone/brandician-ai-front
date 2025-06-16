@@ -225,10 +225,13 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
   const handleAccept = async () => {
     if (!brandId || !adjustment) return;
     try {
+      console.log('[DEBUG] SummaryAdjustment: Updating summary...');
       await brands.updateSummary(brandId, adjustment.new_text || '');
+      console.log('[DEBUG] SummaryAdjustment: Summary updated, calling onComplete...');
       const cacheKey = `adjustment-${brandId}`;
       adjustmentCache.delete(cacheKey);
       onComplete();
+      console.log('[DEBUG] SummaryAdjustment: onComplete called');
     } catch (error: any) {
       console.error('Failed to update summary:', error);
       let errorMessage = 'Failed to update summary. Please try again.';
@@ -270,7 +273,7 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
         <div className="flex flex-col items-center">
           <Loader className="animate-spin h-8 w-8 text-primary-600 mb-4" />
-          <p className="text-gray-600">Analyzing feedback for adjusting the brand summary...</p>
+          <p className="text-gray-600">Analyzing feedback of potential customers to adjust the brand summary...</p>
         </div>
       </div>
     );

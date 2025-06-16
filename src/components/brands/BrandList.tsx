@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, ArrowRight } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
-import { getStatusPath } from '../../lib/brandStatus';
+import { getRouteForStatus } from '../../lib/navigation';
 
 const BrandList: React.FC = () => {
   const { brands, loadBrands, isLoading, error } = useBrandStore();
@@ -10,13 +10,13 @@ const BrandList: React.FC = () => {
 
   useEffect(() => {
     loadBrands();
-  }, [loadBrands]);
+  }, []);
 
   const handleContinue = (brandId: string, status: string) => {
     console.group('🚀 Navigating to brand component');
     console.log('Brand ID:', brandId);
     console.log('Current status:', status);
-    const path = getStatusPath(status as any, brandId);
+    const path = getRouteForStatus(brandId, status as any);
     console.log('Navigating to path:', path);
     console.groupEnd();
     

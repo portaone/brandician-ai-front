@@ -13,23 +13,6 @@ const LandingPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100">
       <div className="container mx-auto px-4 py-6 md:py-12">
-        <header className="flex justify-between items-center mb-8 md:mb-16">
-          <div className="flex items-center">
-            <Brain className="text-primary-600 h-7 w-7 md:h-8 md:w-8 mr-2" />
-            <h1 className="text-xl md:text-2xl font-display font-bold text-neutral-800">Brandician.AI</h1>
-          </div>
-          <nav className="hidden md:flex space-x-6">
-            <a href="#features" className="text-neutral-600 hover:text-primary-600 transition-colors">Features</a>
-            <a href="#how-it-works" className="text-neutral-600 hover:text-primary-600 transition-colors">How It Works</a>
-            <a href="#pricing" className="text-neutral-600 hover:text-primary-600 transition-colors">Pricing</a>
-          </nav>
-          <Link 
-            to="/register"
-            className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            Get Started
-          </Link>
-        </header>
 
         <main>
           <motion.section 
