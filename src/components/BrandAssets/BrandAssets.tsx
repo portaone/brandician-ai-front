@@ -432,7 +432,6 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
                       )}
                       {loaded.asset && (
                         <div className="mb-4">
-                          <h3 className="font-medium text-neutral-700 mb-1">Content:</h3>
                           <AssetContent key={loaded.id} asset={loaded.asset} />
                         </div>
                       )}
