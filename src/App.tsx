@@ -52,6 +52,10 @@ const App: React.FC = () => {
           <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route 
+            path="/start" 
+            element={user ? <Navigate to="/brands" replace /> : <RegisterForm />} 
+          />
+          <Route 
             path="/login" 
             element={user ? <Navigate to="/brands" replace /> : <LoginForm />} 
           />

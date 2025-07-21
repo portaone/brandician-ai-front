@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Copy, Loader, RefreshCw } from 'lucide-react';
+import { Copy, Loader, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
-import { SurveyStatus } from '../../types';
+import { SurveyStatus, Brand, SurveyQuestion } from '../../types';
 import { brands } from '../../lib/api';
 import { navigateAfterProgress } from '../../lib/navigation';
+import { BrandAttributeDisplay, JTBDDisplay, SurveyQuestionsDisplay } from '../common/BrandAttributeDisplay';
 
 const CollectFeedbackContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -15,6 +16,32 @@ const CollectFeedbackContainer: React.FC = () => {
   const [surveyUrl, setSurveyUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string>('');
+  const [summary, setSummary] = useState<string | null>(null);
+  const [archetype, setArchetype] = useState<string | null>(null);
+  const [jtbd, setJtbd] = useState<any | null>(null);
+  const [surveyQuestions, setSurveyQuestions] = useState<SurveyQuestion[] | null>(null);
+  const [loadingStates, setLoadingStates] = useState<{
+    summary: boolean;
+    archetype: boolean;
+    jtbd: boolean;
+    questions: boolean;
+  }>({
+    summary: true,
+    archetype: true,
+    jtbd: true,
+    questions: true,
+  });
+  const [expandedSections, setExpandedSections] = useState<{
+    summary: boolean;
+    archetype: boolean;
+    jtbd: boolean;
+    questions: boolean;
+  }>({
+    summary: false,
+    archetype: false,
+    jtbd: false,
+    questions: false,
+  });
 
   const loadSurveyData = async () => {
     if (!brandId) return;
@@ -30,11 +57,80 @@ const CollectFeedbackContainer: React.FC = () => {
       if (survey?.results?.url) {
         setSurveyUrl(survey.results.url);
       }
+
+      // Load individual brand attributes using their own endpoints
+      console.log('🔍 Loading brand attributes for:', brandId);
+      
+      // Load summary
+      brands.getSummary(brandId)
+        .then(summaryData => {
+          setSummary(summaryData.summary || summaryData);
+          console.log('📝 Summary loaded');
+        })
+        .catch(error => {
+          console.error('Failed to load summary:', error);
+        })
+        .finally(() => {
+          setLoadingStates(prev => ({ ...prev, summary: false }));
+        });
+
+      // Load archetype
+      brands.getArchetype(brandId)
+        .then(archetypeData => {
+          setArchetype(archetypeData.archetype || archetypeData);
+          console.log('🎭 Archetype loaded');
+        })
+        .catch(error => {
+          console.error('Failed to load archetype:', error);
+        })
+        .finally(() => {
+          setLoadingStates(prev => ({ ...prev, archetype: false }));
+        });
+
+      // Load JTBD
+      brands.getJTBD(brandId)
+        .then(jtbdData => {
+          setJtbd(jtbdData);
+          console.log('🎯 JTBD loaded');
+        })
+        .catch(error => {
+          console.error('Failed to load JTBD:', error);
+        })
+        .finally(() => {
+          setLoadingStates(prev => ({ ...prev, jtbd: false }));
+        });
+
+      // Load survey questions
+      brands.getSurveyQuestions(brandId)
+        .then(questions => {
+          setSurveyQuestions(questions.questions || questions);
+          console.log('📋 Survey questions loaded');
+        })
+        .catch(error => {
+          console.error('Failed to load survey questions:', error);
+        })
+        .finally(() => {
+          setLoadingStates(prev => ({ ...prev, questions: false }));
+        });
     } catch (error) {
       console.error('Failed to load survey data:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const toggleSection = (section: 'summary' | 'archetype' | 'jtbd' | 'questions') => {
+    console.log('🔄 Toggling section:', section);
+    console.log('📋 Current expanded state:', expandedSections);
+    
+    setExpandedSections(prev => {
+      const newState = {
+        ...prev,
+        [section]: !prev[section]
+      };
+      console.log('✅ New expanded state:', newState);
+      return newState;
+    });
   };
 
   useEffect(() => {
@@ -97,6 +193,135 @@ const CollectFeedbackContainer: React.FC = () => {
             <p className="text-center text-gray-600">Unable to load survey status</p>
           </div>
         )}
+
+        {/* Survey Purpose Explanation */}
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-gray-700 mb-4">
+            We have launched a survey to validate how the:
+          </p>
+          
+          <div className="space-y-3">
+            {/* Executive Summary */}
+            <div className="border border-gray-200 rounded-lg bg-white">
+              <button
+                onClick={() => toggleSection('summary')}
+                className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+              >
+                <span className="font-medium text-primary-600 cursor-pointer hover:text-primary-700">
+                  Executive summary
+                </span>
+                {expandedSections.summary ? 
+                  <ChevronUp className="h-4 w-4 text-gray-500" /> : 
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                }
+              </button>
+              {expandedSections.summary && (
+                <div className="px-4 pb-4 border-t border-gray-100">
+                  <div className="pt-3">
+                    {loadingStates.summary ? (
+                      <div className="text-gray-500 italic text-sm">Loading...</div>
+                    ) : (
+                      <BrandAttributeDisplay 
+                        title="" 
+                        content={summary} 
+                        className=""
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Archetype */}
+            <div className="border border-gray-200 rounded-lg bg-white">
+              <button
+                onClick={() => toggleSection('archetype')}
+                className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+              >
+                <span className="font-medium text-primary-600 cursor-pointer hover:text-primary-700">
+                  Archetype
+                </span>
+                {expandedSections.archetype ? 
+                  <ChevronUp className="h-4 w-4 text-gray-500" /> : 
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                }
+              </button>
+              {expandedSections.archetype && (
+                <div className="px-4 pb-4 border-t border-gray-100">
+                  <div className="pt-3">
+                    {loadingStates.archetype ? (
+                      <div className="text-gray-500 italic text-sm">Loading...</div>
+                    ) : (
+                      <BrandAttributeDisplay 
+                        title="" 
+                        content={archetype} 
+                        className="font-semibold"
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Jobs-To-Be-Done */}
+            <div className="border border-gray-200 rounded-lg bg-white">
+              <button
+                onClick={() => toggleSection('jtbd')}
+                className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+              >
+                <span className="font-medium text-primary-600 cursor-pointer hover:text-primary-700">
+                  Jobs-To-Be-Done personas and drivers
+                </span>
+                {expandedSections.jtbd ? 
+                  <ChevronUp className="h-4 w-4 text-gray-500" /> : 
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                }
+              </button>
+              {expandedSections.jtbd && (
+                <div className="px-4 pb-4 text-sm text-gray-600 border-t border-gray-100">
+                  <div className="pt-3">
+                    {loadingStates.jtbd ? (
+                      <div className="text-gray-500 italic">Loading...</div>
+                    ) : (
+                      <JTBDDisplay jtbd={jtbd} />
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Survey Questions */}
+            <div className="border border-gray-200 rounded-lg bg-white">
+              <button
+                onClick={() => toggleSection('questions')}
+                className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+              >
+                <span className="font-medium text-primary-600 cursor-pointer hover:text-primary-700">
+                  Survey questions
+                </span>
+                {expandedSections.questions ? 
+                  <ChevronUp className="h-4 w-4 text-gray-500" /> : 
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                }
+              </button>
+              {expandedSections.questions && (
+                <div className="px-4 pb-4 text-sm text-gray-600 border-t border-gray-100">
+                  <div className="pt-3">
+                    {loadingStates.questions ? (
+                      <div className="text-gray-500 italic">Loading...</div>
+                    ) : (
+                      <SurveyQuestionsDisplay questions={surveyQuestions} />
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <p className="text-gray-700 mt-4">
+            match the expectations and needs of the people whom you consider to be your potential customers.
+          </p>
+        </div>
 
         {/* Survey URL */}
         {surveyUrl && (

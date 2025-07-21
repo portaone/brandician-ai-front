@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { CreditCard, Loader, AlertCircle } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
@@ -30,6 +30,22 @@ const PaymentContainer: React.FC = () => {
   // Form validation and error handling
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  // Social sharing state for zero-amount
+  const [sharedNetworks, setSharedNetworks] = useState<{[key: string]: boolean}>({
+    facebook: false,
+    linkedin: false,
+    twitter: false,
+    other: false,
+  });
+  const shareText =
+    'I have just created a branding for my new business idea using Brandician.AI and it was awesome! AI-powered tool analyzes your business idea, suggests the brand archetype, generates brand assets, etc. Visit https://brandician.ai/ to create a brand for your idea!';
+  const atLeastOneShared = Object.values(sharedNetworks).some(Boolean);
+  const isZeroAmount = paymentAmount !== '' && parseFloat(paymentAmount) === 0;
+  const canProceed = paymentAmount !== '' && (!isZeroAmount || atLeastOneShared);
+
+  // Ref for amount input
+  const amountInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (brandId && (!currentBrand || currentBrand.id !== brandId)) {
@@ -99,28 +115,37 @@ const PaymentContainer: React.FC = () => {
     loadPaymentMethods();
   }, []);
 
+  useEffect(() => {
+    if (amountInputRef.current) {
+      amountInputRef.current.focus();
+    }
+  }, []);
+
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
-    
-    if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
+    // Accept zero as valid
+    if (paymentAmount === '' || isNaN(Number(paymentAmount))) {
       newErrors.payment = 'Please enter a payment amount';
     }
-    
     if (!selectedPaymentMethod) {
       newErrors.paymentMethod = 'Please select a payment method';
     }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handlePaymentSubmit = async () => {
     if (!brandId || !validateForm()) return;
-    
     setIsProcessingPayment(true);
     setPaymentError(null);
-    
+
     try {
+      if (isZeroAmount) {
+        // Just progress status and move on
+        const statusUpdate = await progressBrandStatus(brandId);
+        navigateAfterProgress(navigate, brandId, statusUpdate);
+        return;
+      }
       // Create payment session with the backend including payment method
       const paymentSession = await brands.createPaymentSession(
         brandId, 
@@ -128,22 +153,19 @@ const PaymentContainer: React.FC = () => {
         `Brand creation payment for ${currentBrand?.name || 'brand'}`,
         selectedPaymentMethod
       );
-      
       // Open payment processor checkout in new window (standard PayPal behavior)
       console.log('Opening payment checkout in new window:', paymentSession.checkout_url);
-      
       const popup = window.open(
         paymentSession.checkout_url,
         'paypal_checkout',
         'width=600,height=700,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=no'
       );
-      
       if (!popup) {
         // Handle popup blocker
         setPaymentError('Popup blocked. Please allow popups for this site and try again.');
+        setIsProcessingPayment(false);
         return;
       }
-      
       // Monitor popup for closure to check payment status
       const pollTimer = setInterval(() => {
         if (popup.closed) {
@@ -155,7 +177,6 @@ const PaymentContainer: React.FC = () => {
           setIsProcessingPayment(false);
         }
       }, 1000);
-      
     } catch (error) {
       console.error('Payment submission failed:', error);
       setErrors({ payment: 'Failed to process payment. Please try again.' });
@@ -166,6 +187,13 @@ const PaymentContainer: React.FC = () => {
   const handlePaymentAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPaymentAmount(e.target.value);
     setErrors({ ...errors, payment: '' });
+  };
+
+  const handleCheckboxChange = (network: string) => {
+    setSharedNetworks(prev => ({ ...prev, [network]: !prev[network] }));
+  };
+  const handleCopyShareText = () => {
+    navigator.clipboard.writeText(shareText);
   };
 
   if (isLoading || !currentBrand) {
@@ -267,7 +295,7 @@ const PaymentContainer: React.FC = () => {
                   Choose Your Contribution
                 </h2>
                 <p className="text-neutral-600 mb-4">
-                  We ask for a contribution of <strong>any amount</strong> based on the value we've added to your brand's future success. 
+                  We ask for a contribution of <strong>any amount</strong> (yes, it can even be zero!) based on the value we've added to your brand's future success. 
                   Your support helps us cover AI costs and continue developing new features for entrepreneurs like you.
                 </p>
                 
@@ -288,6 +316,7 @@ const PaymentContainer: React.FC = () => {
                         errors.payment ? 'border-red-300' : 'border-gray-300'
                       }`}
                       placeholder="Enter amount"
+                      ref={amountInputRef}
                     />
                   </div>
                   {errors.payment && (
@@ -308,39 +337,72 @@ const PaymentContainer: React.FC = () => {
                   ))}
                 </div>
 
-                {/* What you get */}
-                <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                  <h3 className="font-semibold text-neutral-800 mb-3">What you get:</h3>
-                  <ul className="space-y-2 text-sm text-neutral-600">
-                    <li className="flex items-start">
-                      <span className="text-primary-600 mr-2">✓</span>
-                      Full access to all your brand assets
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-primary-600 mr-2">✓</span>
-                      High-resolution logo files and variations
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-primary-600 mr-2">✓</span>
-                      Complete brand guidelines document
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-primary-600 mr-2">✓</span>
-                      Marketing materials and templates
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-primary-600 mr-2">✓</span>
-                      Lifetime access to your brand portal
-                    </li>
-                  </ul>
-                </div>
+                {/* Zero-amount sharing flow */}
+                {isZeroAmount && (
+                  <div className="mb-6 p-6 bg-blue-50 border-2 border-blue-300 rounded-lg text-center">
+                    <div className="text-xl font-bold text-blue-900 mb-4">
+                      <p>It is ok to pay nothing - sometimes the cash situation is tight.
+                      But can you then please do a thing, that will not cost you anything -
+                      but will help Brandician and our customers?
+                      </p>
+                      <p>Please share the text below (or your own wording) on as many as possible
+                        of your favorite social networks.</p>
+                    </div>
+                    <div className="mb-4 mt-4">
+                      <div className="font-semibold text-lg mb-2">Yes, I shared it on:</div>
+                      <div className="flex flex-wrap justify-center gap-6">
+                        <label className="flex items-center gap-2 text-lg">
+                          <input type="checkbox" checked={sharedNetworks.facebook} onChange={() => handleCheckboxChange('facebook')} />
+                          Facebook
+                        </label>
+                        <label className="flex items-center gap-2 text-lg">
+                          <input type="checkbox" checked={sharedNetworks.linkedin} onChange={() => handleCheckboxChange('linkedin')} />
+                          LinkedIn
+                        </label>
+                        <label className="flex items-center gap-2 text-lg">
+                          <input type="checkbox" checked={sharedNetworks.twitter} onChange={() => handleCheckboxChange('twitter')} />
+                          Twitter(X)
+                        </label>
+                        <label className="flex items-center gap-2 text-lg">
+                          <input type="checkbox" checked={sharedNetworks.other} onChange={() => handleCheckboxChange('other')} />
+                          Other
+                        </label>
+                      </div>
+                    </div>
+                    <div className="bg-white border border-gray-200 rounded p-4 mb-2 text-left max-w-2xl mx-auto">
+                      <div className="mb-2 text-gray-700">Share this text:</div>
+                      <div className="font-mono text-base text-gray-900 mb-2 whitespace-pre-line">{shareText}</div>
+                      <button
+                        onClick={handleCopyShareText}
+                        className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium text-sm"
+                      >
+                        Copy to Clipboard
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Always show share text section below suggested amounts, outside zero-amount block */}
+                {!isZeroAmount && (
+                  <div className="bg-white border border-gray-200 rounded p-4 mb-6 text-left max-w-2xl mx-auto">
+                    <div className="mb-2 text-gray-700 font-semibold">Share this text on social networks:</div>
+                    <div className="font-mono text-base text-gray-900 mb-2 whitespace-pre-line">{shareText}</div>
+                    <button
+                      onClick={handleCopyShareText}
+                      className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium text-sm"
+                    >
+                      Copy to Clipboard
+                    </button>
+                  </div>
+                )}
+
               </div>
 
               {/* Submit Button */}
               <div className="border-t pt-6">
                 <button
                   onClick={handlePaymentSubmit}
-                  disabled={isProcessingPayment}
+                  disabled={isProcessingPayment || !canProceed}
                   className="w-full inline-flex items-center justify-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isProcessingPayment ? (

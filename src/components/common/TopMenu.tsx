@@ -46,8 +46,8 @@ const TopMenu: React.FC = () => {
             onClick={handleLogoClick}
             className="flex items-center text-primary-600 hover:text-primary-700"
           >
-            <Brain className="h-6 w-6 mr-2" />
-            <span className="text-lg font-display font-bold text-neutral-800">Brandician.AI</span>
+            <img src="/images/brandician-logo.png" alt="Brandician.AI Logo" className="h-8 w-auto mr-2" />
+            
           </a>
           
           {/* Navigation for landing page */}

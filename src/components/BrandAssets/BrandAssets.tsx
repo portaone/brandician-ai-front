@@ -234,6 +234,116 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
     [assetSummaries]
   );
 
+  // PaletteSample component for 'palette' asset type
+  const PaletteSample: React.FC<{ content: string }> = ({ content }) => {
+    let colors: { [key: string]: string } = {};
+    try {
+      colors = JSON.parse(content);
+    } catch (e) {
+      return <div className="text-red-500">Invalid palette data</div>;
+    }
+    const main = colors['main-color'] || '#2c3e50';
+    const supporting = colors['supporting-color'] || '#e5d7cd';
+    const accent = colors['accent-color'] || '#f76c6c';
+    const bodyText = colors['body-text-color'] || '#444';
+
+    // Helper for copying to clipboard
+    const handleCopy = (value: string) => {
+      navigator.clipboard.writeText(value);
+    };
+
+    return (
+      <>
+        <div style={{
+          display: 'flex',
+          background: '#faf9f6',
+          borderRadius: 12,
+          overflow: 'hidden',
+          border: '1px solid #e5e7eb',
+          minHeight: 340,
+          marginBottom: 24,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+        }}>
+          {/* Left side */}
+          <div style={{ flex: 1, padding: '2.5rem 2rem', background: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ fontSize: 32, fontWeight: 600, color: '#333', marginBottom: 16 }}>Branding Color Scheme</div>
+            <div style={{ fontSize: 20, fontWeight: 500, color: main, marginBottom: 8 }}>This is the Main Color</div>
+            <div style={{ color: bodyText, marginBottom: 16 }}>This is the Body Text color, used for presenting large chunks of text to readers.</div>
+            <div style={{ display: 'inline-block', background: accent, color: '#fff', fontWeight: 600, padding: '0.5em 1.2em', borderRadius: 4, fontSize: 15 }}>ACCENT COLOR</div>
+          </div>
+          {/* Right side */}
+          <div style={{ flex: 1.2, background: supporting, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            <div style={{
+              width: 180,
+              height: 180,
+              borderRadius: '50%',
+              background: main,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              fontWeight: 600,
+              fontSize: 22,
+              marginBottom: 24,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              textAlign: 'center',
+              lineHeight: 1.2
+            }}>
+              The circle has the main color
+            </div>
+            <div style={{
+              color: '#fff',
+              fontWeight: 500,
+              fontSize: 17,
+              textAlign: 'center',
+              marginTop: 8,
+              textShadow: '0 1px 4px rgba(0,0,0,0.18)'
+            }}>
+              The large rectangle has the supporting color
+            </div>
+          </div>
+        </div>
+        {/* Color list with copy buttons */}
+        <div style={{ marginTop: 24, paddingLeft: 8, paddingRight: 8 }}>
+          <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 8 }}>Palette Colors</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5em' }}>
+            {Object.entries(colors).map(([key, value]) => (
+              <div key={key} style={{ display: 'flex', alignItems: 'center', marginBottom: 8, minWidth: 220 }}>
+                <span style={{
+                  display: 'inline-block',
+                  width: 28,
+                  height: 28,
+                  borderRadius: 6,
+                  background: value,
+                  border: '1px solid #e5e7eb',
+                  marginRight: 10
+                }} />
+                <span style={{ fontWeight: 500, minWidth: 110 }}>{key.replace(/-/g, ' ')}:</span>
+                <span style={{ fontFamily: 'monospace', marginLeft: 6, marginRight: 8 }}>{value}</span>
+                <button
+                  onClick={() => handleCopy(value)}
+                  style={{
+                    background: '#f3f4f6',
+                    border: '1px solid #d1d5db',
+                    borderRadius: 4,
+                    padding: '2px 10px',
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    color: '#333',
+                    marginLeft: 2
+                  }}
+                  title={`Copy ${value} to clipboard`}
+                >
+                  Copy
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+  };
+
   // Component to render asset content based on display_as attribute
   const AssetContent: React.FC<{ asset: BrandAsset }> = ({ asset }) => {
     if (!asset.content) return <div className="text-red-500">No content available</div>;
@@ -262,6 +372,11 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
         }
         return part;
       });
+    }
+
+    // Render palette sample if type or display_as is 'palette'
+    if (String(displayAs) === 'palette' || String(asset.type) === 'palette') {
+      return <PaletteSample content={asset.content} />;
     }
 
     if (displayAs === 'markdown') {
@@ -386,7 +501,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-display font-bold text-neutral-800 mb-6">Brand Assets (UPDATED v8)</h1>
+          <h1 className="text-3xl font-display font-bold text-neutral-800 mb-6">Brand Assets</h1>
           <div className="mb-6 flex gap-2 border-b">
             {assetTypes.map(type => (
               <button
@@ -467,8 +582,8 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
                 Love what you see? 
               </h3>
               <p className="text-neutral-600 mb-6">
-                These brand assets are ready to help your business succeed. 
-                Share your experience and complete your brand journey.
+                These brand assets are ready to help your business succeed.
+                You will be able to download them on the final step, or anytime in the future.
               </p>
               <button
                 onClick={handleProceedToPayment}

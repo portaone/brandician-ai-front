@@ -35,7 +35,11 @@ const LandingPage: React.FC = () => {
               <p className="text-lg md:text-xl text-neutral-600 mb-8">
                 Transform your business idea into a complete brand identity in minutes, not months. 
                 Our AI-powered platform guides you through a strategic branding process that would 
-                normally cost thousands.
+                normally cost thousands of dollars with a marketing agency. Moreover, we do not just
+                generate something that seems ok (you can do it for free using ChatGPT!). Our process
+                involves validation of the brand hypothesis with realm people from the target audience,
+                so if there is a need to adjust the brand - you will do it immediately and not after
+                failure of the first version of the product (wasting quite a bit of time and money).
               </p>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                 <Link 

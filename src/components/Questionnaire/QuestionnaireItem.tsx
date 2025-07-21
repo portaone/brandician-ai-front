@@ -47,9 +47,9 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const enhancementTimeoutRef = useRef<number>();
+  const enhancementTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const MAX_RECORDING_DURATION_MS = 180000; // 3 minutes
-  const recordingTimeoutRef = useRef<number | null>(null);
+  const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Update answer when currentAnswer changes (e.g., when navigating)
   useEffect(() => {
@@ -109,7 +109,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
       console.log('🎤 Recording started');
 
       // Set timeout to stop after 3 minutes
-      recordingTimeoutRef.current = window.setTimeout(() => {
+      recordingTimeoutRef.current = setTimeout(() => {
         stopRecording();
       }, MAX_RECORDING_DURATION_MS);
     } catch (error) {
@@ -437,6 +437,15 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
                 Clear
               </button>
             )}
+            {/* Retry Button */}
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="ml-3 inline-flex items-center px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className="h-4 w-4 mr-1" />
+              Retry
+            </button>
           </div>
         </div>
       )}
