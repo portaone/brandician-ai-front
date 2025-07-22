@@ -332,6 +332,11 @@ export const brands = {
     return response.data;
   },
 
+  getSurveyQuestions: async (brandId: string) => {
+    const response = await api.get(apiPath(`/brands/${brandId}/survey/questions/`));
+    return response.data;
+  },
+
   saveSurvey: async (brandId: string, survey: Survey): Promise<SubmissionLink> => {
     const response = await api.put(apiPath(`/brands/${brandId}/survey`), survey);
     return response.data;

@@ -84,149 +84,6 @@ const LandingPage: React.FC = () => {
             </motion.div>
           </motion.section>
 
-          <motion.section 
-            id="features" 
-            className="mb-16 md:mb-24"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
-            <h2 className="text-3xl font-display font-bold text-neutral-800 text-center mb-12">
-              Complete Brand Creation in Minutes
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="h-12 w-12 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-                  <Brain className="text-primary-600 h-6 w-6" />
-                </div>
-                <h3 className="text-xl font-display font-bold text-neutral-800 mb-2">AI-Powered Insights</h3>
-                <p className="text-neutral-600">
-                  Our AI analyzes your business goals and target audience to generate strategic insights that inform every aspect of your brand.
-                </p>
-              </div>
-              
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="h-12 w-12 bg-secondary-100 rounded-full flex items-center justify-center mb-4">
-                  <Sparkles className="text-secondary-500 h-6 w-6" />
-                </div>
-                <h3 className="text-xl font-display font-bold text-neutral-800 mb-2">Complete Brand Package</h3>
-                <p className="text-neutral-600">
-                  Get everything you need: brand name options, visual identity recommendations, messaging, and positioning strategy.
-                </p>
-              </div>
-              
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="h-12 w-12 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
-                  <CheckCircle className="text-green-600 h-6 w-6" />
-                </div>
-                <h3 className="text-xl font-display font-bold text-neutral-800 mb-2">Easy Implementation</h3>
-                <p className="text-neutral-600">
-                  Download your complete brand package with all assets and guidelines to bring your brand to life immediately.
-                </p>
-              </div>
-            </div>
-          </motion.section>
-
-          <motion.section 
-            id="how-it-works" 
-            className="mb-16 md:mb-24"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
-            <h2 className="text-3xl font-display font-bold text-neutral-800 text-center mb-12">
-              Your Brand Development Journey
-            </h2>
-
-            <div className="relative">
-              {/* Vertical line connecting steps */}
-              <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-0.5 bg-primary-200 transform -translate-x-1/2"></div>
-              
-              <div className="space-y-12 md:space-y-24 relative">
-                {/* Step 1 */}
-                <div className="flex flex-col md:flex-row items-center">
-                  <div className="md:w-1/2 mb-6 md:mb-0 md:pr-12 md:text-right">
-                    <h3 className="text-xl font-display font-bold text-neutral-800 mb-2">1. Discovery Questionnaire</h3>
-                    <p className="text-neutral-600">
-                      Answer simple questions about your business, goals, and target audience. Our AI analyzes your responses to understand your needs.
-                    </p>
-                  </div>
-                  <div className="md:absolute md:left-1/2 md:transform md:-translate-x-1/2 z-10 bg-white rounded-full h-12 w-12 flex items-center justify-center border-2 border-primary-500 text-primary-600 font-bold">
-                    1
-                  </div>
-                  <div className="md:w-1/2 md:pl-12">
-                    <div className="bg-white p-4 rounded-lg shadow-md">
-                      <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-4 bg-neutral-100 rounded w-full mb-2"></div>
-                      <div className="h-4 bg-neutral-200 rounded w-5/6"></div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Step 2 */}
-                <div className="flex flex-col md:flex-row items-center">
-                  <div className="md:w-1/2 mb-6 md:mb-0 md:pr-12 md:text-right order-1 md:order-1">
-                    <div className="bg-white p-4 rounded-lg shadow-md">
-                      <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-4 bg-neutral-100 rounded w-full mb-2"></div>
-                      <div className="h-4 bg-neutral-200 rounded w-5/6"></div>
-                    </div>
-                  </div>
-                  <div className="md:absolute md:left-1/2 md:transform md:-translate-x-1/2 z-10 bg-white rounded-full h-12 w-12 flex items-center justify-center border-2 border-primary-500 text-primary-600 font-bold order-2 md:order-2">
-                    2
-                  </div>
-                  <div className="md:w-1/2 md:pl-12 order-3 md:order-3">
-                    <h3 className="text-xl font-display font-bold text-neutral-800 mb-2">2. Strategic Profile</h3>
-                    <p className="text-neutral-600">
-                      Receive a detailed brand strategy document with market analysis, positioning recommendations, and brand personality traits.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Step 3 */}
-                <div className="flex flex-col md:flex-row items-center">
-                  <div className="md:w-1/2 mb-6 md:mb-0 md:pr-12 md:text-right">
-                    <h3 className="text-xl font-display font-bold text-neutral-800 mb-2">3. Brand Identity Creation</h3>
-                    <p className="text-neutral-600">
-                      Our AI generates name options, visual style recommendations, and messaging frameworks tailored to your strategic profile.
-                    </p>
-                  </div>
-                  <div className="md:absolute md:left-1/2 md:transform md:-translate-x-1/2 z-10 bg-white rounded-full h-12 w-12 flex items-center justify-center border-2 border-primary-500 text-primary-600 font-bold">
-                    3
-                  </div>
-                  <div className="md:w-1/2 md:pl-12">
-                    <div className="bg-white p-4 rounded-lg shadow-md">
-                      <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-4 bg-neutral-100 rounded w-full mb-2"></div>
-                      <div className="h-4 bg-neutral-200 rounded w-5/6"></div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Step 4 */}
-                <div className="flex flex-col md:flex-row items-center">
-                  <div className="md:w-1/2 mb-6 md:mb-0 md:pr-12 md:text-right order-1 md:order-1">
-                    <div className="bg-white p-4 rounded-lg shadow-md">
-                      <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-4 bg-neutral-100 rounded w-full mb-2"></div>
-                      <div className="h-4 bg-neutral-200 rounded w-5/6"></div>
-                    </div>
-                  </div>
-                  <div className="md:absolute md:left-1/2 md:transform md:-translate-x-1/2 z-10 bg-white rounded-full h-12 w-12 flex items-center justify-center border-2 border-primary-500 text-primary-600 font-bold order-2 md:order-2">
-                    4
-                  </div>
-                  <div className="md:w-1/2 md:pl-12 order-3 md:order-3">
-                    <h3 className="text-xl font-display font-bold text-neutral-800 mb-2">4. Finalization & Delivery</h3>
-                    <p className="text-neutral-600">
-                      Review and refine your brand assets, then download your complete brand package with all the elements you need.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.section>
 
           <motion.section 
             id="pricing" 
@@ -239,15 +96,7 @@ const LandingPage: React.FC = () => {
             <h2 className="text-3xl font-display font-bold text-neutral-800 text-center mb-4">
               Simple, Transparent Pricing
             </h2>
-            <p className="text-center text-neutral-600 mb-12 max-w-2xl mx-auto">
-              Pay what you want! After we generate the branding assets and you actually see them - enter ANY amount based on the perceived value of what we delivered. And yes, if right now things are tight - you can also enter ZERO as the amount and you will get it for FREE.
-            </p>
-
-            <div className="bg-primary-50 p-8 md:p-12 rounded-xl max-w-4xl mx-auto text-center">
-              <h3 className="text-2xl font-display font-bold text-neutral-800 mb-6">
-                Value-Based Pricing
-              </h3>
-              <p className="text-lg text-neutral-600 mb-8">
+            <p className="text-lg text-neutral-600 mb-8">
                 We believe in the value of our service so much that we let you decide what it's worth to you
                 after seeing the final results (chosen archetype, tone of voice, brand assets, etc.) - and 
                 set <strong>your own price!</strong>.
@@ -255,38 +104,10 @@ const LandingPage: React.FC = () => {
               <p className="text-lg text-neutral-600 mb-8">And yes, it means you can pay <strong>ZERO </strong> 
                  if the cash situation is tight at the moment!
               </p>
-              <Link
-                to="/register"
-                className="inline-block bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-8 rounded-md transition-colors"
-              >
-                Start Your Brand Journey Today
-              </Link>
-            </div>
+
+
           </motion.section>
 
-          <motion.section 
-            className="mb-16 md:mb-24 bg-primary-50 p-8 md:p-12 rounded-xl"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
-            <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-3xl font-display font-bold text-neutral-800 mb-6">
-                Ready to Transform Your Business with a Powerful Brand?
-              </h2>
-              <p className="text-lg text-neutral-600 mb-8">
-                Join thousands of entrepreneurs who have used Brandician.AI to create memorable, 
-                effective brands that resonate with their audience.
-              </p>
-              <Link
-                to="/register"
-                className="inline-block bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-8 rounded-md transition-colors"
-              >
-                Start Your Brand Journey Today
-              </Link>
-            </div>
-          </motion.section>
         </main>
 
         <footer className="border-t border-neutral-200 pt-8 pb-12">
