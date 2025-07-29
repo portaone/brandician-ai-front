@@ -101,6 +101,10 @@ const api = axios.create({
 // Helper function to build API paths
 const apiPath = (path: string) => `${API_PREFIX}${path}`;
 
+// Configure retry settings
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000; // Start with 1 second
+
 // Add request interceptor for auth token and request ID
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token');
@@ -114,6 +118,11 @@ api.interceptors.request.use((config) => {
   
   // Store request ID in config for later use in response/error logging
   config.metadata = { requestId };
+  
+  // Initialize retry count if not set
+  if (!config.hasOwnProperty('retryCount')) {
+    (config as any).retryCount = 0;
+  }
   
   logApiCall(config.method?.toUpperCase() || 'REQUEST', config.url || '', requestId, config.data);
   
@@ -144,6 +153,34 @@ api.interceptors.response.use(
       }
     }
     
+    // Check if this is a network error (no response) - don't logout
+    if (!error.response) {
+      // Network error - connection refused, timeout, etc.
+      console.warn('Network error detected - not logging out user');
+      
+      // Retry logic for network errors
+      const config = error.config;
+      const retryCount = (config as any).retryCount || 0;
+      
+      if (retryCount < MAX_RETRIES) {
+        (config as any).retryCount = retryCount + 1;
+        const delay = RETRY_DELAY * Math.pow(2, retryCount); // Exponential backoff
+        
+        console.log(`🔄 [${requestId}] Retrying request (attempt ${retryCount + 1}/${MAX_RETRIES}) after ${delay}ms...`);
+        
+        return new Promise(resolve => {
+          setTimeout(() => {
+            resolve(api(config));
+          }, delay);
+        });
+      }
+      
+      // Max retries reached
+      console.error(`❌ [${requestId}] Max retries (${MAX_RETRIES}) reached for network error`);
+      return Promise.reject(error);
+    }
+    
+    // Only handle 401 for actual authentication failures, not network errors
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
@@ -161,10 +198,15 @@ api.interceptors.response.use(
         
         originalRequest.headers.Authorization = `Bearer ${access_token}`;
         return api(originalRequest);
-      } catch (error) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
+      } catch (refreshError: any) {
+        // Only logout if the refresh also failed with a 401 (not network error)
+        if (refreshError.response?.status === 401) {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          window.location.href = '/login';
+        }
+        // For other errors (including network errors), just reject
+        return Promise.reject(refreshError);
       }
     }
     return Promise.reject(error);

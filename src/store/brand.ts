@@ -3,6 +3,33 @@ import { brands } from '../lib/api';
 import { Brand, Question, Answer, JTBDList } from '../types';
 import { BrandStatus } from '../lib/navigation';
 
+// Helper function to get user-friendly error messages
+const getErrorMessage = (error: any, defaultMessage: string): string => {
+  // Check for network/connection errors
+  if (error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_REFUSED' || 
+      error.message?.includes('Network Error') ||
+      !error.response) {
+    return 'Unable to connect to the server. Please check your internet connection and try again.';
+  }
+  
+  // Check for server errors (5xx)
+  if (error.response?.status >= 500) {
+    return 'The server is experiencing issues. Please try again later.';
+  }
+  
+  // Check for specific error messages from the API
+  if (error.response?.data?.message) {
+    return error.response.data.message;
+  }
+  
+  if (error.response?.data?.detail) {
+    return error.response.data.detail;
+  }
+  
+  // Default fallback
+  return defaultMessage;
+};
+
 interface BrandState {
   brands: Brand[];
   currentBrand: Brand | null;
@@ -43,7 +70,8 @@ export const useBrandStore = create<BrandState>((set, get) => ({
       const brandList = await brands.list();
       set({ brands: brandList, isLoading: false });
     } catch (error) {
-      set({ isLoading: false, error: 'Failed to load brands' });
+      const errorMessage = getErrorMessage(error, 'Failed to load brands');
+      set({ isLoading: false, error: errorMessage });
       throw error;
     }
   },
@@ -59,7 +87,8 @@ export const useBrandStore = create<BrandState>((set, get) => ({
       }));
       return brand;
     } catch (error) {
-      set({ isLoading: false, error: 'Failed to create brand' });
+      const errorMessage = getErrorMessage(error, 'Failed to create brand');
+      set({ isLoading: false, error: errorMessage });
       throw error;
     }
   },
@@ -70,7 +99,8 @@ export const useBrandStore = create<BrandState>((set, get) => ({
       const brand = await brands.get(brandId);
       set({ currentBrand: brand, isLoading: false });
     } catch (error) {
-      set({ isLoading: false, error: 'Failed to load brand data' });
+      const errorMessage = getErrorMessage(error, 'Failed to load brand data');
+      set({ isLoading: false, error: errorMessage });
       throw error;
     }
   },
@@ -80,7 +110,8 @@ export const useBrandStore = create<BrandState>((set, get) => ({
       const questions = await brands.getQuestions(brandId);
       set({ questions });
     } catch (error) {
-      set({ error: 'Failed to load questions' });
+      const errorMessage = getErrorMessage(error, 'Failed to load questions');
+      set({ error: errorMessage });
       throw error;
     }
   },
@@ -99,7 +130,8 @@ export const useBrandStore = create<BrandState>((set, get) => ({
       
       set({ answers, answersMap });
     } catch (error: any) {
-      set({ error: 'Failed to load answers' });
+      const errorMessage = getErrorMessage(error, 'Failed to load answers');
+      set({ error: errorMessage });
       throw error;
     }
   },
@@ -128,7 +160,8 @@ export const useBrandStore = create<BrandState>((set, get) => ({
         };
       });
     } catch (error) {
-      set({ isLoading: false, error: 'Failed to submit answer' });
+      const errorMessage = getErrorMessage(error, 'Failed to submit answer');
+      set({ isLoading: false, error: errorMessage });
       throw error;
     }
   },
