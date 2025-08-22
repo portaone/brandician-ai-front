@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&family=Source+Sans+Pro:wght@400;600;700&family=Bitter:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bitter:wght@400;500;700&family=Source+Sans+Pro:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,34 +6,34 @@
 
 @layer base {
   :root {
-    --color-accent: #FC5258;
+    --color-accent: #FD615E;
     --color-main: #7F5971;
     --color-supporting: rgba(127, 89, 113, 0.25);
-    --color-light: #F4F2F2;
-    --color-white: #F3F3F3;
+    --color-light: #F8FAFC;
+    --color-white: #FFFFFF;
     
     /* Title font properties */
-    --title-font-family: 'Bitter', Sans-serif;
+    --title-font-family: 'Bitter', sans-serif;
     --title-font-weight: 700;
     --title-font-style: normal;
-    --title-font-size: 56px;
-    --title-line-height: 100%;
+    --title-font-size: 46px;
+    --title-line-height: 57.5px;
     --title-letter-spacing: 0%;
     
     /* Heading font properties */
-    --heading-font-family: 'Bitter', serif;
-    --heading-font-weight: 600;
+    --heading-font-family: 'Bitter', sans-serif;
+    --heading-font-weight: 700;
     --heading-font-style: normal;
-    --heading-font-size: 32px;
-    --heading-line-height: 100%;
+    --heading-font-size: 56px;
+    --heading-line-height: 70px;
     --heading-letter-spacing: 0%;
     
     /* Body font properties */
     --body-font-family: 'Bitter', serif;
     --body-font-weight: 400;
     --body-font-style: normal;
-    --body-font-size: 16px;
-    --body-line-height: 24px;
+    --body-font-size: 24px;
+    --body-line-height: 36px;
     --body-letter-spacing: 0%;
     
     /* Menu font properties */
@@ -87,7 +87,7 @@
     color: #FFFFFF;
     background: var(--color-accent);
     box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.2);
-    border-radius: 50px;
+    border-radius: 24px;
   }
 
   .btn:hover {

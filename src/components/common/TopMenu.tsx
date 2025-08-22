@@ -38,80 +38,54 @@ const TopMenu: React.FC = () => {
   }, [location]);
 
   return (
-    <header className="bg-white border-b border-neutral-200">
+    <header className="bg-white sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20">
           <a
             href="/"
             onClick={handleLogoClick}
-            className="flex items-center text-primary-600 hover:text-primary-700"
+            className="flex items-center"
           >
-            <img src="/images/brandician-logo.png" alt="Brandician.AI Logo" className="h-8 w-auto mr-2" />
-            
+            <div className="flex items-center">
+              <div className="w-12 h-12 rounded-full border-2 border-primary-500 flex items-center justify-center mr-3">
+                <div className="w-8 h-6 bg-primary-500 rounded-t-full"></div>
+              </div>
+              <span className="text-xl font-bold text-neutral-800">Brandician</span>
+            </div>
           </a>
           
-          {/* Navigation for landing page */}
-          {location.pathname === '/' && (
-            <nav className="hidden md:flex items-center space-x-6">
-              <a href="#features" className="text-menu text-neutral-600 hover:text-[var(--main-color)] transition-colors">Features</a>
-              <span className="text-menu text-neutral-400">|</span>
-              <a href="#how-it-works" className="text-menu text-neutral-600 hover:text-[var(--main-color)] transition-colors">How It Works</a>
-              <span className="text-menu text-neutral-400">|</span>
-              <a href="#pricing" className="text-menu text-neutral-600 hover:text-[var(--main-color)] transition-colors">Pricing</a>
-            </nav>
-          )}
-          
-          {/* Right side content */}
-          {!user && (
-            <Link 
-              to="/register"
-              className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-            >
-              Get Started
-            </Link>
-          )}
-          
-          {user && (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center space-x-2 text-neutral-600 hover:text-neutral-800 focus:outline-none"
-              >
-                <User className="h-5 w-5" />
-                <span>{user.name}</span>
+          {/* Full navigation menu exactly like brandician.eu */}
+          <div className="hidden md:flex items-center space-x-8">
+            <div className="relative group">
+              <button className="text-menu text-neutral-600 hover:text-primary-500 transition-colors flex items-center">
+                ABOUT
+                <svg className="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
               </button>
-
-              {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
-                  <button
-                    onClick={() => {
-                      navigate('/brands');
-                      setIsDropdownOpen(false);
-                    }}
-                    className="block w-full text-left px-4 py-2 text-menu text-neutral-700 hover:text-[var(--main-color)] hover:bg-neutral-100"
-                  >
-                    My Brands
-                  </button>
-                  <Link
-                    to="/profile"
-                    className="block px-4 py-2 text-menu text-neutral-700 hover:text-[var(--main-color)] hover:bg-neutral-100"
-                    onClick={() => setIsDropdownOpen(false)}
-                  >
-                    Profile
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-menu text-neutral-700 hover:text-[var(--main-color)] hover:bg-neutral-100"
-                  >
-                    <div className="flex items-center">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Log out
-                    </div>
-                  </button>
-                </div>
-              )}
             </div>
-          )}
+            <a href="#" className="text-menu text-neutral-600 hover:text-primary-500 transition-colors">APP</a>
+            <a href="#" className="text-menu text-neutral-600 hover:text-primary-500 transition-colors">OUR WORK</a>
+            <a href="#" className="text-menu text-neutral-600 hover:text-primary-500 transition-colors">BLOG</a>
+            <a href="#" className="text-menu text-neutral-600 hover:text-primary-500 transition-colors">CONTACT</a>
+            <button className="p-2 hover:bg-neutral-50 transition-colors">
+              <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* Mobile menu toggle */}
+          <div className="md:hidden flex items-center">
+            <button className="p-2 rounded-md hover:bg-neutral-50 transition-colors">
+              <div className="space-y-1">
+                <div className="w-6 h-0.5 bg-neutral-800"></div>
+                <div className="w-6 h-0.5 bg-neutral-800"></div>
+                <div className="w-6 h-0.5 bg-neutral-800"></div>
+              </div>
+              <span className="sr-only">Menu</span>
+            </button>
+          </div>
         </div>
       </div>
     </header>
