@@ -52,10 +52,12 @@ const TopMenu: React.FC = () => {
           
           {/* Navigation for landing page */}
           {location.pathname === '/' && (
-            <nav className="hidden md:flex space-x-6">
-              <a href="#features" className="text-neutral-600 hover:text-primary-600 transition-colors">Features</a>
-              <a href="#how-it-works" className="text-neutral-600 hover:text-primary-600 transition-colors">How It Works</a>
-              <a href="#pricing" className="text-neutral-600 hover:text-primary-600 transition-colors">Pricing</a>
+            <nav className="hidden md:flex items-center space-x-6">
+              <a href="#features" className="text-menu text-neutral-600 hover:text-[var(--main-color)] transition-colors">Features</a>
+              <span className="text-menu text-neutral-400">|</span>
+              <a href="#how-it-works" className="text-menu text-neutral-600 hover:text-[var(--main-color)] transition-colors">How It Works</a>
+              <span className="text-menu text-neutral-400">|</span>
+              <a href="#pricing" className="text-menu text-neutral-600 hover:text-[var(--main-color)] transition-colors">Pricing</a>
             </nav>
           )}
           
@@ -86,20 +88,20 @@ const TopMenu: React.FC = () => {
                       navigate('/brands');
                       setIsDropdownOpen(false);
                     }}
-                    className="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+                    className="block w-full text-left px-4 py-2 text-menu text-neutral-700 hover:text-[var(--main-color)] hover:bg-neutral-100"
                   >
                     My Brands
                   </button>
                   <Link
                     to="/profile"
-                    className="block px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+                    className="block px-4 py-2 text-menu text-neutral-700 hover:text-[var(--main-color)] hover:bg-neutral-100"
                     onClick={() => setIsDropdownOpen(false)}
                   >
                     Profile
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100"
+                    className="block w-full text-left px-4 py-2 text-menu text-neutral-700 hover:text-[var(--main-color)] hover:bg-neutral-100"
                   >
                     <div className="flex items-center">
                       <LogOut className="h-4 w-4 mr-2" />

@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Sparkles, ArrowRight, CheckCircle } from 'lucide-react';
+import Button from './common/Button';
 
 const LandingPage: React.FC = () => {
   const fadeIn = {
@@ -16,7 +17,7 @@ const LandingPage: React.FC = () => {
 
         <main>
           <motion.section 
-            className="flex flex-col md:flex-row items-center mb-16 md:mb-24"
+            className="flex flex-col md:flex-row items-center py-16 px-4 bg-light"
             initial="initial"
             animate="animate"
             variants={{
@@ -27,8 +28,9 @@ const LandingPage: React.FC = () => {
               }
             }}
           >
-            <motion.div className="md:w-1/2 mb-8 md:mb-0" {...fadeIn}>
-              <h2 className="text-4xl md:text-5xl font-display font-bold text-neutral-800 mb-6">
+            <div className="container mx-auto flex flex-col md:flex-row items-center">
+              <motion.div className="md:w-1/2 mb-8 md:mb-0" {...fadeIn}>
+              <h2 className="text-title mb-6 font-weight-900">
                 Create Your Brand Identity with AI
                 <Sparkles className="inline text-secondary-500 h-6 w-6 md:h-8 md:w-8 ml-2" />
               </h2>
@@ -44,17 +46,18 @@ const LandingPage: React.FC = () => {
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                 <Link 
                   to="/register"
-                  className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 rounded-md transition-colors flex items-center justify-center"
+                  className="inline-flex items-center justify-center"
                 >
-                  Start Your Brand Journey
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <Button rightIcon={<ArrowRight className="h-5 w-5" />}>
+                    Start Your Brand Journey
+                  </Button>
                 </Link>
-                <a 
-                  href="#how-it-works" 
-                  className="bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 font-medium py-3 px-6 rounded-md transition-colors text-center"
+                <Button 
+                  variant="outline"
+                  onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
                 >
                   See How It Works
-                </a>
+                </Button>
               </div>
             </motion.div>
 
@@ -82,30 +85,31 @@ const LandingPage: React.FC = () => {
                 <div className="h-10 bg-primary-500 rounded-md w-full"></div>
               </div>
             </motion.div>
+            </div>
           </motion.section>
 
 
           <motion.section 
             id="pricing" 
-            className="mb-16 md:mb-24"
+            className="bg-white py-16 px-4 pt-32 rounded-lg"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-3xl font-display font-bold text-neutral-800 text-center mb-4">
-              Simple, Transparent Pricing
-            </h2>
-            <p className="text-lg text-neutral-600 mb-8">
-                We believe in the value of our service so much that we let you decide what it's worth to you
-                after seeing the final results (chosen archetype, tone of voice, brand assets, etc.) - and 
-                set <strong>your own price!</strong>.
-              </p>
-              <p className="text-lg text-neutral-600 mb-8">And yes, it means you can pay <strong>ZERO </strong> 
-                 if the cash situation is tight at the moment!
-              </p>
-
-
+            <div className="container mx-auto">
+              <h2 className="text-heading text-center mb-4">
+                Simple, Transparent Pricing
+              </h2>
+              <p className="text-lg text-neutral-600 mb-8">
+                  We believe in the value of our service so much that we let you decide what it's worth to you
+                  after seeing the final results (chosen archetype, tone of voice, brand assets, etc.) - and 
+                  set <strong>your own price!</strong>.
+                </p>
+                <p className="text-lg text-neutral-600 mb-8">And yes, it means you can pay <strong>ZERO </strong> 
+                   if the cash situation is tight at the moment!
+                </p>
+            </div>
           </motion.section>
 
         </main>

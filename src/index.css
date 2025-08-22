@@ -1,18 +1,259 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&family=Source+Sans+Pro:wght@400;600;700&family=Bitter:wght@400&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-accent: #FC5258;
+    --color-main: #7F5971;
+    --color-supporting: rgba(127, 89, 113, 0.25);
+    --color-light: #F4F2F2;
+    --color-white: #F3F3F3;
+    
+    /* Title font properties */
+    --title-font-family: 'Bitter', Sans-serif;
+    --title-font-weight: 700;
+    --title-font-style: normal;
+    --title-font-size: 56px;
+    --title-line-height: 100%;
+    --title-letter-spacing: 0%;
+    
+    /* Heading font properties */
+    --heading-font-family: 'Bitter', serif;
+    --heading-font-weight: 600;
+    --heading-font-style: normal;
+    --heading-font-size: 32px;
+    --heading-line-height: 100%;
+    --heading-letter-spacing: 0%;
+    
+    /* Body font properties */
+    --body-font-family: 'Bitter', serif;
+    --body-font-weight: 400;
+    --body-font-style: normal;
+    --body-font-size: 16px;
+    --body-line-height: 24px;
+    --body-letter-spacing: 0%;
+    
+    /* Menu font properties */
+    --menu-font-family: 'Source Sans Pro', sans-serif;
+    --menu-font-weight: 400;
+    --menu-font-style: normal;
+    --menu-font-size: 18px;
+    --menu-line-height: 100%;
+    --menu-letter-spacing: 12%;
+    --menu-text-align: right;
+    --menu-text-transform: uppercase;
+  }
+
   html {
-    font-family: 'Open Sans', system-ui, sans-serif;
+    font-family: var(--body-font-family);
+    font-weight: var(--body-font-weight);
+    font-style: var(--body-font-style);
+    font-size: var(--body-font-size);
+    line-height: var(--body-line-height);
+    letter-spacing: var(--body-letter-spacing);
     color: #334155;
     scroll-behavior: smooth;
   }
 
+  body, p, div, span, a, li, td, th, input, textarea, select, button {
+    font-family: var(--body-font-family);
+    font-weight: var(--body-font-weight);
+    font-style: var(--body-font-style);
+    font-size: var(--body-font-size);
+    line-height: var(--body-line-height);
+    letter-spacing: var(--body-letter-spacing);
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Montserrat', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* Global Button Styles */
+  .btn {
+    @apply inline-flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-style: normal;
+    font-weight: 700;
+    font-size: var(--btn-font-size, 18px); /* Use CSS custom property */
+    line-height: 202%;
+    text-align: center;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #FFFFFF;
+    background: var(--color-accent);
+    box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.2);
+    border-radius: 50px;
+  }
+
+  .btn:hover {
+    background: var(--color-main);
+    box-shadow: 0px 6px 28px rgba(0, 0, 0, 0.25);
+  }
+
+  .btn:focus {
+    @apply ring-red-500 ring-offset-2;
+  }
+
+  .btn:disabled {
+    background: #fca5a7;
+    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Button Size Variants */
+  .btn-sm {
+    padding: 12px 16px !important;
+    --btn-font-size: 14px !important;
+  }
+
+  .btn-md {
+    padding: 16px 24px !important;
+    --btn-font-size: 16px !important;
+  }
+
+  .btn-lg {
+    padding: 20px 32px !important;
+    --btn-font-size: 18px !important;
+  }
+
+  .btn-xl {
+    padding: 24px 40px !important;
+    --btn-font-size: 20px !important;
+  }
+
+  /* Button Variants */
+  .btn-primary {
+    background: var(--color-accent);
+    color: #FFFFFF;
+  }
+
+  .btn-primary:hover {
+    background: var(--color-main);
+    color: #FFFFFF;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: var(--color-accent);
+    border: 2px solid var(--color-accent);
+    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-secondary:hover {
+    background: var(--color-main);
+    color: #FFFFFF;
+    box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-accent);
+    box-shadow: none;
+  }
+
+  .btn-ghost:hover {
+    background: rgba(127, 89, 113, 0.1);
+    color: var(--color-main);
+    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--color-accent);
+    border: 2px solid var(--color-accent);
+    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-outline:hover {
+    background: var(--color-main);
+    color: #FFFFFF;
+    box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Title text style */
+  .text-title {
+    font-family: var(--title-font-family);
+    font-weight: var(--title-font-weight);
+    font-style: var(--title-font-style);
+    font-size: var(--title-font-size);
+    line-height: var(--title-line-height);
+    letter-spacing: var(--title-letter-spacing);
+  }
+
+  /* Heading text style */
+  .text-heading {
+    font-family: var(--heading-font-family);
+    font-weight: var(--heading-font-weight);
+    font-style: var(--heading-font-style);
+    font-size: var(--heading-font-size);
+    line-height: var(--heading-line-height);
+    letter-spacing: var(--heading-letter-spacing);
+  }
+
+  /* Body text style */
+  .text-body {
+    font-family: var(--body-font-family);
+    font-weight: var(--body-font-weight);
+    font-style: var(--body-font-style);
+    font-size: var(--body-font-size);
+    line-height: var(--body-line-height);
+    letter-spacing: var(--body-letter-spacing);
+  }
+
+  /* Menu text style */
+  .text-menu {
+    font-family: var(--menu-font-family);
+    font-weight: var(--menu-font-weight);
+    font-style: var(--menu-font-style);
+    font-size: var(--menu-font-size);
+    line-height: var(--menu-line-height);
+    letter-spacing: var(--menu-letter-spacing);
+    text-align: var(--menu-text-align);
+    text-transform: var(--menu-text-transform);
+  }
+
+  .color-accent {
+    color: var(--color-accent);
+  }
+
+  .color-supporting {
+    color: var(--color-supporting);
+  }
+
+  .color-light {
+    color: var(--color-light);
+  }
+
+  .color-white {
+    color: var(--color-white);
+  }
+
+  .color-main {
+    color: var(--color-main);
+  }
+
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+
+  .bg-supporting {
+    background-color: var(--color-supporting);
+  }
+
+  .bg-light {
+    background-color: var(--color-light);
+  }
+
+  .bg-white {
+    background-color: var(--color-white);
+  }
+
+  .bg-main {
+    background-color: var(--color-main);
   }
 }
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, ArrowRight } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { getRouteForStatus } from '../../lib/navigation';
+import Button from '../common/Button';
 
 const BrandList: React.FC = () => {
   const { brands, loadBrands, isLoading, error } = useBrandStore();
@@ -44,26 +45,24 @@ const BrandList: React.FC = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold text-gray-900">Your Brands</h2>
-          <button
+          <Button
             onClick={() => navigate('/brands/new')}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
+            leftIcon={<Plus className="h-5 w-5" />}
           >
-            <Plus className="h-5 w-5 mr-2" />
             Create New Brand
-          </button>
+          </Button>
         </div>
 
         {brands.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-lg">
             <h3 className="text-lg font-medium text-gray-900 mb-2">No brands yet</h3>
             <p className="text-gray-500 mb-4">Create your first brand to get started</p>
-            <button
+            <Button
               onClick={() => navigate('/brands/new')}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
+              leftIcon={<Plus className="h-5 w-5" />}
             >
-              <Plus className="h-5 w-5 mr-2" />
               Create Brand
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -80,13 +79,13 @@ const BrandList: React.FC = () => {
                   <span className="text-sm text-gray-500">
                     Status: {brand.status_description || 'Unknown status'}
                   </span>
-                  <button
+                  <Button
                     onClick={() => handleContinue(brand.id, brand.current_status || 'new_brand')}
-                    className="inline-flex items-center text-primary-600 hover:text-primary-700"
+                    variant="ghost"
+                    rightIcon={<ArrowRight className="h-4 w-4" />}
                   >
                     Continue
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}

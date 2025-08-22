@@ -7,6 +7,7 @@ import QuestionnaireSummary from './QuestionnaireSummary';
 import { Brain, ArrowRight } from 'lucide-react';
 import { brands } from '../../lib/api';
 import { navigateAfterProgress } from '../../lib/navigation';
+import Button from '../common/Button';
 
 const QuestionnaireContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -271,13 +272,12 @@ const QuestionnaireContainer: React.FC = () => {
               </div>
 
               <div className="mt-8 flex justify-center">
-                <button
+                <Button
                   onClick={handleStartQuestionnaire}
-                  className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+                  rightIcon={<ArrowRight className="h-5 w-5" />}
                 >
                   Begin Questionnaire
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
