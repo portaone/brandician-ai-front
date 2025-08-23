@@ -57,17 +57,17 @@ const TopMenu: React.FC = () => {
           {/* Full navigation menu exactly like brandician.eu */}
           <div className="hidden md:flex items-center space-x-8">
             <div className="relative group">
-              <button className="text-menu text-neutral-600 hover:text-primary-500 transition-colors flex items-center">
+              <button className="nav-menu-item flex items-center">
                 ABOUT
                 <svg className="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </button>
             </div>
-            <a href="#" className="text-menu text-neutral-600 hover:text-primary-500 transition-colors">APP</a>
-            <a href="#" className="text-menu text-neutral-600 hover:text-primary-500 transition-colors">OUR WORK</a>
-            <a href="#" className="text-menu text-neutral-600 hover:text-primary-500 transition-colors">BLOG</a>
-            <a href="#" className="text-menu text-neutral-600 hover:text-primary-500 transition-colors">CONTACT</a>
+            <a href="#" className="nav-menu-item">APP</a>
+            <a href="#" className="nav-menu-item">OUR WORK</a>
+            <a href="#" className="nav-menu-item">BLOG</a>
+            <a href="#" className="nav-menu-item">CONTACT</a>
             <button className="p-2 hover:bg-neutral-50 transition-colors">
               <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

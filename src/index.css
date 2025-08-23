@@ -174,34 +174,117 @@
     box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.2);
   }
 
-  /* Title text style */
-  .text-title {
-    font-family: var(--title-font-family);
-    font-weight: var(--title-font-weight);
-    font-style: var(--title-font-style);
-    font-size: var(--title-font-size);
-    line-height: var(--title-line-height);
-    letter-spacing: var(--title-letter-spacing);
+  /* Brandician.eu exact style classes */
+  
+  /* Hero title - "Build brands on insight, not intuition" */
+  .hero-title {
+    font-family: 'Bitter', sans-serif;
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 70px;
+    color: rgb(255, 255, 255);
+    margin-bottom: 20px;
   }
 
-  /* Heading text style */
-  .text-heading {
-    font-family: var(--heading-font-family);
-    font-weight: var(--heading-font-weight);
-    font-style: var(--heading-font-style);
-    font-size: var(--heading-font-size);
-    line-height: var(--heading-line-height);
-    letter-spacing: var(--heading-letter-spacing);
+  /* Main section headings - "Make sure your brand...", "Service Options" */
+  .section-heading-large {
+    font-family: 'Bitter', sans-serif;
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 70px;
+    color: rgb(253, 97, 94);
+    margin-bottom: 20px;
   }
 
-  /* Body text style */
-  .text-body {
-    font-family: var(--body-font-family);
-    font-weight: var(--body-font-weight);
-    font-style: var(--body-font-style);
-    font-size: var(--body-font-size);
-    line-height: var(--body-line-height);
-    letter-spacing: var(--body-letter-spacing);
+  /* Problem/Solution headings */
+  .section-heading-medium {
+    font-family: 'Bitter', sans-serif;
+    font-size: 32px;
+    font-weight: 400;
+    line-height: 40px;
+    margin-bottom: 14px;
+  }
+
+  .section-heading-medium.white-text {
+    color: rgb(255, 255, 255);
+  }
+
+  .section-heading-medium.purple-text {
+    color: rgb(127, 89, 113);
+    font-weight: 500;
+  }
+
+  /* Card headings - Foundation Builder, Strategic Partnership, etc. */
+  .card-heading {
+    font-family: 'Bitter', sans-serif;
+    font-size: 26px;
+    font-weight: 600;
+    color: rgb(253, 97, 94);
+    line-height: 32.5px;
+    margin-bottom: 15px;
+  }
+
+  /* Labels - "Our mission", "The problem", etc. */
+  .section-label {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: rgb(54, 54, 54);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 27px;
+  }
+
+  /* Hero paragraph */
+  .hero-paragraph {
+    font-family: 'Bitter', sans-serif;
+    font-size: 24px;
+    font-weight: 400;
+    color: rgb(255, 255, 255);
+    line-height: 36px;
+    margin-bottom: 0px;
+  }
+
+  /* Large paragraphs - mission, service descriptions */
+  .large-paragraph {
+    font-family: 'Bitter', sans-serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: rgb(54, 54, 54);
+    line-height: 42px;
+    margin-bottom: 0px;
+  }
+
+  /* Regular paragraphs */
+  .regular-paragraph {
+    font-family: 'Bitter', sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 31.5px;
+    margin-bottom: 0px;
+  }
+
+  .regular-paragraph.white-text {
+    color: rgb(255, 255, 255);
+  }
+
+  .regular-paragraph.dark-text {
+    color: rgb(54, 54, 54);
+  }
+
+  /* Navigation menu items - exact brandician.eu styles */
+  .nav-menu-item {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgb(54, 54, 54);
+    transition: color 0.2s ease;
+  }
+
+  .nav-menu-item:hover {
+    color: rgb(253, 97, 94);
   }
 
   /* Menu text style */

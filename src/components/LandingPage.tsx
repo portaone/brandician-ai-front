@@ -99,24 +99,10 @@ const LandingPage: React.FC = () => {
 
             {/* Right side - Content */}
             <motion.div className="w-1/2 pl-8" {...fadeIn}>
-              <h1 style={{ 
-                fontFamily: 'Bitter, sans-serif',
-                fontSize: '56px',
-                fontWeight: '700',
-                lineHeight: '70px',
-                color: 'rgb(255, 255, 255)',
-                marginBottom: '20px'
-              }}>
+              <h1 className="hero-title">
                 Build brands on insight, not intuition.
               </h1>
-              <p style={{
-                fontFamily: 'Bitter, sans-serif',
-                fontSize: '24px',
-                fontWeight: '400',
-                color: 'rgb(255, 255, 255)',
-                lineHeight: '36px',
-                marginBottom: '0px'
-              }}>
+              <p className="hero-paragraph">
                 We use psychology and AI to create brands that connect emotionally and perform 
                 strategically—from startup foundations to complete transformations.
               </p>
@@ -141,33 +127,11 @@ const LandingPage: React.FC = () => {
           transition={{ duration: 0.8 }}
         >
           <div className="container mx-auto px-4">
-            <p style={{
-              fontFamily: 'Source Sans Pro, sans-serif',
-              fontSize: '18px',
-              fontWeight: '700',
-              color: 'rgb(54, 54, 54)',
-              textTransform: 'uppercase',
-              letterSpacing: '2px',
-              marginBottom: '27px'
-            }}>Our mission</p>
-            <h2 style={{ 
-              fontFamily: 'Bitter, sans-serif',
-              fontSize: '56px',
-              fontWeight: '700',
-              color: 'rgb(253, 97, 94)',
-              marginBottom: '20px',
-              lineHeight: '70px'
-            }}>
+            <p className="section-label">Our mission</p>
+            <h2 className="section-heading-large">
               Make sure your brand matches what people really need.
             </h2>
-            <p style={{
-              fontFamily: 'Bitter, sans-serif',
-              fontSize: '28px',
-              fontWeight: '400',
-              color: 'rgb(54, 54, 54)',
-              lineHeight: '42px',
-              maxWidth: '800px'
-            }}>
+            <p className="large-paragraph" style={{maxWidth: '800px'}}>
               We bridge the gap between how you see your brand and how customers experience it — with psychology, feedback, and a solid plan.
             </p>
           </div>
@@ -182,33 +146,11 @@ const LandingPage: React.FC = () => {
           transition={{ duration: 0.8 }}
         >
           <div className="container mx-auto px-4">
-            <p style={{
-              fontFamily: 'Source Sans Pro, sans-serif',
-              fontSize: '18px',
-              fontWeight: '700',
-              color: 'rgb(54, 54, 54)',
-              textTransform: 'uppercase',
-              letterSpacing: '2px',
-              marginBottom: '27px'
-            }}>The problem</p>
-            <h2 style={{ 
-              fontFamily: 'Bitter, sans-serif',
-              fontSize: '32px',
-              fontWeight: '400',
-              color: 'rgb(255, 255, 255)',
-              marginBottom: '14px',
-              lineHeight: '40px'
-            }}>
+            <p className="section-label">The problem</p>
+            <h2 className="section-heading-medium white-text">
               Brands built on guesses don't grow.
             </h2>
-            <p style={{
-              fontFamily: 'Bitter, sans-serif',
-              fontSize: '18px',
-              fontWeight: '400',
-              color: 'rgb(255, 255, 255)',
-              lineHeight: '31.5px',
-              maxWidth: '800px'
-            }}>
+            <p className="regular-paragraph white-text" style={{maxWidth: '800px'}}>
               When businesses skip the strategy, they end up with surface-level design driven by trends, gut feelings, or a cool-looking logo — and then wonder why it doesn't connect, resonate, or last.
             </p>
           </div>
@@ -223,33 +165,11 @@ const LandingPage: React.FC = () => {
           transition={{ duration: 0.8 }}
         >
           <div className="container mx-auto px-4">
-            <p style={{
-              fontFamily: 'Source Sans Pro, sans-serif',
-              fontSize: '18px',
-              fontWeight: '700',
-              color: 'rgb(54, 54, 54)',
-              textTransform: 'uppercase',
-              letterSpacing: '2px',
-              marginBottom: '27px'
-            }}>Our Solution</p>
-            <h2 style={{ 
-              fontFamily: 'Bitter, sans-serif',
-              fontSize: '32px',
-              fontWeight: '500',
-              color: 'rgb(127, 89, 113)',
-              marginBottom: '14px',
-              lineHeight: '40px'
-            }}>
+            <p className="section-label">Our Solution</p>
+            <h2 className="section-heading-medium purple-text">
               We test before we build.
             </h2>
-            <p style={{
-              fontFamily: 'Bitter, sans-serif',
-              fontSize: '18px',
-              fontWeight: '400',
-              color: '#64748b',
-              lineHeight: '31.5px',
-              maxWidth: '800px'
-            }}>
+            <p className="regular-paragraph dark-text" style={{maxWidth: '800px'}}>
               Using archetypal psychology and customer validation, we create brands that connect on a fundamental level. Every decision is guided by insight, ensuring your brand resonates with the people who matter most — <span className="font-semibold">your customers</span>.
             </p>
           </div>
@@ -265,24 +185,10 @@ const LandingPage: React.FC = () => {
         >
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 style={{ 
-                fontFamily: 'Bitter, sans-serif',
-                fontSize: '56px',
-                fontWeight: '700',
-                color: 'rgb(253, 97, 94)',
-                marginBottom: '10px',
-                lineHeight: '70px'
-              }}>
+              <h2 className="section-heading-large">
                 Service Options
               </h2>
-              <p style={{
-                fontFamily: 'Bitter, sans-serif',
-                fontSize: '28px',
-                fontWeight: '400',
-                color: 'rgb(54, 54, 54)',
-                lineHeight: '42px',
-                marginBottom: '0px'
-              }}>
+              <p className="large-paragraph">
                 Start smart, scale from strategic to full transformation.
               </p>
             </div>
@@ -292,14 +198,7 @@ const LandingPage: React.FC = () => {
               <div className="bg-white p-8 rounded-lg shadow-lg">
                 <div className="mb-6">
                   <Brain className="h-12 w-12 text-primary-500 mb-4" />
-                  <h3 style={{
-                    fontFamily: 'Bitter, sans-serif',
-                    fontSize: '26px',
-                    fontWeight: '600',
-                    color: 'rgb(253, 97, 94)',
-                    lineHeight: '32.5px',
-                    marginBottom: '15px'
-                  }}>
+                  <h3 className="card-heading">
                     Foundation Builder
                   </h3>
                   <p className="text-lg">
@@ -333,14 +232,7 @@ const LandingPage: React.FC = () => {
               <div className="bg-white p-8 rounded-lg shadow-lg border-2 border-primary-500">
                 <div className="mb-6">
                   <Sparkles className="h-12 w-12 text-primary-500 mb-4" />
-                  <h3 style={{
-                    fontFamily: 'Bitter, sans-serif',
-                    fontSize: '26px',
-                    fontWeight: '600',
-                    color: 'rgb(253, 97, 94)',
-                    lineHeight: '32.5px',
-                    marginBottom: '15px'
-                  }}>
+                  <h3 className="card-heading">
                     Strategic Partnership
                   </h3>
                   <p className="text-lg">
@@ -376,14 +268,7 @@ const LandingPage: React.FC = () => {
               <div className="bg-white p-8 rounded-lg shadow-lg">
                 <div className="mb-6">
                   <ArrowRight className="h-12 w-12 text-primary-500 mb-4" />
-                  <h3 style={{
-                    fontFamily: 'Bitter, sans-serif',
-                    fontSize: '26px',
-                    fontWeight: '600',
-                    color: 'rgb(253, 97, 94)',
-                    lineHeight: '32.5px',
-                    marginBottom: '15px'
-                  }}>
+                  <h3 className="card-heading">
                     Full Transformation
                   </h3>
                   <p className="text-lg">
