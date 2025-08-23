@@ -101,21 +101,21 @@ const LandingPage: React.FC = () => {
             <motion.div className="w-1/2 pl-8" {...fadeIn}>
               <h1 style={{ 
                 fontFamily: 'Bitter, sans-serif',
-                fontSize: '46px',
+                fontSize: '56px',
                 fontWeight: '700',
-                lineHeight: '57.5px',
-                color: 'white',
-                marginBottom: '24px'
+                lineHeight: '70px',
+                color: 'rgb(255, 255, 255)',
+                marginBottom: '20px'
               }}>
                 Build brands on insight, not intuition.
               </h1>
               <p style={{
-                fontFamily: 'Bitter, serif',
+                fontFamily: 'Bitter, sans-serif',
                 fontSize: '24px',
                 fontWeight: '400',
-                color: 'white',
+                color: 'rgb(255, 255, 255)',
                 lineHeight: '36px',
-                marginBottom: '32px'
+                marginBottom: '0px'
               }}>
                 We use psychology and AI to create brands that connect emotionally and perform 
                 strategically—from startup foundations to complete transformations.
@@ -145,26 +145,26 @@ const LandingPage: React.FC = () => {
               fontFamily: 'Source Sans Pro, sans-serif',
               fontSize: '18px',
               fontWeight: '700',
-              color: '#FD615E',
+              color: 'rgb(54, 54, 54)',
               textTransform: 'uppercase',
-              letterSpacing: '0.12em',
-              marginBottom: '24px'
+              letterSpacing: '2px',
+              marginBottom: '27px'
             }}>Our mission</p>
             <h2 style={{ 
               fontFamily: 'Bitter, sans-serif',
               fontSize: '56px',
               fontWeight: '700',
-              color: '#7F5971',
-              marginBottom: '24px',
+              color: 'rgb(253, 97, 94)',
+              marginBottom: '20px',
               lineHeight: '70px'
             }}>
               Make sure your brand matches what people really need.
             </h2>
             <p style={{
-              fontFamily: 'Bitter, serif',
+              fontFamily: 'Bitter, sans-serif',
               fontSize: '28px',
               fontWeight: '400',
-              color: '#64748b',
+              color: 'rgb(54, 54, 54)',
               lineHeight: '42px',
               maxWidth: '800px'
             }}>
@@ -175,7 +175,7 @@ const LandingPage: React.FC = () => {
 
         {/* The Problem */}
         <motion.section 
-          className="bg-neutral-50 py-20"
+          className="bg-neutral-800 py-20"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
@@ -186,26 +186,26 @@ const LandingPage: React.FC = () => {
               fontFamily: 'Source Sans Pro, sans-serif',
               fontSize: '18px',
               fontWeight: '700',
-              color: '#FD615E',
+              color: 'rgb(54, 54, 54)',
               textTransform: 'uppercase',
-              letterSpacing: '0.12em',
-              marginBottom: '24px'
+              letterSpacing: '2px',
+              marginBottom: '27px'
             }}>The problem</p>
             <h2 style={{ 
               fontFamily: 'Bitter, sans-serif',
               fontSize: '32px',
               fontWeight: '400',
-              color: '#7F5971',
-              marginBottom: '24px',
+              color: 'rgb(255, 255, 255)',
+              marginBottom: '14px',
               lineHeight: '40px'
             }}>
               Brands built on guesses don't grow.
             </h2>
             <p style={{
-              fontFamily: 'Bitter, serif',
+              fontFamily: 'Bitter, sans-serif',
               fontSize: '18px',
               fontWeight: '400',
-              color: '#64748b',
+              color: 'rgb(255, 255, 255)',
               lineHeight: '31.5px',
               maxWidth: '800px'
             }}>
@@ -227,23 +227,23 @@ const LandingPage: React.FC = () => {
               fontFamily: 'Source Sans Pro, sans-serif',
               fontSize: '18px',
               fontWeight: '700',
-              color: '#FD615E',
+              color: 'rgb(54, 54, 54)',
               textTransform: 'uppercase',
-              letterSpacing: '0.12em',
-              marginBottom: '24px'
+              letterSpacing: '2px',
+              marginBottom: '27px'
             }}>Our Solution</p>
             <h2 style={{ 
               fontFamily: 'Bitter, sans-serif',
               fontSize: '32px',
               fontWeight: '500',
-              color: '#7F5971',
-              marginBottom: '24px',
+              color: 'rgb(127, 89, 113)',
+              marginBottom: '14px',
               lineHeight: '40px'
             }}>
               We test before we build.
             </h2>
             <p style={{
-              fontFamily: 'Bitter, serif',
+              fontFamily: 'Bitter, sans-serif',
               fontSize: '18px',
               fontWeight: '400',
               color: '#64748b',
@@ -269,18 +269,19 @@ const LandingPage: React.FC = () => {
                 fontFamily: 'Bitter, sans-serif',
                 fontSize: '56px',
                 fontWeight: '700',
-                color: '#7F5971',
-                marginBottom: '24px',
+                color: 'rgb(253, 97, 94)',
+                marginBottom: '10px',
                 lineHeight: '70px'
               }}>
                 Service Options
               </h2>
               <p style={{
-                fontFamily: 'Bitter, serif',
+                fontFamily: 'Bitter, sans-serif',
                 fontSize: '28px',
                 fontWeight: '400',
-                color: '#64748b',
-                lineHeight: '42px'
+                color: 'rgb(54, 54, 54)',
+                lineHeight: '42px',
+                marginBottom: '0px'
               }}>
                 Start smart, scale from strategic to full transformation.
               </p>
@@ -291,7 +292,14 @@ const LandingPage: React.FC = () => {
               <div className="bg-white p-8 rounded-lg shadow-lg">
                 <div className="mb-6">
                   <Brain className="h-12 w-12 text-primary-500 mb-4" />
-                  <h3 className="text-xl font-display font-bold text-secondary-500 mb-2">
+                  <h3 style={{
+                    fontFamily: 'Bitter, sans-serif',
+                    fontSize: '26px',
+                    fontWeight: '600',
+                    color: 'rgb(253, 97, 94)',
+                    lineHeight: '32.5px',
+                    marginBottom: '15px'
+                  }}>
                     Foundation Builder
                   </h3>
                   <p className="text-lg">
@@ -325,7 +333,14 @@ const LandingPage: React.FC = () => {
               <div className="bg-white p-8 rounded-lg shadow-lg border-2 border-primary-500">
                 <div className="mb-6">
                   <Sparkles className="h-12 w-12 text-primary-500 mb-4" />
-                  <h3 className="text-xl font-display font-bold text-secondary-500 mb-2">
+                  <h3 style={{
+                    fontFamily: 'Bitter, sans-serif',
+                    fontSize: '26px',
+                    fontWeight: '600',
+                    color: 'rgb(253, 97, 94)',
+                    lineHeight: '32.5px',
+                    marginBottom: '15px'
+                  }}>
                     Strategic Partnership
                   </h3>
                   <p className="text-lg">
@@ -361,7 +376,14 @@ const LandingPage: React.FC = () => {
               <div className="bg-white p-8 rounded-lg shadow-lg">
                 <div className="mb-6">
                   <ArrowRight className="h-12 w-12 text-primary-500 mb-4" />
-                  <h3 className="text-xl font-display font-bold text-secondary-500 mb-2">
+                  <h3 style={{
+                    fontFamily: 'Bitter, sans-serif',
+                    fontSize: '26px',
+                    fontWeight: '600',
+                    color: 'rgb(253, 97, 94)',
+                    lineHeight: '32.5px',
+                    marginBottom: '15px'
+                  }}>
                     Full Transformation
                   </h3>
                   <p className="text-lg">
