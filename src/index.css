@@ -5,346 +5,348 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --color-accent: #FD615E;
-    --color-main: #7F5971;
-    --color-supporting: rgba(127, 89, 113, 0.25);
-    --color-light: #F8FAFC;
-    --color-white: #FFFFFF;
-    
-    /* Title font properties */
-    --title-font-family: 'Bitter', sans-serif;
-    --title-font-weight: 700;
-    --title-font-style: normal;
-    --title-font-size: 46px;
-    --title-line-height: 57.5px;
-    --title-letter-spacing: 0%;
-    
-    /* Heading font properties */
-    --heading-font-family: 'Bitter', sans-serif;
-    --heading-font-weight: 700;
-    --heading-font-style: normal;
-    --heading-font-size: 56px;
-    --heading-line-height: 70px;
-    --heading-letter-spacing: 0%;
-    
-    /* Body font properties */
-    --body-font-family: 'Bitter', serif;
-    --body-font-weight: 400;
-    --body-font-style: normal;
-    --body-font-size: 24px;
-    --body-line-height: 36px;
-    --body-letter-spacing: 0%;
-    
-    /* Menu font properties */
-    --menu-font-family: 'Source Sans Pro', sans-serif;
-    --menu-font-weight: 400;
-    --menu-font-style: normal;
-    --menu-font-size: 18px;
-    --menu-line-height: 100%;
-    --menu-letter-spacing: 12%;
-    --menu-text-align: right;
-    --menu-text-transform: uppercase;
-  }
+    :root {
+        --color-accent: #FD615E;
+        --color-main: #7F5971;
+        --color-supporting: rgba(127, 89, 113, 0.25);
+        --color-light: #F8FAFC;
+        --color-white: #FFFFFF;
 
-  html {
-    font-family: var(--body-font-family);
-    font-weight: var(--body-font-weight);
-    font-style: var(--body-font-style);
-    font-size: var(--body-font-size);
-    line-height: var(--body-line-height);
-    letter-spacing: var(--body-letter-spacing);
-    color: #334155;
-    scroll-behavior: smooth;
-  }
+        /* Title font properties */
+        --title-font-family: 'Bitter', sans-serif;
+        --title-font-weight: 700;
+        --title-font-style: normal;
+        --title-font-size: 46px;
+        --title-line-height: 57.5px;
+        --title-letter-spacing: 0%;
 
-  body, p, div, span, a, li, td, th, input, textarea, select, button {
-    font-family: var(--body-font-family);
-    font-weight: var(--body-font-weight);
-    font-style: var(--body-font-style);
-    font-size: var(--body-font-size);
-    line-height: var(--body-line-height);
-    letter-spacing: var(--body-letter-spacing);
-  }
+        /* Heading font properties */
+        --heading-font-family: 'Bitter', sans-serif;
+        --heading-font-weight: 700;
+        --heading-font-style: normal;
+        --heading-font-size: 56px;
+        --heading-line-height: 70px;
+        --heading-letter-spacing: 0%;
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Montserrat', system-ui, sans-serif;
-  }
+        /* Body font properties */
+        --body-font-family: 'Bitter', serif;
+        --body-font-weight: 400;
+        --body-font-style: normal;
+        --body-font-size: 24px;
+        --body-line-height: 36px;
+        --body-letter-spacing: 0%;
+
+        /* Menu font properties */
+        --menu-font-family: 'Source Sans Pro', sans-serif;
+        --menu-font-weight: 400;
+        --menu-font-style: normal;
+        --menu-font-size: 18px;
+        --menu-line-height: 100%;
+        --menu-letter-spacing: 12%;
+        --menu-text-align: right;
+        --menu-text-transform: uppercase;
+    }
+
+    html {
+        font-family: var(--body-font-family);
+        font-weight: var(--body-font-weight);
+        font-style: var(--body-font-style);
+        font-size: var(--body-font-size);
+        line-height: var(--body-line-height);
+        letter-spacing: var(--body-letter-spacing);
+        color: #334155;
+        scroll-behavior: smooth;
+    }
+
+    body, p, div, span, a, li, td, th, input, textarea, select, button {
+        font-family: var(--body-font-family);
+        font-weight: var(--body-font-weight);
+        font-style: var(--body-font-style);
+        font-size: var(--body-font-size);
+        line-height: var(--body-line-height);
+        letter-spacing: var(--body-letter-spacing);
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Montserrat', system-ui, sans-serif;
+    }
 }
 
 @layer components {
-  /* Global Button Styles */
-  .btn {
-    @apply inline-flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
-    font-family: 'Source Sans Pro', sans-serif;
-    font-style: normal;
-    font-weight: 700;
-    font-size: var(--btn-font-size, 18px); /* Use CSS custom property */
-    line-height: 202%;
-    text-align: center;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #FFFFFF;
-    background: var(--color-accent);
-    box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.2);
-    border-radius: 24px;
-  }
+    /* Global Button Styles */
+    .btn {
+        @apply inline-flex items-center justify-center transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+        font-family: 'Source Sans Pro', sans-serif;
+        font-style: normal;
+        font-weight: 700;
+        font-size: var(--btn-font-size, 18px); /* Use CSS custom property */
+        line-height: 202%;
+        text-align: center;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #FFFFFF;
+        background: var(--color-accent);
+        box-shadow: 2px 4px 14px 0px rgba(0, 0, 0, 0.2);
+        border-radius: 24px;
+    }
 
-  .btn:hover {
-    background: var(--color-main);
-    box-shadow: 0px 6px 28px rgba(0, 0, 0, 0.25);
-  }
+    .btn:hover {
+        background: var(--color-main);
+        box-shadow: 0px 6px 28px rgba(0, 0, 0, 0.25);
+    }
 
-  .btn:focus {
-    @apply ring-red-500 ring-offset-2;
-  }
+    .btn:focus {
+        @apply ring-red-500 ring-offset-2;
+    }
 
-  .btn:disabled {
-    background: #fca5a7;
-    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.1);
-  }
+    .btn:disabled {
+        background: #fca5a7;
+        box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.1);
+    }
 
-  /* Button Size Variants */
-  .btn-sm {
-    padding: 12px 16px !important;
-    --btn-font-size: 14px !important;
-  }
+    /* Button Size Variants */
+    .btn-sm {
+        padding: 12px 16px !important;
+        --btn-font-size: 14px !important;
+    }
 
-  .btn-md {
-    padding: 16px 24px !important;
-    --btn-font-size: 16px !important;
-  }
+    .btn-md {
+        padding: 16px 24px !important;
+        --btn-font-size: 16px !important;
+    }
 
-  .btn-lg {
-    padding: 20px 32px !important;
-    --btn-font-size: 18px !important;
-  }
+    .btn-lg {
+        padding: 20px 32px !important;
+        --btn-font-size: 18px !important;
+    }
 
-  .btn-xl {
-    padding: 24px 40px !important;
-    --btn-font-size: 20px !important;
-  }
+    .btn-xl {
+        padding: 24px 40px !important;
+        --btn-font-size: 20px !important;
+    }
 
-  /* Button Variants */
-  .btn-primary {
-    background: var(--color-accent);
-    color: #FFFFFF;
-  }
+    /* Button Variants */
+    .btn-primary {
+        background: var(--color-accent);
+        color: #FFFFFF;
+    }
 
-  .btn-primary:hover {
-    background: var(--color-main);
-    color: #FFFFFF;
-  }
+    .btn-primary:hover {
+        background: var(--color-main);
+        color: #FFFFFF;
+    }
 
-  .btn-secondary {
-    background: white;
-    color: var(--color-accent);
-    border: 2px solid var(--color-accent);
-    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.1);
-  }
+    .btn-secondary {
+        background: white;
+        color: var(--color-accent);
+        border: 2px solid var(--color-accent);
+        box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.1);
+    }
 
-  .btn-secondary:hover {
-    background: var(--color-main);
-    color: #FFFFFF;
-    box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.2);
-  }
+    .btn-secondary:hover {
+        background: var(--color-main);
+        color: #FFFFFF;
+        box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.2);
+    }
 
-  .btn-ghost {
-    background: transparent;
-    color: var(--color-accent);
-    box-shadow: none;
-  }
+    .btn-ghost {
+        background: transparent;
+        color: var(--color-accent);
+        box-shadow: none;
+    }
 
-  .btn-ghost:hover {
-    background: rgba(127, 89, 113, 0.1);
-    color: var(--color-main);
-    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.1);
-  }
+    .btn-ghost:hover {
+        background: rgba(127, 89, 113, 0.1);
+        color: var(--color-main);
+        box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.1);
+    }
 
-  .btn-outline {
-    background: transparent;
-    color: var(--color-accent);
-    border: 2px solid var(--color-accent);
-    box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.1);
-  }
+    .btn-outline {
+        background: transparent;
+        color: var(--color-accent);
+        border: 2px solid var(--color-accent);
+        box-shadow: 0px 2px 12px rgba(0, 0, 0, 0.1);
+    }
 
-  .btn-outline:hover {
-    background: var(--color-main);
-    color: #FFFFFF;
-    box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.2);
-  }
+    .btn-outline:hover {
+        background: var(--color-main);
+        color: #FFFFFF;
+        box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.2);
+    }
 
-  /* Brandician.eu exact style classes */
-  
-  /* Hero title - "Build brands on insight, not intuition" */
-  .hero-title {
-    font-family: 'Bitter', sans-serif;
-    font-size: 56px;
-    font-weight: 700;
-    line-height: 70px;
-    color: rgb(255, 255, 255);
-    margin-bottom: 20px;
-  }
+    /* Brandician.eu exact style classes */
+    /* Hero title - "Build brands on insight, not intuition" */
+    .hero-title {
+        font-family: 'Bitter', sans-serif;
+        font-size: 56px;
+        font-weight: 700;
+        line-height: 70px;
+        color: rgb(255, 255, 255);
+    }
 
-  /* Main section headings - "Make sure your brand...", "Service Options" */
-  .section-heading-large {
-    font-family: 'Bitter', sans-serif;
-    font-size: 56px;
-    font-weight: 700;
-    line-height: 70px;
-    color: rgb(253, 97, 94);
-    margin-bottom: 20px;
-  }
+    /* Main section headings - "Make sure your brand...", "Service Options" */
+    .section-heading-large {
+        font-family: 'Bitter', sans-serif;
+        font-size: 56px;
+        font-weight: 700;
+        line-height: 70px;
+        color: rgb(253, 97, 94);
+        margin-bottom: 20px;
+    }
 
-  /* Problem/Solution headings */
-  .section-heading-medium {
-    font-family: 'Bitter', sans-serif;
-    font-size: 32px;
-    font-weight: 400;
-    line-height: 40px;
-    margin-bottom: 14px;
-  }
+    /* Problem/Solution headings */
+    .section-heading-medium {
+        font-family: 'Bitter', sans-serif;
+        font-size: 32px;
+        font-weight: 400;
+        line-height: 40px;
+        margin-bottom: 14px;
+    }
 
-  .section-heading-medium.white-text {
-    color: rgb(255, 255, 255);
-  }
+    .section-heading-medium.white-text {
+        color: rgb(255, 255, 255);
+    }
 
-  .section-heading-medium.purple-text {
-    color: rgb(127, 89, 113);
-    font-weight: 500;
-  }
+    .section-heading-medium.purple-text {
+        color: rgb(127, 89, 113);
+        font-weight: 500;
+    }
 
-  /* Card headings - Foundation Builder, Strategic Partnership, etc. */
-  .card-heading {
-    font-family: 'Bitter', sans-serif;
-    font-size: 26px;
-    font-weight: 600;
-    color: rgb(253, 97, 94);
-    line-height: 32.5px;
-    margin-bottom: 15px;
-  }
+    /* Card headings - Foundation Builder, Strategic Partnership, etc. */
+    .card-heading {
+        font-family: 'Bitter', sans-serif;
+        font-size: 26px;
+        font-weight: 600;
+        color: rgb(253, 97, 94);
+        line-height: 32.5px;
+        margin-bottom: 15px;
+    }
 
-  /* Labels - "Our mission", "The problem", etc. */
-  .section-label {
-    font-family: 'Source Sans Pro', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: rgb(54, 54, 54);
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 27px;
-  }
+    /* Labels - "Our mission", "The problem", etc. */
+    .section-label {
+        font-family: 'Source Sans Pro', sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        color: rgb(54, 54, 54);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 27px;
+    }
 
-  /* Hero paragraph */
-  .hero-paragraph {
-    font-family: 'Bitter', sans-serif;
-    font-size: 24px;
-    font-weight: 400;
-    color: rgb(255, 255, 255);
-    line-height: 36px;
-    margin-bottom: 0px;
-  }
+    /* Hero paragraph */
+    .hero-paragraph {
+        font-family: 'Bitter', sans-serif;
+        font-weight: 400;
+        color: rgb(255, 255, 255);
+        margin-bottom: 0px;
+        font-size: 28px;
+        line-height: 1.5em;
+    }
 
-  /* Large paragraphs - mission, service descriptions */
-  .large-paragraph {
-    font-family: 'Bitter', sans-serif;
-    font-size: 28px;
-    font-weight: 400;
-    color: rgb(54, 54, 54);
-    line-height: 42px;
-    margin-bottom: 0px;
-  }
+    /* Large paragraphs - mission, service descriptions */
+    .large-paragraph {
+        font-family: 'Bitter', sans-serif;
+        font-size: 28px;
+        font-weight: 400;
+        color: rgb(54, 54, 54);
+        line-height: 42px;
+        margin-bottom: 0px;
+    }
 
-  /* Regular paragraphs */
-  .regular-paragraph {
-    font-family: 'Bitter', sans-serif;
-    font-size: 18px;
-    font-weight: 400;
-    line-height: 31.5px;
-    margin-bottom: 0px;
-  }
+    /* Regular paragraphs */
+    .regular-paragraph {
+        font-family: 'Bitter', sans-serif;
+        font-size: 18px;
+        font-weight: 400;
+        line-height: 31.5px;
+        margin-bottom: 0px;
+    }
 
-  .regular-paragraph.white-text {
-    color: rgb(255, 255, 255);
-  }
+    .regular-paragraph.white-text {
+        color: rgb(255, 255, 255);
+    }
 
-  .regular-paragraph.dark-text {
-    color: rgb(54, 54, 54);
-  }
+    .regular-paragraph.dark-text {
+        color: rgb(54, 54, 54);
+    }
 
-  /* Navigation menu items - exact brandician.eu styles */
-  .nav-menu-item {
-    font-family: 'Source Sans Pro', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: rgb(54, 54, 54);
-    transition: color 0.2s ease;
-  }
+    /* Navigation menu items - exact brandician.eu styles */
+    .nav-menu-item {
+        font-family: 'Source Sans Pro', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: rgb(54, 54, 54);
+        transition: color 0.2s ease;
+        padding: 13px 20px;
+    }
 
-  .nav-menu-item:hover {
-    color: rgb(253, 97, 94);
-  }
+    .nav-menu-item:hover {
+        color: rgb(253, 97, 94);
+    }
 
-  /* Menu text style */
-  .text-menu {
-    font-family: var(--menu-font-family);
-    font-weight: var(--menu-font-weight);
-    font-style: var(--menu-font-style);
-    font-size: var(--menu-font-size);
-    line-height: var(--menu-line-height);
-    letter-spacing: var(--menu-letter-spacing);
-    text-align: var(--menu-text-align);
-    text-transform: var(--menu-text-transform);
-  }
+    /* Active state for navigation items */
+    .nav-menu-item.active {
+        color: #FD615E !important;
+    }
 
-  .color-accent {
-    color: var(--color-accent);
-  }
+    /* Menu text style */
+    .text-menu {
+        font-family: var(--menu-font-family);
+        font-weight: var(--menu-font-weight);
+        font-style: var(--menu-font-style);
+        font-size: var(--menu-font-size);
+        line-height: var(--menu-line-height);
+        letter-spacing: var(--menu-letter-spacing);
+        text-align: var(--menu-text-align);
+        text-transform: var(--menu-text-transform);
+    }
 
-  .color-supporting {
-    color: var(--color-supporting);
-  }
+    .color-accent {
+        color: var(--color-accent);
+    }
 
-  .color-light {
-    color: var(--color-light);
-  }
+    .color-supporting {
+        color: var(--color-supporting);
+    }
 
-  .color-white {
-    color: var(--color-white);
-  }
+    .color-light {
+        color: var(--color-light);
+    }
 
-  .color-main {
-    color: var(--color-main);
-  }
+    .color-white {
+        color: var(--color-white);
+    }
 
-  .bg-accent {
-    background-color: var(--color-accent);
-  }
+    .color-main {
+        color: var(--color-main);
+    }
 
-  .bg-supporting {
-    background-color: var(--color-supporting);
-  }
+    .bg-accent {
+        background-color: var(--color-accent);
+    }
 
-  .bg-light {
-    background-color: var(--color-light);
-  }
+    .bg-supporting {
+        background-color: var(--color-supporting);
+    }
 
-  .bg-white {
-    background-color: var(--color-white);
-  }
+    .bg-light {
+        background-color: var(--color-light);
+    }
 
-  .bg-main {
-    background-color: var(--color-main);
-  }
+    .bg-white {
+        background-color: var(--color-white);
+    }
+
+    .bg-main {
+        background-color: var(--color-main);
+    }
 }
 
 .container {
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-  width: 100%;
-  padding-left: 1rem;
-  padding-right: 1rem;
+    max-width: 1080px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
 }
