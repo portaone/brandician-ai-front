@@ -16,7 +16,7 @@ const LandingPage: React.FC = () => {
             <main>
                 {/* Hero Section */}
                 <motion.section
-                    className="relative min-h-[600px] overflow-hidden"
+                    className="relative min-h-[460px] lg:min-h-[600px] overflow-hidden"
                     style={{
                         backgroundColor: '#7F5971',
                         backgroundImage: 'url(https://www.brandician.eu/wp-content/uploads/2021/12/seamless-back-dark-circles.svg)',
@@ -41,10 +41,11 @@ const LandingPage: React.FC = () => {
                             opacity: 0.92
                         }}
                     />
-                    <div className="container mx-auto flex items-center min-h-[600px]  h-[768px] relative z-10">
+                    <div
+                        className="container mx-auto flex flex-col lg:flex-row items-center min-h-[400px] md:min-h-[500px] lg:min-h-[600px] h-auto lg:h-[768px] py-12 md:py-16 lg:py-0 relative z-10">
                         {/* Left side - Carousel */}
                         <motion.div
-                            className="flex justify-center items-center max-w-[556px]"
+                            className="hidden lg:flex justify-center items-center max-w-[556px]"
                             initial={{opacity: 0, x: -20}}
                             animate={{opacity: 1, x: 0}}
                             transition={{duration: 0.8}}
@@ -52,7 +53,7 @@ const LandingPage: React.FC = () => {
                             <div
                                 className="relative w-full overflow-hidden flex items-center justify-center">
                                 {/* Hat carousel */}
-                                <div className="flex space-x-8 ц">
+                                <div className="flex space-x-8 ">
                                     {[
                                         // Hat 1 - Classic fedora
                                         <svg key={0} width="120" height="120" viewBox="0 0 120 120"
@@ -121,11 +122,12 @@ const LandingPage: React.FC = () => {
                         </motion.div>
 
                         {/* Right side - Content */}
-                        <motion.div className="w-1/2 p-[10px] space-y-[20px]" {...fadeIn}>
-                            <h1 className="hero-title">
+                        <motion.div
+                            className="w-full lg:w-1/2 px-4 md:px-6 lg:p-[10px] space-y-[15px] md:space-y-[18px] lg:space-y-[20px] text-center lg:text-left" {...fadeIn}>
+                            <h1 className="hero-title text-[32px] md:text-[44px] lg:text-[56px] leading-[1.2] md:leading-[1.25] lg:leading-[70px]">
                                 Build brands on insight, not intuition.
                             </h1>
-                            <p className="hero-paragraph">
+                            <p className="hero-paragraph text-[18px] md:text-[22px] lg:text-[28px] leading-[1.5] max-w-[600px] mx-auto lg:mx-0">
                                 We use psychology and AI to create brands that connect emotionally and perform
                                 strategically—from startup foundations to complete transformations.
                             </p>
@@ -151,7 +153,7 @@ const LandingPage: React.FC = () => {
 
                 {/* Our Mission */}
                 <motion.section
-                    className="bg-white py-20"
+                    className="bg-white py-10 lg:py-20"
                     initial={{opacity: 0}}
                     whileInView={{opacity: 1}}
                     viewport={{once: true}}
@@ -171,7 +173,7 @@ const LandingPage: React.FC = () => {
 
                 {/* The Problem */}
                 <motion.section
-                    className="bg-neutral-800 py-20"
+                    className="bg-neutral-800 py-10 lg:py-20"
                     initial={{opacity: 0}}
                     whileInView={{opacity: 1}}
                     viewport={{once: true}}
@@ -192,7 +194,7 @@ const LandingPage: React.FC = () => {
 
                 {/* Our Solution */}
                 <motion.section
-                    className="bg-white py-20"
+                    className="bg-white py-10 lg:py-20"
                     initial={{opacity: 0}}
                     whileInView={{opacity: 1}}
                     viewport={{once: true}}
@@ -213,7 +215,7 @@ const LandingPage: React.FC = () => {
 
                 {/* Service Options */}
                 <motion.section
-                    className="bg-neutral-50 py-20"
+                    className="bg-neutral-50 py-10 lg:py-20"
                     initial={{opacity: 0}}
                     whileInView={{opacity: 1}}
                     viewport={{once: true}}
