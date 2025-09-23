@@ -14,7 +14,16 @@
       "mcp__playwright__browser_take_screenshot",
       "mcp__playwright__browser_evaluate",
       "Bash(npm install:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "mcp__playwright__browser_hover",
+      "mcp__playwright__browser_snapshot",
+      "Bash(curl:*)",
+      "Bash(/dev/null)",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_wait_for"
     ],
     "deny": []
   }

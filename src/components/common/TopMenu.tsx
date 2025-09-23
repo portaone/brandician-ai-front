@@ -44,17 +44,17 @@ const TopMenu: React.FC = () => {
                                 </span>
                             </button>
                             {/* About dropdown menu */}
-                            <div className="absolute top-full left-0 mt-0 w-64 bg-white border border-gray-200 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                            <div className="absolute top-full left-0 mt-0 w-auto min-w-[240px] bg-[#F4F2F2] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                                 <a href="https://www.brandician.eu/about/what-makes-us-different/"
                                    target="_blank"
                                    rel="noopener noreferrer"
-                                   className="block px-4 py-3 text-[13px] font-['Source_Sans_Pro'] font-semibold uppercase tracking-[1px] text-gray-700 hover:text-[#FD615E] hover:bg-gray-50 transition-colors">
+                                   className="block px-5 py-[13px] text-[13px] font-['Source_Sans_Pro'] font-semibold uppercase tracking-[2px] text-[#33373D] hover:text-[#FD615E] hover:bg-white/50 transition-colors whitespace-nowrap">
                                     What Makes Us Special
                                 </a>
                                 <a href="https://www.brandician.eu/team/"
                                    target="_blank"
                                    rel="noopener noreferrer"
-                                   className="block px-4 py-3 text-[13px] font-['Source_Sans_Pro'] font-semibold uppercase tracking-[1px] text-gray-700 hover:text-[#FD615E] hover:bg-gray-50 transition-colors border-t border-gray-100">
+                                   className="block px-5 py-[13px] text-[13px] font-['Source_Sans_Pro'] font-semibold uppercase tracking-[2px] text-[#33373D] hover:text-[#FD615E] hover:bg-white/50 transition-colors whitespace-nowrap">
                                     Team
                                 </a>
                             </div>
