@@ -29,6 +29,7 @@ import MarkdownPage from './components/MarkdownPage';
 import Footer from './components/common/Footer';
 import CookieConsent from './components/common/CookieConsent';
 import BrandAssets from './components/BrandAssets/BrandAssets';
+import Profile from './components/Profile';
 import './index.css';
 
 function BrandAssetsWrapper() {
@@ -68,6 +69,14 @@ const App: React.FC = () => {
             element={
               <AuthGuard>
                 <BrandList />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <AuthGuard>
+                <Profile />
               </AuthGuard>
             }
           />

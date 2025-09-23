@@ -149,6 +149,18 @@
         box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.2);
     }
 
+    .btn-danger {
+        background: #DC2626;
+        color: white;
+        border: 2px solid #DC2626;
+        box-shadow: 0px 2px 12px rgba(220, 38, 38, 0.2);
+    }
+    .btn-danger:hover {
+        background: #B91C1C;
+        border-color: #B91C1C;
+        box-shadow: 0px 4px 24px rgba(220, 38, 38, 0.3);
+    }
+
     .btn-ghost {
         background: transparent;
         color: var(--color-accent);
