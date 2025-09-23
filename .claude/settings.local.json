@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rg:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(grep:*)",
+      "Bash(npx eslint:*)",
+      "Bash(rm:*)",
+      "WebFetch(domain:www.figma.com)",
+      "Bash(find:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_evaluate",
+      "Bash(npm install:*)",
+      "Bash(git push:*)"
+    ],
+    "deny": []
+  }
+}

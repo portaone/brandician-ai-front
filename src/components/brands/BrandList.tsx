@@ -41,7 +41,7 @@ const BrandList: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 pt-8">
+    <div className="container mx-auto px-4 pt-8 min-h-[calc(100vh-300px)]">
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold text-gray-900">Your Brands</h2>
@@ -69,20 +69,23 @@ const BrandList: React.FC = () => {
             {brands.map((brand) => (
               <div
                 key={brand.id}
-                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow"
+                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow flex flex-col"
               >
                 <h3 className="text-lg font-medium text-gray-900 mb-2">{brand.name}</h3>
                 {brand.description && (
                   <p className="text-gray-500 mb-4 line-clamp-2">{brand.description}</p>
                 )}
-                <div className="flex justify-between items-center">
+                <div className="flex-grow">
                   <span className="text-sm text-gray-500">
                     Status: {brand.status_description || 'Unknown status'}
                   </span>
+                </div>
+                <div className="mt-4">
                   <Button
                     onClick={() => handleContinue(brand.id, brand.current_status || 'new_brand')}
-                    variant="ghost"
+                    variant="primary"
                     rightIcon={<ArrowRight className="h-4 w-4" />}
+                    className="w-full"
                   >
                     Continue
                   </Button>
