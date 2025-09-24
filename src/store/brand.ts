@@ -53,6 +53,7 @@ interface BrandState {
   loadSummary: (brandId: string) => Promise<string>;
   loadArchetype: (brandId: string) => Promise<void>;
   updateArchetype: (brandId: string, archetype: string) => Promise<void>;
+  deleteBrand: (brandId: string) => Promise<void>;
 }
 
 export const useBrandStore = create<BrandState>((set, get) => ({
@@ -322,6 +323,23 @@ export const useBrandStore = create<BrandState>((set, get) => ({
     } catch (error: any) {
       set({ isLoading: false, error: 'Failed to update archetype' });
       throw error;
+    }
+  },
+
+  deleteBrand: async (brandId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await brands.delete(brandId);
+      // Remove the brand from the list
+      set((state) => ({
+        brands: state.brands.filter((brand) => brand.id !== brandId),
+        currentBrand: state.currentBrand?.id === brandId ? null : state.currentBrand,
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      const errorMessage = getErrorMessage(error, 'Failed to delete brand');
+      set({ isLoading: false, error: errorMessage });
+      throw new Error(errorMessage);
     }
   },
 }));

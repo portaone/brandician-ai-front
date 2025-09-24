@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
+import Button from '../common/Button';
 
 const CreateBrand: React.FC = () => {
   const [name, setName] = useState('');
@@ -22,13 +23,14 @@ const CreateBrand: React.FC = () => {
   return (
     <div className="container mx-auto px-4">
       <div className="max-w-2xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <button
+        <Button
           onClick={() => navigate('/brands')}
-          className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6"
+          variant="ghost"
+          leftIcon={<ArrowLeft className="h-5 w-5" />}
+          className="mb-6"
         >
-          <ArrowLeft className="h-5 w-5 mr-1" />
           Back to Brands
-        </button>
+        </Button>
 
         <div className="bg-white rounded-lg shadow px-6 py-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Brand</h2>
@@ -72,16 +74,14 @@ const CreateBrand: React.FC = () => {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
               disabled={isLoading || !name.trim()}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+              loading={isLoading}
+              className="w-full"
             >
-              {isLoading ? (
-                <span className="inline-block animate-spin mr-2">⟳</span>
-              ) : null}
               Create Brand
-            </button>
+            </Button>
           </form>
         </div>
       </div>

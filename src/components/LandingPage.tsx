@@ -1,134 +1,161 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Sparkles, ArrowRight, CheckCircle } from 'lucide-react';
+import Button from './common/Button';
+import { useAuthStore } from '../store/auth';
 
 const LandingPage: React.FC = () => {
-  const fadeIn = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.6 }
-  };
+    const navigate = useNavigate();
+    const { user } = useAuthStore();
+    const [currentHatIndex, setCurrentHatIndex] = useState(0);
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100">
-      <div className="container mx-auto px-4 py-6 md:py-12">
+    const fadeIn = {
+        initial: {opacity: 0, y: 20},
+        animate: {opacity: 1, y: 0},
+        transition: {duration: 0.6}
+    };
 
-        <main>
-          <motion.section 
-            className="flex flex-col md:flex-row items-center mb-16 md:mb-24"
-            initial="initial"
-            animate="animate"
-            variants={{
-              animate: {
-                transition: {
-                  staggerChildren: 0.1
-                }
-              }
-            }}
-          >
-            <motion.div className="md:w-1/2 mb-8 md:mb-0" {...fadeIn}>
-              <h2 className="text-4xl md:text-5xl font-display font-bold text-neutral-800 mb-6">
-                Create Your Brand Identity with AI
-                <Sparkles className="inline text-secondary-500 h-6 w-6 md:h-8 md:w-8 ml-2" />
-              </h2>
-              <p className="text-lg md:text-xl text-neutral-600 mb-8">
-                Transform your business idea into a complete brand identity in minutes, not months. 
-                Our AI-powered platform guides you through a strategic branding process that would 
-                normally cost thousands of dollars with a marketing agency. Moreover, we do not just
-                generate something that seems ok (you can do it for free using ChatGPT!). Our process
-                involves validation of the brand hypothesis with realm people from the target audience,
-                so if there is a need to adjust the brand - you will do it immediately and not after
-                failure of the first version of the product (wasting quite a bit of time and money).
-              </p>
-              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                <Link 
-                  to="/register"
-                  className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 rounded-md transition-colors flex items-center justify-center"
+    // Hat images from brandician.eu
+    const hatImages = [
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-cilinder-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-brandician-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-worker-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-viking-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-sailor-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-sage-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-nurse-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-military-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-magus-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-lover-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-lady-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-jester-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-innocent-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-hunter-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-detective-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-cowboy-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-cook-1.svg',
+        'https://www.brandician.eu/wp-content/uploads/2021/12/Brandician-0-hat-citizen-1.svg',
+    ];
+
+    const hatNames = [
+        'cilinder',
+        'brandician',
+        'worker',
+        'viking',
+        'sailor',
+        'sage',
+        'nurse',
+        'military',
+        'magus',
+        'lover',
+        'lady',
+        'jester',
+        'innocent',
+        'hunter',
+        'detective',
+        'cowboy',
+        'cook',
+        'citizen',
+    ];
+
+    // Auto-rotate carousel every 3 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentHatIndex((prevIndex) => (prevIndex + 1) % hatImages.length);
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [hatImages.length]);
+
+    return (
+        <div className="min-h-screen bg-white">
+            <main>
+                {/* Hero Section */}
+                <motion.section
+                    className="relative min-h-[460px] lg:min-h-[600px] overflow-hidden"
+                    style={{
+                        backgroundColor: '#7F5971',
+                        backgroundImage: 'url(https://www.brandician.eu/wp-content/uploads/2021/12/seamless-back-dark-circles.svg)',
+                        backgroundPosition: 'center center',
+                        backgroundSize: 'cover'
+                    }}
+                    initial="initial"
+                    animate="animate"
+                    variants={{
+                        animate: {
+                            transition: {
+                                staggerChildren: 0.1
+                            }
+                        }
+                    }}
                 >
-                  Start Your Brand Journey
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-                <a 
-                  href="#how-it-works" 
-                  className="bg-white border border-neutral-300 hover:bg-neutral-50 text-neutral-700 font-medium py-3 px-6 rounded-md transition-colors text-center"
-                >
-                  See How It Works
-                </a>
-              </div>
-            </motion.div>
+                    {/* Gradient overlay matching original site */}
+                    <div
+                        className="absolute inset-0 z-0"
+                        style={{
+                            background: 'linear-gradient(28deg, #704C63 31%, #FD615E 130%)',
+                            opacity: 0.92
+                        }}
+                    />
+                    <div
+                        className="container mx-auto flex flex-col lg:flex-row items-center min-h-[400px] md:min-h-[500px] lg:min-h-[600px] h-auto lg:h-[768px] py-12 md:py-16 lg:py-0 relative z-10">
+                        {/* Left side - Carousel */}
+                        <motion.div
+                            className="hidden lg:flex justify-center items-center w-1/2"
+                            initial={{opacity: 0, x: -20}}
+                            animate={{opacity: 1, x: 0}}
+                            transition={{duration: 0.8}}
+                        >
+                            <div className="relative w-[400px] h-[400px] flex items-center justify-center">
+                                {/* Hat carousel with fade transition */}
+                                <AnimatePresence mode="wait">
+                                    <motion.div
+                                        key={currentHatIndex}
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 1.1 }}
+                                        transition={{ duration: 0.5 }}
+                                        className="absolute inset-0 flex items-center justify-center"
+                                    >
+                                        <img
+                                            src={hatImages[currentHatIndex]}
+                                            alt={hatNames[currentHatIndex]}
+                                            className="w-full h-full object-contain filter brightness-0 invert opacity-90"
+                                            style={{ maxWidth: '350px', maxHeight: '350px' }}
+                                        />
+                                    </motion.div>
+                                </AnimatePresence>
 
-            <motion.div 
-              className="md:w-1/2 flex justify-center"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-                <div className="bg-neutral-50 p-4 rounded-md mb-4">
-                  <div className="h-8 bg-primary-100 rounded-md w-3/4 mb-3"></div>
-                  <div className="h-4 bg-neutral-200 rounded-md w-full mb-2"></div>
-                  <div className="h-4 bg-neutral-200 rounded-md w-5/6"></div>
-                </div>
-                <div className="flex items-center mb-4">
-                  <div className="h-10 w-10 rounded-full bg-secondary-100 flex items-center justify-center">
-                    <Sparkles className="text-secondary-500 h-6 w-6" />
-                  </div>
-                  <div className="ml-3">
-                    <div className="h-4 bg-neutral-200 rounded-md w-40 mb-2"></div>
-                    <div className="h-3 bg-neutral-100 rounded-md w-24"></div>
-                  </div>
-                </div>
-                <div className="h-10 bg-primary-500 rounded-md w-full"></div>
-              </div>
-            </motion.div>
-          </motion.section>
+                            </div>
+                        </motion.div>
 
-
-          <motion.section 
-            id="pricing" 
-            className="mb-16 md:mb-24"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-          >
-            <h2 className="text-3xl font-display font-bold text-neutral-800 text-center mb-4">
-              Simple, Transparent Pricing
-            </h2>
-            <p className="text-lg text-neutral-600 mb-8">
-                We believe in the value of our service so much that we let you decide what it's worth to you
-                after seeing the final results (chosen archetype, tone of voice, brand assets, etc.) - and 
-                set <strong>your own price!</strong>.
-              </p>
-              <p className="text-lg text-neutral-600 mb-8">And yes, it means you can pay <strong>ZERO </strong> 
-                 if the cash situation is tight at the moment!
-              </p>
-
-
-          </motion.section>
-
-        </main>
-
-        <footer className="border-t border-neutral-200 pt-8 pb-12">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center mb-4 md:mb-0">
-              <Brain className="text-primary-600 h-6 w-6 mr-2" />
-              <span className="text-lg font-display font-bold text-neutral-800">Brandician.AI</span>
-            </div>
-            <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-8">
-              <a href="#" className="text-neutral-600 hover:text-primary-600 transition-colors text-center md:text-left">Privacy Policy</a>
-              <a href="#" className="text-neutral-600 hover:text-primary-600 transition-colors text-center md:text-left">Terms of Service</a>
-              <a href="#" className="text-neutral-600 hover:text-primary-600 transition-colors text-center md:text-left">Contact Us</a>
-            </div>
-            <div className="mt-6 md:mt-0 text-neutral-500 text-sm">
-              &copy; {new Date().getFullYear()} Brandician.AI. All rights reserved.
-            </div>
-          </div>
-        </footer>
-      </div>
-    </div>
-  );
+                        {/* Right side - Content */}
+                        <motion.div
+                            className="w-full lg:w-1/2 px-4 md:px-6 lg:p-[10px] space-y-[15px] md:space-y-[18px] lg:space-y-[20px] text-center lg:text-left" {...fadeIn}>
+                            <h1 className="hero-title text-[32px] md:text-[44px] lg:text-[56px] leading-[1.2] md:leading-[1.25] lg:leading-[70px]">
+                                Build brands on insight, not intuition.
+                            </h1>
+                            <p className="hero-paragraph text-[18px] md:text-[22px] lg:text-[28px] leading-[1.5] max-w-[600px] mx-auto lg:mx-0">
+                                We use psychology and AI to create brands that connect emotionally and perform
+                                strategically—from startup foundations to complete transformations.
+                            </p>
+                            <Button
+                                size="xl"
+                                onClick={() => {
+                                    if (user) {
+                                        navigate('/brands/new');
+                                    } else {
+                                        navigate('/register');
+                                    }
+                                }}>
+                                Start brand creation
+                            </Button>
+                        </motion.div>
+                    </div>
+                </motion.section>
+            </main>
+        </div>
+    );
 };
 
 export default LandingPage;

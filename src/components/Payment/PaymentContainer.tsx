@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { CreditCard, Loader, AlertCircle } from 'lucide-react';
+import { CreditCard, Loader, AlertCircle, Copy } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { useAuthStore } from '../../store/auth';
 import { navigateAfterProgress } from '../../lib/navigation';
 import { brands } from '../../lib/api';
+import Button from '../common/Button';
 
 interface PaymentMethod {
   id: string;
@@ -372,12 +373,12 @@ const PaymentContainer: React.FC = () => {
                     <div className="bg-white border border-gray-200 rounded p-4 mb-2 text-left max-w-2xl mx-auto">
                       <div className="mb-2 text-gray-700">Share this text:</div>
                       <div className="font-mono text-base text-gray-900 mb-2 whitespace-pre-line">{shareText}</div>
-                      <button
+                      <Button
                         onClick={handleCopyShareText}
-                        className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium text-sm"
+                        leftIcon={<Copy className="h-4 w-4" />}
                       >
                         Copy to Clipboard
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -387,12 +388,12 @@ const PaymentContainer: React.FC = () => {
                   <div className="bg-white border border-gray-200 rounded p-4 mb-6 text-left max-w-2xl mx-auto">
                     <div className="mb-2 text-gray-700 font-semibold">Share this text on social networks:</div>
                     <div className="font-mono text-base text-gray-900 mb-2 whitespace-pre-line">{shareText}</div>
-                    <button
+                    <Button
                       onClick={handleCopyShareText}
-                      className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium text-sm"
+                      leftIcon={<Copy className="h-4 w-4" />}
                     >
                       Copy to Clipboard
-                    </button>
+                    </Button>
                   </div>
                 )}
 
@@ -400,23 +401,15 @@ const PaymentContainer: React.FC = () => {
 
               {/* Submit Button */}
               <div className="border-t pt-6">
-                <button
+                <Button
                   onClick={handlePaymentSubmit}
                   disabled={isProcessingPayment || !canProceed}
-                  className="w-full inline-flex items-center justify-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  loading={isProcessingPayment}
+                  leftIcon={!isProcessingPayment ? <CreditCard className="h-5 w-5" /> : undefined}
+                  className="w-full"
                 >
-                  {isProcessingPayment ? (
-                    <>
-                      <Loader className="animate-spin h-5 w-5 mr-2" />
-                      Processing Payment...
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="h-5 w-5 mr-2" />
-                      Proceed to Secure Payment
-                    </>
-                  )}
-                </button>
+                  {isProcessingPayment ? 'Processing Payment...' : 'Proceed to Secure Payment'}
+                </Button>
                 
                 <p className="text-xs text-gray-500 text-center mt-2">
                   Secure payment processing • Your download will be available immediately after payment
