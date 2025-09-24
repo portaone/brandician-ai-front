@@ -95,7 +95,7 @@ export const useBrandStore = create<BrandState>((set, get) => ({
   },
   
   selectBrand: async (brandId: string) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, answers: [], answersMap: new Map() });
     try {
       const brand = await brands.get(brandId);
       set({ currentBrand: brand, isLoading: false });

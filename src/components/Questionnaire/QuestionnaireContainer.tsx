@@ -44,6 +44,10 @@ const QuestionnaireContainer: React.FC = () => {
   useEffect(() => {
     console.log('🔄 Loading brand data for brandId:', brandId);
     if (brandId) {
+      // Reset the question index when switching brands
+      setCurrentQuestionIndex(-1);
+      setShowSummary(false);
+
       // Create a single async function to handle all loading
       const loadAllData = async () => {
         try {
@@ -56,7 +60,7 @@ const QuestionnaireContainer: React.FC = () => {
           console.error('Failed to load brand data:', error);
         }
       };
-      
+
       loadAllData();
     }
   }, [brandId, selectBrand, loadQuestions, loadAnswers]); // Include proper dependencies
