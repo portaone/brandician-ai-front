@@ -1,13 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ArrowRight } from 'lucide-react';
+import { Plus, ArrowRight, Trash2 } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { getRouteForStatus } from '../../lib/navigation';
 import Button from '../common/Button';
 
 const BrandList: React.FC = () => {
-  const { brands, loadBrands, isLoading, error } = useBrandStore();
+  const { brands, loadBrands, deleteBrand, isLoading, error } = useBrandStore();
   const navigate = useNavigate();
+  const [deleteConfirm, setDeleteConfirm] = useState<{ brandId: string; brandName: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadBrands();
@@ -20,8 +22,22 @@ const BrandList: React.FC = () => {
     const path = getRouteForStatus(brandId, status as any);
     console.log('Navigating to path:', path);
     console.groupEnd();
-    
+
     navigate(path);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteBrand(deleteConfirm.brandId);
+      setDeleteConfirm(null);
+    } catch (error) {
+      console.error('Failed to delete brand:', error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (isLoading) {
@@ -80,7 +96,7 @@ const BrandList: React.FC = () => {
                     Status: {brand.status_description || 'Unknown status'}
                   </span>
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 space-y-2">
                   <Button
                     onClick={() => handleContinue(brand.id, brand.current_status || 'new_brand')}
                     variant="primary"
@@ -89,12 +105,50 @@ const BrandList: React.FC = () => {
                   >
                     Continue
                   </Button>
+                  <Button
+                    onClick={() => setDeleteConfirm({ brandId: brand.id, brandName: brand.name })}
+                    variant="ghost"
+                    leftIcon={<Trash2 className="h-4 w-4" />}
+                    className="w-full text-red-600 hover:bg-red-50 hover:text-red-700"
+                  >
+                    Delete
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete Brand</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete "<strong>{deleteConfirm.brandName}</strong>"?
+              This action cannot be undone and will permanently remove all data associated with this brand.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button
+                onClick={() => setDeleteConfirm(null)}
+                variant="secondary"
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDelete}
+                variant="danger"
+                disabled={isDeleting}
+                loading={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Brand'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
