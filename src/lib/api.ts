@@ -1,15 +1,16 @@
 import axios from 'axios';
 import { BrandStatus } from './navigation';
-import { 
-  JTBDList, 
-  Survey, 
-  SurveyQuestion, 
-  SubmissionLink, 
-  SurveyStatus, 
+import {
+  JTBDList,
+  Survey,
+  SurveyQuestion,
+  SubmissionLink,
+  SurveyStatus,
   Feedback,
-  AdjustObject 
+  AdjustObject
 } from '../types';
 import { BRAND_STATUS_CREATE_SURVEY } from './navigation';
+import { config } from '../config';
 
 // Extend axios config to include our metadata
 declare module 'axios' {
@@ -20,9 +21,9 @@ declare module 'axios' {
   }
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = config.apiUrl;
 const API_PREFIX = '/api/v1.0';
-const DEBUG = import.meta.env.VITE_DEBUG === 'true';
+const DEBUG = config.debug;
 
 // Generate random request ID
 const generateRequestId = (): string => {

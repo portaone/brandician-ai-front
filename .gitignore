@@ -25,4 +25,8 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.build
 .playwright-mcp
+
+# Deployment configuration files
+vars/

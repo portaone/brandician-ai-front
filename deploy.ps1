@@ -2,14 +2,14 @@
 param(
     [Parameter(Position=0, Mandatory=$false)]
     [string]$serviceName,
-    
+
     [Parameter(ValueFromRemainingArguments=$true)]
     [string[]]$remainingArgs
 )
 
 if (-not $serviceName -or $serviceName -eq "-h") {
     Write-Host @"
-Usage: cloud-deploy.ps1 <service-name> [options]
+Usage: deploy.ps1 <service-name> [options]
 
 Deploy or update a Cloud Run service.
 
@@ -20,16 +20,14 @@ Options:
     --region <region>           GCP region for deployment.
                                Defaults to environment variable CLOUD_REGION
     --project-id <id>           GCP project ID. If not supplied, then env var PROJECT_ID
-                               is used and if not set, then the default value multi-tenant-demo is used.
-    --back-end-api <url>        URL of the backend API service.
-                               If not supplied, uses BACK_END_API environment variable.
+                               is used and if not set, then the default value portaone-ai is used.
 
 Environment variables:
-    INITIAL_DEPLOY             If set, performs initial deployment with YAML config;
-                              otherwise updates the code but keeps all the configuration variables
+    INITIAL_DEPLOY             If set, performs initial deployment with YAML config
+                              allowing you to edit environment variables before deployment.
+                              Otherwise updates only the code without changing variables.
     CLOUD_REGION              Default region if not specified as argument
     PROJECT_ID                Default project ID if not specified as argument
-    BACK_END_API             Default backend API URL if not specified as argument
 "@
     exit 0
 }
@@ -84,34 +82,6 @@ gcloud config set project $projectId
 
 gcloud auth configure-docker "$repo_region-docker.pkg.dev"
 
-$describe = gcloud run services describe $cloudRunServiceName --region $region --format="json"
-$parsed = $describe | ConvertFrom-Json
-$envVars = $parsed.spec.template.spec.containers[0].env
-
-# Extract only VITE_* vars
-$viteVars = $envVars | Where-Object { $_.name -like "NEXT_*" }
-
-# Write them to a .env.build file using absolute path
-$env_file = Join-Path $currentDirectory ".env.build"
-Write-Host "Creating environment file at: $env_file"
-@($viteVars | ForEach-Object { "$($_.name)=$($_.value)" }) | Set-Content -Path $env_file
-@($viteVars | ForEach-Object { "$($_.name)=$($_.value)" }) | Write-Output 
-Write-Output "Environment file $env_file"
-Get-Content -Path $env_file
-Write-Output "Edit the file if needed and press enter to continue..."
-$response = Read-Host
-
-# Ensure the file exists and has content before proceeding
-if (-not (Test-Path $env_file)) {
-    Write-Error "Environment file $env_file was not created. Aborting deployment."
-    exit 1
-}
-
-if ((Get-Content $env_file).Length -eq 0) {
-    Write-Error "Environment file $env_file is empty. Aborting deployment."
-    exit 1
-}
-
 Write-Output "Building Docker image from directory: $currentDirectory"
 Set-Location $currentDirectory
 docker build -t $tag .
@@ -141,17 +111,48 @@ $deployArgs = @(
 
 
 if ([System.Environment]::GetEnvironmentVariable("INITIAL_DEPLOY")) {
-    # supply the yaml file with the environment variables so we do not have to set them all manually
-    Write-Output "Will deploy a new service $cloudRunServiceName/$projectId in $region using image built in $currentDirectory"
-    $yaml_cfg = "${currentDirectory}\vars\${cloudRunServiceName}.yaml"
-    Write-Output "YAML config file $yaml_cfg"
-    $viteVars | ForEach-Object { "$($_.name): `"$($_.value)`"" } | Set-Content -Path $yaml_cfg
+    # Initial deployment: create YAML config file and let user edit it
+    Write-Output "INITIAL DEPLOYMENT: Will deploy a new service $cloudRunServiceName/$projectId in $region"
+
+    # Create vars directory if it doesn't exist
+    $varsDir = Join-Path $currentDirectory "vars"
+    if (-not (Test-Path $varsDir)) {
+        New-Item -ItemType Directory -Path $varsDir | Out-Null
+    }
+
+    $yaml_cfg = Join-Path $varsDir "${cloudRunServiceName}.yaml"
+    Write-Output "Creating YAML config file: $yaml_cfg"
+
+    # Create template with default values
+    @"
+# Environment variables for Cloud Run service: $cloudRunServiceName
+# Edit these values as needed before deployment
+
+VITE_API_URL: "http://localhost:8000"
+VITE_DEBUG: "false"
+"@ | Set-Content -Path $yaml_cfg
+
+    Write-Output "`nCurrent configuration:"
     Get-Content -Path $yaml_cfg
-    Write-Output "Edit the file if needed and press enter to continue..."
+    Write-Output "`nEdit the file if needed and press enter to continue..."
     $response = Read-Host
+
+    # Verify file exists and has content
+    if (-not (Test-Path $yaml_cfg)) {
+        Write-Error "YAML config file $yaml_cfg was not created. Aborting deployment."
+        exit 1
+    }
+
+    if ((Get-Content $yaml_cfg).Length -eq 0) {
+        Write-Error "YAML config file $yaml_cfg is empty. Aborting deployment."
+        exit 1
+    }
+
     $deployArgs += @("--env-vars-file", $yaml_cfg)
 } else {
-    Write-Output "Will update $projectId/$cloudRunServiceName in $region using image built in $currentDirectory"
+    # Regular deployment: only update code, keep existing environment variables
+    Write-Output "CODE UPDATE: Will update $projectId/$cloudRunServiceName in $region"
+    Write-Output "Environment variables will NOT be changed (runtime configuration maintained)"
     Write-Output "Press enter to continue..."
     $response = Read-Host
 }

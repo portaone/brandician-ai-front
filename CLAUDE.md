@@ -82,11 +82,71 @@ Brand name selection supports domain registration via `/api/v1.0/brands/{brand_i
 
 ## Environment Configuration
 
+### Development
+For local development, create a `.env` file:
 ```env
 VITE_API_URL=http://localhost:8000  # Backend API URL
 VITE_DEBUG=true                     # Enable debug logging
 ```
 
+### Runtime Configuration (Docker)
+The application uses runtime environment variable injection via `/config.js` generated at container startup. This allows changing environment variables without rebuilding the container.
+
+- Configuration service: `src/config.ts`
+- Docker entrypoint: `docker-entrypoint.sh`
+- Runtime config loaded in: `index.html`
+
 ## Deployment
 
-The project includes Docker configuration and Nginx setup for production deployment. Use the PowerShell deployment scripts for automated deployment processes.
+### Docker Build & Run
+```bash
+# Build the container (only needs to be done once)
+docker build -t brandician-front .
+
+# Run with runtime environment variables
+docker run -p 8080:8080 \
+  -e VITE_API_URL=https://api.production.com \
+  -e VITE_DEBUG=false \
+  brandician-front
+```
+
+### Google Cloud Run Deployment Script
+
+The project includes `deploy.ps1` for automated deployment:
+
+#### Initial Deployment (First Time)
+```powershell
+# Set environment variable to trigger initial deployment
+$env:INITIAL_DEPLOY = "1"
+
+# Deploy with service name
+.\deploy.ps1 brandician-front --region europe-west3 --project-id YOUR_PROJECT_ID
+```
+
+This will:
+1. Build the Docker image
+2. Create `vars/brandician-front.yaml` with default environment variables
+3. Let you edit the YAML file before deployment
+4. Deploy to Cloud Run with the specified environment variables
+
+#### Code Updates (Regular Deployments)
+```powershell
+# Regular deployment (no INITIAL_DEPLOY variable)
+.\deploy.ps1 brandician-front --region europe-west3 --project-id YOUR_PROJECT_ID
+```
+
+This will:
+1. Build the Docker image with latest code
+2. Push to Google Cloud Registry
+3. Deploy to Cloud Run **WITHOUT changing environment variables**
+4. Existing runtime configuration is preserved
+
+#### Updating Environment Variables
+To change environment variables without code changes:
+1. Go to Cloud Run console
+2. Select your service
+3. Click "Edit & Deploy New Revision"
+4. Update environment variables (VITE_API_URL, VITE_DEBUG, etc.)
+5. Deploy
+
+The container will regenerate `/config.js` on startup with the new values.
