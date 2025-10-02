@@ -4,6 +4,7 @@ import { Plus, Trash2, Edit2, Copy, ArrowRight, Loader, RefreshCw, GripVertical,
 import { useBrandStore } from '../../store/brand';
 import { Survey, SurveyQuestion, SurveyStatus } from '../../types';
 import { brands } from '../../lib/api';
+import Button from '../common/Button';
 
 const SurveyContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -323,21 +324,22 @@ const SurveyContainer: React.FC = () => {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
         <p className="text-red-600">{surveyError}</p>
         <div className="flex space-x-4">
-          <button
+          <Button
             onClick={handleRetry}
             disabled={isSubmitting || isLoadingSurvey}
-            className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50"
+            size="md"
           >
-            {(isSubmitting || isLoadingSurvey) && <Loader className="animate-spin h-5 w-5 mr-2" />}
-            <RefreshCw className="h-5 w-5 mr-2" />
+            {(isSubmitting || isLoadingSurvey) && <Loader className="animate-spin h-5 w-5 mr-2 inline" />}
+            <RefreshCw className="h-5 w-5 mr-2 inline" />
             {errorType === 'save' ? 'Retry Save' : 'Try Again'}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => navigate('/brands')}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium"
+            variant="secondary"
+            size="md"
           >
             Exit
-          </button>
+          </Button>
         </div>
       </div>
     );

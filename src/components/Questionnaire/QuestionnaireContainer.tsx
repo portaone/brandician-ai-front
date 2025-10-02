@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useBrandStore } from '../../store/brand';
 import QuestionnaireHeader from './QuestionnaireHeader';
@@ -30,6 +30,7 @@ const QuestionnaireContainer: React.FC = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1); // Start at -1 for intro screen
   const [showSummary, setShowSummary] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const questionContainerRef = useRef<HTMLDivElement>(null);
 
   const typedAnswers: Record<string, any> = useMemo(() => {
     if (!answers) return {};
@@ -79,16 +80,24 @@ const QuestionnaireContainer: React.FC = () => {
       if (searchParams.get('summary') === '1') {
         console.log('📄 Showing summary due to URL parameter');
         setShowSummary(true);
+        // Delay scroll to ensure DOM is rendered
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 300);
         return;
       }
-      
+
       const firstUnansweredIndex = questions.findIndex(q => !(q.id in typedAnswers));
       console.log('🎯 First unanswered question index:', firstUnansweredIndex);
-      
+
       if (firstUnansweredIndex === -1) {
         // All questions are answered
         console.log('✅ All questions answered, showing summary');
         setShowSummary(true);
+        // Delay scroll to ensure DOM is rendered
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 300);
       } else {
         // Found first unanswered question
         console.log('📝 Setting current question index to:', firstUnansweredIndex);
@@ -165,6 +174,8 @@ const QuestionnaireContainer: React.FC = () => {
     if (index !== -1) {
       setShowSummary(false);
       setCurrentQuestionIndex(index);
+      // Note: The QuestionnaireItem component will handle scrolling to the question
+      // via its useEffect when the question changes
     }
   };
 
@@ -223,7 +234,7 @@ const QuestionnaireContainer: React.FC = () => {
       <QuestionnaireHeader progress={progress} onSaveExit={handleSaveExit} />
       
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto" ref={questionContainerRef}>
           {currentQuestionIndex === -1 && !showSummary ? (
             <div className="bg-white rounded-lg shadow-lg p-8">
               <div className="flex justify-center mb-6">

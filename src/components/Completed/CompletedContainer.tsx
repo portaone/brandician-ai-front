@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Download, CheckCircle, Star, Share2, Twitter, Linkedin } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Download, CheckCircle, Star, Share2, Twitter, Linkedin, Palette } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { brands } from '../../lib/api';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+import Button from '../common/Button';
 
 const CompletedContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
+  const navigate = useNavigate();
   const { currentBrand, selectBrand, isLoading } = useBrandStore();
   const [assets, setAssets] = useState<any[]>([]);
+  const [assetContents, setAssetContents] = useState<{[key: string]: any}>({});
   const [downloadLinks, setDownloadLinks] = useState<{[key: string]: string}>({});
   const [testimonialData, setTestimonialData] = useState<any>(null);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(false);
 
   useEffect(() => {
     if (brandId && (!currentBrand || currentBrand.id !== brandId)) {
@@ -32,23 +38,43 @@ const CompletedContainer: React.FC = () => {
   useEffect(() => {
     const loadAssets = async () => {
       if (!brandId) return;
-      
+
       try {
+        setIsLoadingAssets(true);
+        // First, produce/get the list of assets
         const response = await brands.produceAssets(brandId);
+        console.log('CompletedContainer - Assets response:', response);
+        console.log('CompletedContainer - Asset types:', response.assets.map((a: any) => a.type));
         setAssets(response.assets);
-        
-        // Generate download links for each asset
+
+        // Then fetch each asset's full content
+        const contents: {[key: string]: any} = {};
         const links: {[key: string]: string} = {};
-        response.assets.forEach((asset: any, index: number) => {
-          if (asset.content) {
-            // Create blob URL for downloadable content
-            const blob = new Blob([asset.content], { type: 'text/plain' });
-            links[asset.type] = URL.createObjectURL(blob);
+
+        for (const asset of response.assets) {
+          try {
+            const fullAsset = await brands.getAsset(brandId, asset.id);
+            if (asset.type.includes('color')) {
+              console.log(`CompletedContainer - Color asset (${asset.type}):`, fullAsset);
+            }
+            contents[asset.type] = fullAsset;
+
+            // Create blob URL for downloadable content if it has content
+            if (fullAsset.content) {
+              const blob = new Blob([fullAsset.content], { type: 'text/plain' });
+              links[asset.type] = URL.createObjectURL(blob);
+            }
+          } catch (error) {
+            console.error(`Failed to load asset ${asset.type}:`, error);
           }
-        });
+        }
+
+        setAssetContents(contents);
         setDownloadLinks(links);
       } catch (error) {
         console.error('Failed to load assets:', error);
+      } finally {
+        setIsLoadingAssets(false);
       }
     };
 
@@ -72,26 +98,80 @@ const CompletedContainer: React.FC = () => {
     document.body.removeChild(element);
   };
 
-  const handleDownloadAll = () => {
-    // Create a zip-like content with all assets
-    let allContent = `${currentBrand?.name} - Brand Package\n`;
-    allContent += '='.repeat(50) + '\n\n';
-    
-    assets.forEach(asset => {
-      if (asset.content) {
-        allContent += `${asset.type.toUpperCase()}\n`;
-        allContent += '-'.repeat(20) + '\n';
-        allContent += asset.content + '\n\n';
-      }
-    });
+  const handleDownloadAll = async () => {
+    try {
+      setIsLoadingAssets(true);
+      const zip = new JSZip();
+      const brandName = currentBrand?.name || 'brand';
 
-    const element = document.createElement('a');
-    const file = new Blob([allContent], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = `${currentBrand?.name || 'brand'}-complete-package.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+      // Create a folder for the brand
+      const brandFolder = zip.folder(brandName);
+
+      if (!brandFolder) {
+        console.error('Failed to create folder in ZIP');
+        return;
+      }
+
+      // Add each asset to the ZIP
+      for (const [assetType, asset] of Object.entries(assetContents)) {
+        if (asset && asset.content) {
+          // Determine file extension based on content type
+          let fileExtension = '.txt';
+          let fileName = assetType.replace(/_/g, '-');
+
+          // Check if content is JSON
+          try {
+            const parsed = JSON.parse(asset.content);
+            fileExtension = '.json';
+            // Format JSON nicely
+            brandFolder.file(`${fileName}${fileExtension}`, JSON.stringify(parsed, null, 2));
+          } catch {
+            // Not JSON, check if it's other structured data
+            if (asset.content.includes('http') && asset.content.includes('\n')) {
+              // Likely URLs or similar
+              fileExtension = '.txt';
+            } else if (asset.content.includes('#') && asset.content.includes('rgb')) {
+              // Likely color palette
+              fileExtension = '.css';
+            }
+            brandFolder.file(`${fileName}${fileExtension}`, asset.content);
+          }
+
+          // Also add metadata if available
+          if (asset.description) {
+            brandFolder.file(`${fileName}-info.txt`, `Type: ${assetType}\nDescription: ${asset.description}\n`);
+          }
+        }
+      }
+
+      // Add a README file with brand information
+      const readme = `${brandName} - Brand Package
+${'='.repeat(50)}
+
+Generated by Brandician AI
+Date: ${new Date().toLocaleDateString()}
+
+This package contains all your brand assets.
+
+Contents:
+${assets.map(asset => `- ${asset.type.replace(/_/g, ' ')}`).join('\n')}
+
+Thank you for using Brandician AI!
+Visit https://brandician.ai for more information.
+`;
+      brandFolder.file('README.txt', readme);
+
+      // Generate the ZIP file
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+      // Download the ZIP file
+      saveAs(zipBlob, `${brandName}-brand-assets.zip`);
+    } catch (error) {
+      console.error('Failed to create ZIP archive:', error);
+      alert('Failed to create ZIP archive. Please try again.');
+    } finally {
+      setIsLoadingAssets(false);
+    }
   };
 
   const shareText = `I just created an amazing brand identity with Brandician AI! Check out what they can do for your business.`;
@@ -123,51 +203,77 @@ const CompletedContainer: React.FC = () => {
             </p>
           </div>
 
+          {/* Color Schema Presenter Button */}
+          <div className="mb-8 text-center">
+            <Button
+              size="xl"
+              onClick={() => {
+                // Open Color Schema Presenter in a popup window
+                const width = 1500;
+                const height = 1100;
+                const left = (window.screen.width - width) / 2;
+                const top = (window.screen.height - height) / 2;
+                window.open(
+                  `/brands/${brandId}/color-schema`,
+                  'ColorSchemaPresenter',
+                  `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+                );
+              }}
+            >
+              <Palette className="h-5 w-5 mr-2 inline" />
+              View Color Schema Presenter
+            </Button>
+          </div>
+
           {/* Download Section */}
           <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-semibold text-neutral-800">
                 Download Your Brand Assets
               </h2>
-              <button
+              <Button
+                size="lg"
                 onClick={handleDownloadAll}
-                className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+                disabled={isLoadingAssets || Object.keys(assetContents).length === 0}
               >
-                <Download className="h-5 w-5 mr-2" />
-                Download All
-              </button>
+                <Download className={`h-5 w-5 mr-2 inline ${isLoadingAssets ? 'animate-spin' : ''}`} />
+                {isLoadingAssets ? 'Preparing...' : 'Download All'}
+              </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {assets.map((asset, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="font-medium text-gray-900 mb-2 capitalize">
-                    {asset.type.replace('_', ' ')}
-                  </h3>
-                  {asset.description && (
-                    <p className="text-sm text-gray-600 mb-3">{asset.description}</p>
-                  )}
-                  {asset.content && (
-                    <button
-                      onClick={() => handleDownload(asset.type, asset.content)}
-                      className="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium"
-                    >
-                      <Download className="h-4 w-4 mr-1" />
-                      Download
-                    </button>
-                  )}
-                  {asset.url && (
-                    <a
-                      href={asset.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium ml-4"
-                    >
-                      View Online
-                    </a>
-                  )}
-                </div>
-              ))}
+              {assets.map((asset, index) => {
+                const fullAsset = assetContents[asset.type];
+                return (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-900 mb-2 capitalize">
+                      {asset.type.replace(/_/g, ' ')}
+                    </h3>
+                    {fullAsset?.description && (
+                      <p className="text-sm text-gray-600 mb-3">{fullAsset.description}</p>
+                    )}
+                    {fullAsset?.content && (
+                      <button
+                        onClick={() => handleDownload(asset.type, fullAsset.content)}
+                        className="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium"
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download
+                      </button>
+                    )}
+                    {fullAsset?.url && (
+                      <a
+                        href={fullAsset.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium ml-4"
+                      >
+                        View Online
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 

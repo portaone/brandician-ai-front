@@ -211,7 +211,13 @@ export const useBrandStore = create<BrandState>((set, get) => ({
         } : null,
         isLoading: false,
       }));
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Failed to load JTBD data:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       set({ isLoading: false, error: 'Failed to load JTBD data' });
       throw error;
     }

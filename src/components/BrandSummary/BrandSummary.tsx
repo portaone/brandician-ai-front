@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Loader, ArrowRight } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
+import Button from '../common/Button';
 
 const BrandSummary: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -89,6 +90,13 @@ const BrandSummary: React.FC = () => {
     setErrorType(null);
     try {
       await updateBrandSummary(brandId, summary);
+      // Also progress the brand status to ensure backend is ready for JTBD
+      try {
+        await useBrandStore.getState().progressBrandStatus(brandId);
+      } catch (error) {
+        // If status progression fails, still navigate (might already be at correct status)
+        console.log('Status progression skipped:', error);
+      }
       navigate(`/brands/${brandId}/jtbd`);
     } catch (error) {
       console.error('Failed to update summary:', error);
@@ -117,11 +125,11 @@ const BrandSummary: React.FC = () => {
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="text-red-600 mb-4">{errorState}</div>
         <div className="flex space-x-4">
-          <button
+          <Button
             onClick={async () => {
               setError(null);
               setErrorType(null);
-              
+
               if (errorType === 'save') {
                 // Retry saving the current summary
                 setIsSubmitting(true);
@@ -153,16 +161,17 @@ const BrandSummary: React.FC = () => {
               }
             }}
             disabled={isSubmitting}
-            className="px-4 py-2 bg-primary-600 text-white rounded-md disabled:opacity-50"
+            size="md"
           >
             {isSubmitting ? 'Saving...' : 'Try again'}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => navigate('/brands')}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700"
+            variant="secondary"
+            size="md"
           >
             Exit
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -199,23 +208,24 @@ const BrandSummary: React.FC = () => {
             </div>
 
             <div className="flex justify-between items-center">
-              <button
+              <Button
                 onClick={() => navigate(`/brands/${brandId}/questionnaire?summary=1`)}
-                className="inline-flex items-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50"
+                variant="secondary"
+                size="lg"
               >
                 Change my answers
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleProceed}
                 disabled={isSubmitting || !summary || !summary.trim()}
-                className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                size="lg"
               >
                 {isSubmitting ? (
-                  <Loader className="animate-spin h-5 w-5 mr-2" />
+                  <Loader className="animate-spin h-5 w-5 mr-2 inline" />
                 ) : null}
                 Proceed to Jobs to be Done
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </button>
+                <ArrowRight className="ml-2 h-5 w-5 inline" />
+              </Button>
             </div>
           </div>
         </div>

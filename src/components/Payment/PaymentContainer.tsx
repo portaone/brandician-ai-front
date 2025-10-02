@@ -168,14 +168,30 @@ const PaymentContainer: React.FC = () => {
         return;
       }
       // Monitor popup for closure to check payment status
-      const pollTimer = setInterval(() => {
+      const pollTimer = setInterval(async () => {
         if (popup.closed) {
           clearInterval(pollTimer);
           // Check payment status after popup closes
           console.log('Payment popup closed, checking status...');
-          // The user will be redirected via our PayPal handlers if successful
-          // For now, just reset the processing state
-          setIsProcessingPayment(false);
+
+          // Wait a moment for any redirects to complete
+          setTimeout(async () => {
+            try {
+              // Check if payment was completed
+              const paymentStatus = await brands.getPaymentStatus(brandId);
+              if (paymentStatus.payment_complete) {
+                // Payment was successful, progress to completion
+                const statusUpdate = await progressBrandStatus(brandId);
+                navigateAfterProgress(navigate, brandId, statusUpdate);
+              } else {
+                // Payment was not completed, just reset state
+                setIsProcessingPayment(false);
+              }
+            } catch (error) {
+              console.error('Failed to check payment status:', error);
+              setIsProcessingPayment(false);
+            }
+          }, 2000); // Wait 2 seconds to allow for redirect handling
         }
       }, 1000);
     } catch (error) {

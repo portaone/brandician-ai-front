@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, ArrowRight, Mic, MicOff, Loader, Wand2, Copy, RefreshCw, AlertCircle } from 'lucide-react';
 import { brands } from '../../lib/api';
+import Button from '../common/Button';
 
 interface QuestionnaireItemProps {
   question: string;
@@ -44,9 +45,11 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   const [augmentationWarning, setAugmentationWarning] = useState<string | null>(null);
   const [noEnhancementNeeded, setNoEnhancementNeeded] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string>('');
+  const [lastEnhancedText, setLastEnhancedText] = useState<string>('');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const questionTitleRef = useRef<HTMLHeadingElement>(null);
   const enhancementTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const MAX_RECORDING_DURATION_MS = 180000; // 3 minutes
   const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -60,6 +63,15 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     setAugmentationError(null);
     setAugmentationWarning(null);
     setNoEnhancementNeeded(false);
+    setLastEnhancedText('');
+    // Scroll to question title when question changes
+    setTimeout(() => {
+      if (questionTitleRef.current) {
+        const yOffset = -120; // Offset to account for fixed header and give breathing room
+        const y = questionTitleRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }, 100);
   }, [currentAnswer, question]);
 
   useEffect(() => {
@@ -257,20 +269,25 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     console.log('📝 Answer changed:', { newAnswer, length: newAnswer.trim().length });
     setAnswer(newAnswer);
     setHasBeenEdited(true);
-    
+
     // Clear submit error when user starts typing
     if (onRetrySubmit) {
       onRetrySubmit();
     }
-    
-    // Request AI enhancement for quality validation if the answer is long enough
-    if (newAnswer.trim().length > 10) {
-      console.log('🤖 Requesting AI enhancement for answer validation');
-      requestAiEnhancement(newAnswer);
+
+    // Don't auto-trigger AI enhancement anymore
+    // User will manually trigger it with a button
+  };
+
+  const handleEnhanceClick = () => {
+    if (answer.trim().length > 10) {
+      console.log('🤖 Manual AI enhancement requested');
+      setLastEnhancedText(answer.trim()); // Track trimmed text that was enhanced
+      requestAiEnhancement(answer);
     } else {
-      // Clear enhancement state for short answers
+      // Show error for short answers
+      setAugmentationError('Please enter at least 10 characters to enhance your answer');
       setAiEnhancedAnswer('');
-      setAugmentationError(null);
       setAugmentationWarning(null);
       setNoEnhancementNeeded(false);
     }
@@ -305,7 +322,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow p-6 md:p-8">
-      <h3 className="text-xl font-medium text-gray-800 mb-2">{question}</h3>
+      <h3 ref={questionTitleRef} className="text-xl font-medium text-gray-800 mb-2">{question}</h3>
       {hint && (
         <p className="text-gray-600 mb-4 text-sm">{hint}</p>
       )}
@@ -339,6 +356,29 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
         <p className="mt-2 text-sm text-gray-500">
           Tired of typing? You can dictate your answers (in English, please) by pressing the microphone icon
         </p>
+
+        {answer.trim().length > 0 && (
+          <Button
+            type="button"
+            onClick={handleEnhanceClick}
+            disabled={isEnhancing || (lastEnhancedText !== '' && answer.trim() === lastEnhancedText)}
+            size="md"
+            className="mt-3"
+            title={lastEnhancedText !== '' && answer.trim() === lastEnhancedText ? "Text hasn't changed since last enhancement" : ""}
+          >
+            {isEnhancing ? (
+              <>
+                <Loader className="animate-spin h-4 w-4 mr-2 inline" />
+                Enhancing...
+              </>
+            ) : (
+              <>
+                <Wand2 className="h-4 w-4 mr-2 inline" />
+                {lastEnhancedText !== '' && answer.trim() === lastEnhancedText ? 'Already Enhanced' : 'Enhance with AI'}
+              </>
+            )}
+          </Button>
+        )}
         
         {isProcessing && (
           <div className="mt-2 text-sm text-gray-500 flex items-center">
@@ -354,30 +394,24 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
         )}
       </div>
       
-      {hasBeenEdited && answer.trim().length > 0 && (
+      {(aiEnhancedAnswer || augmentationError || augmentationWarning || noEnhancementNeeded) && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium text-gray-700">
               AI-enhanced answer
             </label>
-            {isEnhancing && (
-              <div className="flex items-center text-sm text-gray-500">
-                <Loader className="animate-spin h-4 w-4 mr-2" />
-                Enhancing...
-              </div>
-            )}
           </div>
           
           <div className="relative">
-            <div className="p-4 bg-gray-50 border border-gray-200 rounded-md text-gray-700 min-h-[100px]">
+            <div className="p-4 rounded-md min-h-[100px]" style={{ backgroundColor: '#7F597120', borderColor: '#7F5971', borderWidth: '1px', borderStyle: 'solid' }}>
               {noEnhancementNeeded ? (
                 <span className="text-gray-500">Your answer seems to be very thorough, no need to further enhance it</span>
               ) : augmentationError ? (
                 <span className="text-red-500">{augmentationError}</span>
               ) : augmentationWarning ? (
-                <span className="text-yellow-500">{augmentationWarning}</span>
+                <span style={{ color: '#7F5971' }}>{augmentationWarning}</span>
               ) : aiEnhancedAnswer ? (
-                aiEnhancedAnswer
+                <span style={{ color: '#7F5971' }}>{aiEnhancedAnswer}</span>
               ) : (
                 <span className="text-gray-400">
                   AI enhancement will appear here...
@@ -451,32 +485,33 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
       )}
       
       <div className="flex justify-between items-center">
-        <button
+        <Button
           type="button"
           onClick={onPrevious}
           disabled={questionNumber === 1 || isSubmitting}
-          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+          variant="secondary"
+          size="md"
         >
-          <ArrowLeft className="h-5 w-5 mr-2" />
+          <ArrowLeft className="h-5 w-5 mr-2 inline" />
           Previous
-        </button>
+        </Button>
         
         <div className="text-sm text-gray-500">
           Question {questionNumber} of {totalQuestions}
         </div>
         
-        <button
+        <Button
           type="button"
           onClick={handleSubmit}
           disabled={!answer.trim() || isSubmitting || isProcessing || !!augmentationError}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+          size="md"
         >
           {isSubmitting ? (
-            <Loader className="animate-spin h-5 w-5 mr-2" />
+            <Loader className="animate-spin h-5 w-5 mr-2 inline" />
           ) : null}
           {isLastQuestion ? 'Finish' : 'Next'}
-          {!isLastQuestion && <ArrowRight className="h-5 w-5 ml-2" />}
-        </button>
+          {!isLastQuestion && <ArrowRight className="h-5 w-5 ml-2 inline" />}
+        </Button>
       </div>
     </div>
   );

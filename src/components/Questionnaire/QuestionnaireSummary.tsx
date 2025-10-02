@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Edit2, ArrowRight } from 'lucide-react';
 import { Question, Answer } from '../../types';
+import Button from '../common/Button';
 
 interface QuestionnaireSummaryProps {
   questions: Question[];
@@ -18,6 +19,16 @@ const QuestionnaireSummary: React.FC<QuestionnaireSummaryProps> = ({
 }) => {
   const navigate = useNavigate();
   const { brandId } = useParams<{ brandId: string }>();
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    // Add a delay to ensure DOM is fully rendered
+    const scrollTimeout = setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 200);
+
+    return () => clearTimeout(scrollTimeout);
+  }, []);
 
   return (
     <div className="bg-white rounded-lg shadow p-6 md:p-8">
@@ -39,27 +50,34 @@ const QuestionnaireSummary: React.FC<QuestionnaireSummaryProps> = ({
                   Edit
                 </button>
               </div>
-              <p className="text-gray-600">{answer?.answer || 'No answer provided'}</p>
+              {answer?.answer ? (
+                <p className="text-gray-600">{answer.answer}</p>
+              ) : (
+                <p className="text-primary-600 italic font-medium">No answer provided</p>
+              )}
             </div>
           );
         })}
       </div>
       
       <div className="flex justify-between items-center pt-4">
-        <button
+        <Button
           onClick={() => navigate('/brands')}
-          className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+          variant="secondary"
+          size="md"
+          tabIndex={-1}
         >
           Save and Exit
-        </button>
-        
-        <button
+        </Button>
+
+        <Button
           onClick={() => brandId && navigate(`/brands/${brandId}/summary?regenerate=1`)}
-          className="flex items-center px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md"
+          size="lg"
+          tabIndex={-1}
         >
           Generate Brand Summary
-          <ArrowRight className="ml-2 h-5 w-5" />
-        </button>
+          <ArrowRight className="ml-2 h-5 w-5 inline" />
+        </Button>
       </div>
     </div>
   );

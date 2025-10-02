@@ -25,6 +25,7 @@ import PaymentCancel from './components/Payment/PaymentCancel';
 import PaymentCancelHandler from './components/Payment/PaymentCancelHandler';
 import PaymentSuccessHandler from './components/Payment/PaymentSuccessHandler';
 import CompletedContainer from './components/Completed/CompletedContainer';
+import ColorSchemaPresenter from './components/ColorSchemaPresenter/ColorSchemaPresenter';
 import MarkdownPage from './components/MarkdownPage';
 import Footer from './components/common/Footer';
 import CookieConsent from './components/common/CookieConsent';
@@ -240,6 +241,10 @@ const App: React.FC = () => {
                 <CompletedContainer />
               </AuthGuard>
             }
+          />
+          <Route
+            path="/brands/:brandId/color-schema"
+            element={<ColorSchemaPresenter />}
           />
           <Route
             path="/terms"

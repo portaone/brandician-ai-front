@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Loader, ArrowRight, X, Edit2, RefreshCw } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { JTBD, JTBDImportance, JTBD_IMPORTANCE_LABELS } from '../../types';
+import Button from '../common/Button';
 
 type Step = 'rating' | 'editing' | 'drivers';
 
@@ -159,7 +160,7 @@ const JTBDContainer: React.FC = () => {
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="text-red-600 mb-4">{error}</div>
         <div className="flex space-x-4">
-          <button
+          <Button
             onClick={async () => {
               hasInitialized.current = false;
               if (brandId) {
@@ -167,16 +168,17 @@ const JTBDContainer: React.FC = () => {
                 await loadJTBD(brandId);
               }
             }}
-            className="px-4 py-2 bg-primary-600 text-white rounded-md"
+            size="md"
           >
             Try again
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => navigate('/brands')}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700"
+            variant="secondary"
+            size="md"
           >
             Exit
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -266,19 +268,20 @@ const JTBDContainer: React.FC = () => {
                 ))}
               </div>
               <div className="flex justify-between items-center mt-8">
-                <button
+                <Button
                   type="button"
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+                  variant="secondary"
+                  size="md"
                   onClick={handleRegeneratePersonas}
                   disabled={isRegenerating || isLoading}
                 >
                   {isRegenerating ? (
-                    <Loader className="animate-spin h-5 w-5 mr-2" />
+                    <Loader className="animate-spin h-5 w-5 mr-2 inline" />
                   ) : (
-                    <RefreshCw className="h-5 w-5 mr-2" />
+                    <RefreshCw className="h-5 w-5 mr-2 inline" />
                   )}
                   Suggest new personas
-                </button>
+                </Button>
 
               </div>
             </div>
@@ -315,19 +318,20 @@ const JTBDContainer: React.FC = () => {
                     />
                   </div>
                   <div className="flex justify-end space-x-2">
-                    <button
+                    <Button
                       type="button"
                       onClick={() => setEditingPersona(null)}
-                      className="px-4 py-2 text-neutral-600 hover:text-neutral-700"
+                      variant="ghost"
+                      size="md"
                     >
                       Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="submit"
-                      className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+                      size="md"
                     >
                       Save Changes
-                    </button>
+                    </Button>
                   </div>
                 </form>
               ) : (
@@ -404,7 +408,7 @@ const JTBDContainer: React.FC = () => {
               </p>
             )}
             
-            <button
+            <Button
               onClick={handleProceed}
               disabled={
                 (currentStep === 'rating' && !canProceedFromRating) ||
@@ -413,14 +417,14 @@ const JTBDContainer: React.FC = () => {
                 isSubmitting ||
                 !!editingPersona
               }
-              className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              size="lg"
             >
-              {isSubmitting && <Loader className="animate-spin h-5 w-5 mr-2" />}
+              {isSubmitting && <Loader className="animate-spin h-5 w-5 mr-2 inline" />}
               {currentStep === 'rating' && 'Continue to Edit Personas'}
               {currentStep === 'editing' && 'Continue to Review Persona\'s Drivers'}
               {currentStep === 'drivers' && 'Proceed to Survey'}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </button>
+              <ArrowRight className="ml-2 h-5 w-5 inline" />
+            </Button>
           </div>
         </div>
       </div>

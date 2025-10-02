@@ -325,16 +325,26 @@ export const brands = {
 
   getJTBD: async (brandId: string) => {
     try {
+      console.log('Attempting to get JTBD for brand:', brandId);
       // Try to get existing JTBD first
       const response = await api.get(apiPath(`/brands/${brandId}/jtbd/`));
+      console.log('Successfully retrieved existing JTBD:', response.data);
       return response.data;
     } catch (error: any) {
+      console.log('JTBD GET failed:', error.response?.status, error.response?.data);
       if (error.response?.status === 404) {
+        console.log('No JTBD exists, attempting to generate new one...');
         // If no JTBD exists, suggest new one
         const key = createRequestKey('POST', apiPath(`/brands/${brandId}/jtbd/`));
         return deduplicate(key, async () => {
-          const response = await api.post(apiPath(`/brands/${brandId}/jtbd/`));
-          return response.data;
+          try {
+            const response = await api.post(apiPath(`/brands/${brandId}/jtbd/`));
+            console.log('Successfully generated new JTBD:', response.data);
+            return response.data;
+          } catch (postError: any) {
+            console.error('Failed to generate JTBD:', postError.response?.data);
+            throw postError;
+          }
         });
       }
       throw error;
