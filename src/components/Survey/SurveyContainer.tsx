@@ -462,15 +462,15 @@ const SurveyContainer: React.FC = () => {
               </div>
 
               <div className="flex justify-end">
-                <button
+                <Button
                   onClick={handleSaveSurvey}
                   disabled={isSubmitting || !survey?.questions.length}
-                  className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50"
+                  size="lg"
                 >
                   {isSubmitting && <Loader className="animate-spin h-5 w-5 mr-2" />}
                   Save Survey
                   <ArrowRight className="ml-2 h-5 w-5" />
-                </button>
+                </Button>
               </div>
             </>
           ) : (
@@ -550,19 +550,19 @@ const SurveyContainer: React.FC = () => {
               </div>
 
               <div className="flex justify-end">
-                <button
+                <Button
                   onClick={surveyStatus && hasEnoughResponses() ? handleDone : handleCheckStatus}
                   disabled={surveyStatus ? !hasEnoughResponses() : false}
-                  className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  size="lg"
                 >
-                  {surveyStatus && hasEnoughResponses() 
-                    ? 'Close the survey and analyze the results' 
+                  {surveyStatus && hasEnoughResponses()
+                    ? 'Close the survey and analyze the results'
                     : surveyStatus && !hasEnoughResponses()
                     ? `Need at least ${surveyStatus.min_responses_required} responses to proceed`
                     : 'Check survey status'
                   }
                   <ArrowRight className="ml-2 h-5 w-5" />
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -631,19 +631,20 @@ const SurveyContainer: React.FC = () => {
                 </div>
 
                 <div className="flex justify-end space-x-3 mt-6">
-                  <button
+                  <Button
                     onClick={() => setEditingQuestion(null)}
-                    className="px-4 py-2 text-neutral-600 hover:text-neutral-700"
+                    variant="secondary"
+                    size="md"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => handleSaveQuestion(editingQuestion)}
                     disabled={!editingQuestion.text.trim()}
-                    className="px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50"
+                    size="md"
                   >
                     Save Question
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

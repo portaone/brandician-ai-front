@@ -6,6 +6,7 @@ import { SurveyStatus, Brand, SurveyQuestion } from '../../types';
 import { brands } from '../../lib/api';
 import { navigateAfterProgress } from '../../lib/navigation';
 import { BrandAttributeDisplay, JTBDDisplay, SurveyQuestionsDisplay } from '../common/BrandAttributeDisplay';
+import Button from '../common/Button';
 
 const CollectFeedbackContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -365,10 +366,11 @@ const CollectFeedbackContainer: React.FC = () => {
           )}
 
           <div className="flex justify-center gap-4 mb-6">
-            <button
+            <Button
               onClick={loadSurveyData}
               disabled={isLoading}
-              className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              variant="secondary"
+              size="md"
             >
               {isLoading ? (
                 <Loader className="animate-spin h-4 w-4 mr-2" />
@@ -376,16 +378,16 @@ const CollectFeedbackContainer: React.FC = () => {
                 <RefreshCw className="h-4 w-4 mr-2" />
               )}
               Refresh survey status
-            </button>
+            </Button>
           </div>
-          
-          <button
+
+          <Button
             onClick={handleProceed}
             disabled={isLoading || !surveyStatus || surveyStatus.number_of_responses < (surveyStatus.min_responses_required || 20)}
-            className="px-8 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary-600"
+            size="lg"
           >
             {isLoading ? 'Loading survey status...' : 'Close the survey and analyze the results'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

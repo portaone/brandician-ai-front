@@ -5,6 +5,7 @@ import { useBrandStore } from '../../store/brand';
 import { brands } from '../../lib/api';
 import BrandAssets from '../BrandAssets/BrandAssets';
 import { navigateAfterProgress } from '../../lib/navigation';
+import Button from '../common/Button';
 
 interface BrandNameSuggestion {
   name: string;
@@ -185,25 +186,23 @@ const BrandNameContainer: React.FC = () => {
                           </span>
                         ))}
                       </div>
-                      <button
+                      <Button
                         onClick={() => handleGetDomains(currentDraft.domains_available.filter((domain: string) => domain.includes('.')))}
-                        className="mb-2 px-3 py-1 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded text-xs font-medium transition-colors"
+                        variant="secondary"
+                        size="sm"
                       >
                         Get them now!
-                      </button>
+                      </Button>
                     </>
                   )}
                 </div>
-                <button
+                <Button
                   onClick={() => handleSelectName(currentDraft.name)}
-                  className={`ml-4 px-4 py-2 rounded-lg font-medium transition-colors ${
-                    selectedName === currentDraft.name
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-white text-primary-600 border border-primary-600 hover:bg-primary-50'
-                  }`}
+                  variant={selectedName === currentDraft.name ? 'primary' : 'secondary'}
+                  size="md"
                 >
                   {selectedName === currentDraft.name ? '✓ Keeping Current Name' : 'Keep Current Name'}
-                </button>
+                </Button>
               </div>
             )}
 
@@ -211,10 +210,11 @@ const BrandNameContainer: React.FC = () => {
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-medium text-neutral-800">Suggested Names</h3>
-                <button
+                <Button
                   onClick={handleGenerateNewSuggestions}
                   disabled={isGenerating}
-                  className="inline-flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  variant="secondary"
+                  size="sm"
                 >
                   {isGenerating ? (
                     <Loader className="animate-spin h-4 w-4 mr-2" />
@@ -222,7 +222,7 @@ const BrandNameContainer: React.FC = () => {
                     <RefreshCw className="h-4 w-4 mr-2" />
                   )}
                   Generate New Suggestions
-                </button>
+                </Button>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -259,15 +259,16 @@ const BrandNameContainer: React.FC = () => {
                             </span>
                           ))}
                         </div>
-                        <button
-                          onClick={e => { 
-                            e.stopPropagation(); 
+                        <Button
+                          onClick={e => {
+                            e.stopPropagation();
                             handleGetDomains(suggestion.domains_available?.filter(domain => domain.includes('.')) || []);
                           }}
-                          className="mb-2 px-3 py-1 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded text-xs font-medium transition-colors"
+                          variant="secondary"
+                          size="sm"
                         >
                           Get them now!
-                        </button>
+                        </Button>
                       </>
                     )}
                   </div>
@@ -280,13 +281,14 @@ const BrandNameContainer: React.FC = () => {
               <h3 className="text-xl font-medium text-neutral-800 mb-4">Or Enter Your Own Name</h3>
               
               {!isShowingCustomInput ? (
-                <button
+                <Button
                   onClick={() => setIsShowingCustomInput(true)}
-                  className="inline-flex items-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary-500 hover:text-primary-600 transition-colors"
+                  variant="secondary"
+                  size="md"
                 >
                   <Plus className="h-5 w-5 mr-2" />
                   Enter Custom Name
-                </button>
+                </Button>
               ) : (
                 <div className="flex items-center gap-2">
                   <input
@@ -334,17 +336,17 @@ const BrandNameContainer: React.FC = () => {
 
             {/* Action Button */}
             <div className="flex justify-end">
-              <button
+              <Button
                 onClick={handleProceedToAssets}
                 disabled={!selectedName || isSubmitting}
-                className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                size="lg"
               >
                 {isSubmitting ? (
                   <Loader className="animate-spin h-5 w-5 mr-2" />
                 ) : null}
                 Create Brand Assets
                 <ArrowRight className="ml-2 h-5 w-5" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -424,11 +424,17 @@ const PaymentContainer: React.FC = () => {
                   leftIcon={!isProcessingPayment ? <CreditCard className="h-5 w-5" /> : undefined}
                   className="w-full"
                 >
-                  {isProcessingPayment ? 'Processing Payment...' : 'Proceed to Secure Payment'}
+                  {isProcessingPayment
+                    ? 'Processing...'
+                    : isZeroAmount
+                      ? 'Proceed without payment'
+                      : 'Proceed to Secure Payment'}
                 </Button>
-                
+
                 <p className="text-xs text-gray-500 text-center mt-2">
-                  Secure payment processing • Your download will be available immediately after payment
+                  {isZeroAmount
+                    ? 'Your download will be available immediately'
+                    : 'Secure payment processing • Your download will be available immediately after payment'}
                 </p>
               </div>
             </div>
