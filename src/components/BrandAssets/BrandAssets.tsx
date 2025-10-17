@@ -6,6 +6,7 @@ import { brands } from '../../lib/api';
 import { useBrandStore } from '../../store/brand';
 import { navigateAfterProgress } from '../../lib/navigation';
 import { BrandAsset, BrandAssetSummary, BrandAssetsListResponse } from '../../types';
+import Button from '../common/Button';
 
 interface BrandAssetsProps {
   brandId: string;
@@ -34,7 +35,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
   const isGeneratingRef = useRef(false);
   const pollingTimeoutRef = useRef<number | null>(null);
 
-  // Function to start asset generation
+  // Function to start asset generation (regenerate all assets)
   const startAssetGeneration = async () => {
     if (isGeneratingRef.current) {
       console.log('🛑 Asset generation already in progress');
@@ -46,18 +47,22 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
     setError(null);
 
     try {
+      console.log('🗑️ Deleting all existing assets for brand:', brandId);
+      await brands.deleteAllAssets(brandId);
+      console.log('✅ All assets deleted');
+
       console.log('🎨 Starting asset generation for brand:', brandId);
       const response = await brands.produceAssets(brandId);
       console.log('✅ Asset generation started:', response);
-      
+
       // After starting generation, periodically check for assets
       setTimeout(() => {
         pollForAssets();
       }, 3000);
-      
+
     } catch (error: any) {
-      console.error('❌ Failed to start asset generation:', error);
-      setError('Failed to start asset generation. Please try again.');
+      console.error('❌ Failed to regenerate assets:', error);
+      setError('Failed to regenerate assets. Please try again.');
       setIsGeneratingAssets(false);
       isGeneratingRef.current = false;
     }
@@ -426,23 +431,25 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="text-red-600 mb-4">{error}</div>
-        <div className="space-x-4">
+        <div className="flex gap-4">
           {!isGeneratingAssets && (
-            <button
+            <Button
               onClick={startAssetGeneration}
-              className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium"
+              variant="primary"
+              size="md"
+              leftIcon={<RefreshCw className="h-4 w-4" />}
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
               Start Asset Generation
-            </button>
+            </Button>
           )}
-          <button
+          <Button
             onClick={() => window.location.reload()}
-            className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium"
+            variant="secondary"
+            size="md"
+            leftIcon={<RefreshCw className="h-4 w-4" />}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
             Refresh Page
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -486,13 +493,14 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="text-neutral-600 mb-4">No assets found. Starting generation...</div>
-        <button
+        <Button
           onClick={() => window.location.reload()}
-          className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium"
+          variant="primary"
+          size="md"
+          leftIcon={<RefreshCw className="h-4 w-4" />}
         >
-          <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
-        </button>
+        </Button>
       </div>
     );
   }
@@ -501,7 +509,20 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-display font-bold text-neutral-800 mb-6">Brand Assets</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-display font-bold text-neutral-800">Brand Assets</h1>
+            <Button
+              onClick={startAssetGeneration}
+              disabled={isGeneratingAssets}
+              variant="primary"
+              size="lg"
+              loading={isGeneratingAssets}
+              leftIcon={!isGeneratingAssets && <RefreshCw className="h-5 w-5" />}
+              title="Regenerate all brand assets"
+            >
+              {isGeneratingAssets ? 'Regenerating...' : 'Regenerate Assets'}
+            </Button>
+          </div>
           <div className="mb-6 flex gap-2 border-b">
             {assetTypes.map(type => (
               <button
@@ -585,23 +606,16 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
                 These brand assets are ready to help your business succeed.
                 You will be able to download them on the final step, or anytime in the future.
               </p>
-              <button
+              <Button
                 onClick={handleProceedToPayment}
                 disabled={isProgressing}
-                className="inline-flex items-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                variant="primary"
+                size="lg"
+                loading={isProgressing}
+                rightIcon={!isProgressing && <ArrowRight className="h-5 w-5" />}
               >
-                {isProgressing ? (
-                  <>
-                    <div className="animate-spin h-5 w-5 mr-2 border-2 border-white border-t-transparent rounded-full"></div>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    Continue to Next Step
-                    <ArrowRight className="h-5 w-5 ml-2" />
-                  </>
-                )}
-              </button>
+                {isProgressing ? 'Processing...' : 'Continue to Next Step'}
+              </Button>
             </div>
           </div>
         </div>

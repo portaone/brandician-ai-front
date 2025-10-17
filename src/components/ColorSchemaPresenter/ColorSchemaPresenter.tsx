@@ -15,13 +15,19 @@ const ColorSchemaPresenter: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const { currentBrand, selectBrand } = useBrandStore();
 
-  // Default brand colors - using the purple theme from Figma
+  // Default brand colors - using black and white theme
+  // Previous Figma theme (purple):
+  // primary: '#7F5971',    // Main Color (dark purple)
+  // supporting: '#E5D7CD', // Supporting Color (light beige)
+  // background: '#F4F2F2', // Light Background Color
+  // accent: '#FC5258',     // Accent color for CTA (coral red)
+  // text: '#383236'        // Text color
   const [brandColors, setBrandColors] = useState<BrandColors>({
-    primary: '#7F5971',    // Main Color (dark purple)
-    supporting: 'rgba(127, 89, 113, 0.25)', // Supporting Color (light purple with transparency)
-    background: '#F4F2F2', // Light Background Color
-    accent: '#FC5258',     // Accent color for CTA (coral red)
-    text: '#383236'        // Text color
+    primary: '#6B6B6B',    // Main Color (medium grey)
+    supporting: '#E0E0E0', // Supporting Color (light grey)
+    background: '#F5F5F5', // Light Background Color (light gray)
+    accent: '#000000',     // Accent color for CTA (black)
+    text: '#000000'        // Text color (black)
   });
 
   useEffect(() => {
@@ -64,15 +70,14 @@ const ColorSchemaPresenter: React.FC = () => {
                 // Extract colors from the asset content
                 setBrandColors({
                   primary: colors['main-color'] || colors.primary || colors.main || brandColors.primary,
-                  supporting: colors['supporting-color'] ? `${colors['supporting-color']}40` : // Add transparency to supporting color
-                    (colors.supporting || colors.secondary || brandColors.supporting),
+                  supporting: colors['supporting-color'] || colors.supporting || colors.secondary || brandColors.supporting,
                   background: colors['background-color'] || colors.background || colors.neutral || '#F4F2F2',
                   accent: colors['accent-color'] || colors.accent || colors.cta || brandColors.accent,
                   text: colors['body-text-color'] || colors.text || colors.foreground || brandColors.text
                 });
                 console.log('Setting brand colors to:', {
                   primary: colors['main-color'],
-                  supporting: colors['supporting-color'] ? `${colors['supporting-color']}40` : 'default',
+                  supporting: colors['supporting-color'],
                   background: colors['background-color'] || '#F4F2F2',
                   accent: colors['accent-color'],
                   text: colors['body-text-color']
@@ -94,8 +99,7 @@ const ColorSchemaPresenter: React.FC = () => {
 
                 setBrandColors({
                   primary: extractedColors.primary || extractedColors.main || extractedColors.brand || brandColors.primary,
-                  supporting: extractedColors.supporting || extractedColors.secondary ||
-                    (extractedColors.primary ? `${extractedColors.primary}40` : brandColors.supporting),
+                  supporting: extractedColors.supporting || extractedColors.secondary || brandColors.supporting,
                   background: extractedColors.background || brandColors.background,
                   accent: extractedColors.accent || extractedColors.cta || extractedColors.action || brandColors.accent,
                   text: extractedColors.text || extractedColors.foreground || brandColors.text
@@ -112,7 +116,7 @@ const ColorSchemaPresenter: React.FC = () => {
               const colors = JSON.parse(storedColors);
               setBrandColors({
                 primary: colors.primary || brandColors.primary,
-                supporting: colors.supporting || `rgba(127, 89, 113, 0.25)`,
+                supporting: colors.supporting || brandColors.supporting,
                 background: colors.background || brandColors.background,
                 accent: colors.accent || brandColors.accent,
                 text: colors.text || brandColors.text

@@ -547,6 +547,10 @@ export const brands = {
     });
   },
 
+  deleteAllAssets: async (brandId: string) => {
+    await api.delete(apiPath(`/brands/${brandId}/assets/`));
+  },
+
   pickName: async (brandId: string) => {
     const key = createRequestKey('POST', apiPath(`/brands/${brandId}/pick-name/`));
     return deduplicate(key, async () => {
