@@ -6,6 +6,7 @@ import { brands } from '../../lib/api';
 import BrandAssets from '../BrandAssets/BrandAssets';
 import { navigateAfterProgress } from '../../lib/navigation';
 import Button from '../common/Button';
+import GetHelpButton from '../common/GetHelpButton';
 
 interface BrandNameSuggestion {
   name: string;
@@ -162,9 +163,12 @@ const BrandNameContainer: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-display font-bold text-neutral-800 mb-6">
-            Pick Your Brand Name
-          </h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-display font-bold text-neutral-800">
+              Pick Your Brand Name
+            </h1>
+            <GetHelpButton variant="secondary" size="md" />
+          </div>
 
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
             {/* Current Brand Name Section */}

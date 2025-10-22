@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Loader, ArrowRight } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import Button from '../common/Button';
+import GetHelpButton from '../common/GetHelpButton';
 
 const BrandSummary: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -181,9 +182,12 @@ const BrandSummary: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-display font-bold text-neutral-800 mb-6">
-            Brand Summary
-          </h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-display font-bold text-neutral-800">
+              Brand Summary
+            </h1>
+            <GetHelpButton variant="secondary" size="md" />
+          </div>
           
           <div className="bg-white rounded-lg shadow-lg p-6">
             <p className="text-neutral-600 mb-6">

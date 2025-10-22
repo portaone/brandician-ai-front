@@ -6,6 +6,7 @@ import { brands } from '../../lib/api';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import Button from '../common/Button';
+import GetHelpButton from '../common/GetHelpButton';
 
 const CompletedContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -192,9 +193,15 @@ Visit https://brandician.ai for more information.
           {/* Success Header */}
           <div className="text-center mb-8">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h1 className="text-4xl font-display font-bold text-neutral-800 mb-4">
-              Congratulations! 🎉
-            </h1>
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex-1"></div>
+              <h1 className="text-4xl font-display font-bold text-neutral-800 flex-1 text-center">
+                Congratulations! 🎉
+              </h1>
+              <div className="flex-1 flex justify-end">
+                <GetHelpButton variant="secondary" size="md" />
+              </div>
+            </div>
             <p className="text-xl text-neutral-600 mb-2">
               Your brand <strong>{currentBrand.name}</strong> is ready to conquer the world!
             </p>

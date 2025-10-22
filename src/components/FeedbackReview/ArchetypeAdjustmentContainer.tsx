@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader, AlertCircle } from 'lucide-react';
 import { brands } from '../../lib/api';
+import GetHelpButton from '../common/GetHelpButton';
 
 interface ArchetypeAdjustment {
   old_archetype: string;
@@ -199,9 +200,12 @@ const ArchetypeAdjustmentContainer: React.FC<ArchetypeAdjustmentContainerProps> 
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-display font-bold text-neutral-800 mb-6">
-            Review Brand Archetype
-          </h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-display font-bold text-neutral-800">
+              Review Brand Archetype
+            </h1>
+            <GetHelpButton variant="secondary" size="md" />
+          </div>
 
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
             {/* Old Archetype */}

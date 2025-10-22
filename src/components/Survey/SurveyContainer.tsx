@@ -5,6 +5,7 @@ import { useBrandStore } from '../../store/brand';
 import { Survey, SurveyQuestion, SurveyStatus } from '../../types';
 import { brands } from '../../lib/api';
 import Button from '../common/Button';
+import GetHelpButton from '../common/GetHelpButton';
 
 const SurveyContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -357,9 +358,12 @@ const SurveyContainer: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-display font-bold text-neutral-800 mb-6">
-            Create Customer Survey
-          </h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-display font-bold text-neutral-800">
+              Create Customer Survey
+            </h1>
+            <GetHelpButton variant="secondary" size="md" />
+          </div>
 
           {!showSuccess ? (
             <>

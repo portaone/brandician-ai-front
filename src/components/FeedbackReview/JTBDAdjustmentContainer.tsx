@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Loader, AlertCircle, Plus } from 'lucide-react';
 import { brands } from '../../lib/api';
 import { AdjustObject, JTBDList } from '../../types';
+import GetHelpButton from '../common/GetHelpButton';
 
 // Global cache to prevent duplicate API calls across component instances
 const adjustmentCache = new Map<string, { loading: boolean; personasData?: AdjustObject[]; driversData?: AdjustObject; error?: string }>();
@@ -566,9 +567,12 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-display font-bold text-neutral-800 mb-6">
-            Review Jobs-to-be-Done
-          </h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-display font-bold text-neutral-800">
+              Review Jobs-to-be-Done
+            </h1>
+            <GetHelpButton variant="secondary" size="md" />
+          </div>
 
           {/* Survey Status */}
           {personasAdjustments[0]?.survey && (

@@ -239,6 +239,16 @@ export const auth = {
     const response = await api.get('/api/v1.0/users/me');
     return response.data;
   },
+
+  sendHelpRequest: async (data: {
+    name: string;
+    message: string;
+    brand_id?: string;
+    url?: string;
+  }) => {
+    const response = await api.post('/api/v1.0/users/help-request', data);
+    return response.data;
+  },
 };
 
 export const brands = {

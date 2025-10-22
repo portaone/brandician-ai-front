@@ -4,6 +4,7 @@ import { Loader, ArrowRight, X, Edit2, RefreshCw } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { JTBD, JTBDImportance, JTBD_IMPORTANCE_LABELS } from '../../types';
 import Button from '../common/Button';
+import GetHelpButton from '../common/GetHelpButton';
 
 type Step = 'rating' | 'editing' | 'drivers';
 
@@ -188,9 +189,12 @@ const JTBDContainer: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-display font-bold text-neutral-800 mb-6">
-            Jobs To Be Done Analysis
-          </h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-display font-bold text-neutral-800">
+              Jobs To Be Done Analysis
+            </h1>
+            <GetHelpButton variant="secondary" size="md" />
+          </div>
 
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-4">

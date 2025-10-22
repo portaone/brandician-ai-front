@@ -7,6 +7,7 @@ import { useBrandStore } from '../../store/brand';
 import { navigateAfterProgress } from '../../lib/navigation';
 import { BrandAsset, BrandAssetSummary, BrandAssetsListResponse } from '../../types';
 import Button from '../common/Button';
+import GetHelpButton from '../common/GetHelpButton';
 
 interface BrandAssetsProps {
   brandId: string;
@@ -511,17 +512,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-display font-bold text-neutral-800">Brand Assets</h1>
-            <Button
-              onClick={startAssetGeneration}
-              disabled={isGeneratingAssets}
-              variant="primary"
-              size="lg"
-              loading={isGeneratingAssets}
-              leftIcon={!isGeneratingAssets && <RefreshCw className="h-5 w-5" />}
-              title="Regenerate all brand assets"
-            >
-              {isGeneratingAssets ? 'Regenerating...' : 'Regenerate Assets'}
-            </Button>
+            <GetHelpButton variant="secondary" size="lg" />
           </div>
           <div className="mb-6 flex gap-2 border-b">
             {assetTypes.map(type => (
@@ -594,6 +585,21 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
                 </div>
                 );
               })}
+          </div>
+
+          {/* Regenerate Assets Button */}
+          <div className="mb-6 flex justify-center">
+            <Button
+              onClick={startAssetGeneration}
+              disabled={isGeneratingAssets}
+              variant="primary"
+              size="lg"
+              loading={isGeneratingAssets}
+              leftIcon={!isGeneratingAssets && <RefreshCw className="h-5 w-5" />}
+              title="Regenerate all brand assets"
+            >
+              {isGeneratingAssets ? 'Regenerating...' : 'Regenerate Assets'}
+            </Button>
           </div>
 
           {/* Proceed to Payment Section */}

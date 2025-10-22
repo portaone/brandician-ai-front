@@ -1,6 +1,7 @@
 import React from 'react';
 import { Brain, Save, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import GetHelpButton from '../common/GetHelpButton';
 
 interface QuestionnaireHeaderProps {
   progress: number;
@@ -32,15 +33,18 @@ const QuestionnaireHeader: React.FC<QuestionnaireHeaderProps> = ({ progress, onS
             </div>
           </div>
           
-          <div className="flex items-center space-x-4 flex-col items-end">
-            <button className="hidden md:flex items-center text-neutral-600 hover:text-primary-600 transition-colors" onClick={onSaveExit}>
-              <Save className="h-5 w-5 mr-1" />
-              <span>Exit</span>
-            </button>
-            <span className="text-xs text-neutral-500 mt-1 hidden md:block">All the progress you made so far will be saved</span>
-            <button className="md:hidden p-2 text-neutral-600 hover:text-primary-600 transition-colors">
-              <Menu className="h-6 w-6" />
-            </button>
+          <div className="flex items-center gap-4">
+            <GetHelpButton variant="secondary" size="sm" />
+            <div className="flex items-center space-x-4 flex-col items-end">
+              <button className="hidden md:flex items-center text-neutral-600 hover:text-primary-600 transition-colors" onClick={onSaveExit}>
+                <Save className="h-5 w-5 mr-1" />
+                <span>Exit</span>
+              </button>
+              <span className="text-xs text-neutral-500 mt-1 hidden md:block">All the progress you made so far will be saved</span>
+              <button className="md:hidden p-2 text-neutral-600 hover:text-primary-600 transition-colors">
+                <Menu className="h-6 w-6" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

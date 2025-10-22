@@ -6,6 +6,7 @@ import { useAuthStore } from '../../store/auth';
 import { navigateAfterProgress } from '../../lib/navigation';
 import { brands } from '../../lib/api';
 import Button from '../common/Button';
+import GetHelpButton from '../common/GetHelpButton';
 
 interface PaymentMethod {
   id: string;
@@ -231,9 +232,15 @@ const PaymentContainer: React.FC = () => {
           <div className="bg-white rounded-lg shadow-lg p-8">
             <div className="text-center mb-8">
               <CreditCard className="h-12 w-12 text-primary-600 mx-auto mb-4" />
-              <h1 className="text-3xl font-display font-bold text-neutral-800 mb-4">
-                Support Our Mission
-              </h1>
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex-1"></div>
+                <h1 className="text-3xl font-display font-bold text-neutral-800 flex-1 text-center">
+                  Support Our Mission
+                </h1>
+                <div className="flex-1 flex justify-end">
+                  <GetHelpButton variant="secondary" size="md" />
+                </div>
+              </div>
               <p className="text-lg text-neutral-600 mb-6">
                 Your brand <strong>{currentBrand.name}</strong> is ready! 
                 We ask for a contribution based on the value we've provided.

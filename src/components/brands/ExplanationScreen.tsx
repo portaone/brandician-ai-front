@@ -5,6 +5,7 @@ import { useBrandStore } from '../../store/brand';
 import { navigateAfterProgress } from '../../lib/navigation';
 import api from '../../lib/api';
 import Button from '../common/Button';
+import GetHelpButton from '../common/GetHelpButton';
 
 const ExplanationScreen: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -148,7 +149,10 @@ const ExplanationScreen: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Process overview</h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Process overview</h2>
+              <GetHelpButton variant="secondary" size="md" />
+            </div>
             <div className="space-y-6 text-neutral-600">
               <p>
                 We will build a brand identity and brand access for your business. Your brand identity is more than just a logo or color scheme—it's your archetype, your tone of voice, your promise to customers, and your ability to meet their needs.
