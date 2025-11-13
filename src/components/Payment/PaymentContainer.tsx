@@ -155,46 +155,12 @@ const PaymentContainer: React.FC = () => {
         `Brand creation payment for ${currentBrand?.name || 'brand'}`,
         selectedPaymentMethod
       );
-      // Open payment processor checkout in new window (standard PayPal behavior)
-      console.log('Opening payment checkout in new window:', paymentSession.checkout_url);
-      const popup = window.open(
-        paymentSession.checkout_url,
-        'paypal_checkout',
-        'width=600,height=700,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=no'
-      );
-      if (!popup) {
-        // Handle popup blocker
-        setPaymentError('Popup blocked. Please allow popups for this site and try again.');
-        setIsProcessingPayment(false);
-        return;
-      }
-      // Monitor popup for closure to check payment status
-      const pollTimer = setInterval(async () => {
-        if (popup.closed) {
-          clearInterval(pollTimer);
-          // Check payment status after popup closes
-          console.log('Payment popup closed, checking status...');
+      // Redirect to payment processor checkout (no popup - avoids blocker issues)
+      console.log('Redirecting to payment checkout:', paymentSession.checkout_url);
 
-          // Wait a moment for any redirects to complete
-          setTimeout(async () => {
-            try {
-              // Check if payment was completed
-              const paymentStatus = await brands.getPaymentStatus(brandId);
-              if (paymentStatus.payment_complete) {
-                // Payment was successful, progress to completion
-                const statusUpdate = await progressBrandStatus(brandId);
-                navigateAfterProgress(navigate, brandId, statusUpdate);
-              } else {
-                // Payment was not completed, just reset state
-                setIsProcessingPayment(false);
-              }
-            } catch (error) {
-              console.error('Failed to check payment status:', error);
-              setIsProcessingPayment(false);
-            }
-          }, 2000); // Wait 2 seconds to allow for redirect handling
-        }
-      }, 1000);
+      // Direct redirect - no popup blockers, cleaner UX
+      // PayPal will redirect back to success/cancel URLs configured in backend
+      window.location.href = paymentSession.checkout_url;
     } catch (error) {
       console.error('Payment submission failed:', error);
       setErrors({ payment: 'Failed to process payment. Please try again.' });
@@ -319,8 +285,14 @@ const PaymentContainer: React.FC = () => {
                   Choose Your Contribution
                 </h2>
                 <p className="text-neutral-600 mb-4">
-                  We ask for a contribution of <strong>any amount</strong> (yes, it can even be zero!) based on the value we've added to your brand's future success. 
-                  Your support helps us cover AI costs and continue developing new features for entrepreneurs like you.
+                  We ask for a contribution of <strong>any amount</strong> based
+                  on the value we've added to your brand's future success. 
+                  Your support helps us cover AI costs and continue developing new features
+                  for entrepreneurs like you. 
+                  <br />
+                  Yes, the amount can even be zero! If you absolutely cannot contribute now,
+                  please enter <strong>0</strong> in the Amount field and spread the word
+                  about us in as many as possible of your favorite social networks.
                 </p>
                 
                 <div className="mb-4">
