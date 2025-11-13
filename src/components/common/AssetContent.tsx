@@ -1,0 +1,72 @@
+import React, { Children } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { BrandAsset } from '../../types';
+import PaletteSample from './PaletteSample';
+
+interface AssetContentProps {
+  asset: BrandAsset;
+}
+
+/**
+ * Component to render asset content based on display_as attribute
+ */
+const AssetContent: React.FC<AssetContentProps> = ({ asset }) => {
+  if (!asset.content) return <div className="text-red-500">No content available</div>;
+
+  const displayAs = asset.display_as || 'markdown'; // Default to markdown
+  const cleanedContent = asset.content.split('\n').map(line => line.trimStart()).join('\n');
+
+  // Custom renderer for color codes
+  const colorCodeRegex = /#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})/g;
+  function renderWithColorSwatches(text: string) {
+    return text.split(colorCodeRegex).map((part, i, arr) => {
+      if (i % 2 === 1) {
+        const color = `#${part}`;
+        return (
+          <span key={i} style={{
+            background: color,
+            color: '#fff',
+            padding: '0 0.5em',
+            borderRadius: '4px',
+            marginLeft: '0.2em',
+            marginRight: '0.2em',
+            fontWeight: 'bold',
+            display: 'inline-block',
+          }}>{color}</span>
+        );
+      }
+      return part;
+    });
+  }
+
+  // Render palette sample if type or display_as is 'palette'
+  if (String(displayAs) === 'palette' || String(asset.type) === 'palette') {
+    return <PaletteSample content={asset.content} />;
+  }
+
+  if (displayAs === 'markdown') {
+    return (
+      <div className="brand-markdown prose max-w-none">
+        <ReactMarkdown
+          components={{
+            text({ children }) {
+              const childArray = Children.toArray(children);
+              return <>{childArray.map((child: any, i: number) =>
+                typeof child === 'string' ? renderWithColorSwatches(child) : child
+              )}</>;
+            },
+            // Ensure paragraphs are rendered for empty lines
+            p({ node, children }) {
+              return <p style={{ marginBottom: '1em' }}>{children}</p>;
+            },
+          }}
+        >
+          {cleanedContent}
+        </ReactMarkdown>
+      </div>
+    );
+  }
+  return <div>{cleanedContent}</div>;
+};
+
+export default AssetContent;

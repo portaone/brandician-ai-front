@@ -4,6 +4,7 @@ import { Loader, AlertCircle } from 'lucide-react';
 import { brands } from '../../lib/api';
 import { AdjustObject } from '../../types';
 import GetHelpButton from '../common/GetHelpButton';
+import HistoryButton from '../common/HistoryButton';
 
 // Global cache to prevent duplicate API calls across component instances
 const adjustmentCache = new Map<string, { loading: boolean; data?: AdjustObject; error?: string }>();
@@ -310,7 +311,10 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
             <h1 className="text-3xl font-display font-bold text-neutral-800">
               Review Brand Summary
             </h1>
-            <GetHelpButton variant="secondary" size="md" />
+            <div className="flex items-center gap-3">
+              {brandId && <HistoryButton brandId={brandId} variant="outline" size="md" />}
+              <GetHelpButton variant="secondary" size="md" />
+            </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">

@@ -1,13 +1,14 @@
-import React, { useEffect, useState, useRef, useMemo, Children } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, RefreshCw, Loader } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 import { brands } from '../../lib/api';
 import { useBrandStore } from '../../store/brand';
 import { navigateAfterProgress } from '../../lib/navigation';
-import { BrandAsset, BrandAssetSummary, BrandAssetsListResponse } from '../../types';
+import { BrandAssetSummary, BrandAssetsListResponse } from '../../types';
 import Button from '../common/Button';
 import GetHelpButton from '../common/GetHelpButton';
+import HistoryButton from '../common/HistoryButton';
+import AssetContent from '../common/AssetContent';
 
 interface BrandAssetsProps {
   brandId: string;
@@ -240,175 +241,6 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
     [assetSummaries]
   );
 
-  // PaletteSample component for 'palette' asset type
-  const PaletteSample: React.FC<{ content: string }> = ({ content }) => {
-    let colors: { [key: string]: string } = {};
-    try {
-      colors = JSON.parse(content);
-    } catch (e) {
-      return <div className="text-red-500">Invalid palette data</div>;
-    }
-    const main = colors['main-color'] || '#2c3e50';
-    const supporting = colors['supporting-color'] || '#e5d7cd';
-    const accent = colors['accent-color'] || '#f76c6c';
-    const bodyText = colors['body-text-color'] || '#444';
-
-    // Helper for copying to clipboard
-    const handleCopy = (value: string) => {
-      navigator.clipboard.writeText(value);
-    };
-
-    return (
-      <>
-        <div style={{
-          display: 'flex',
-          background: '#faf9f6',
-          borderRadius: 12,
-          overflow: 'hidden',
-          border: '1px solid #e5e7eb',
-          minHeight: 340,
-          marginBottom: 24,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-        }}>
-          {/* Left side */}
-          <div style={{ flex: 1, padding: '2.5rem 2rem', background: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: 32, fontWeight: 600, color: '#333', marginBottom: 16 }}>Branding Color Scheme</div>
-            <div style={{ fontSize: 20, fontWeight: 500, color: main, marginBottom: 8 }}>This is the Main Color</div>
-            <div style={{ color: bodyText, marginBottom: 16 }}>This is the Body Text color, used for presenting large chunks of text to readers.</div>
-            <div style={{ display: 'inline-block', background: accent, color: '#fff', fontWeight: 600, padding: '0.5em 1.2em', borderRadius: 4, fontSize: 15 }}>ACCENT COLOR</div>
-          </div>
-          {/* Right side */}
-          <div style={{ flex: 1.2, background: supporting, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-            <div style={{
-              width: 180,
-              height: 180,
-              borderRadius: '50%',
-              background: main,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontWeight: 600,
-              fontSize: 22,
-              marginBottom: 24,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              textAlign: 'center',
-              lineHeight: 1.2
-            }}>
-              The circle has the main color
-            </div>
-            <div style={{
-              color: '#fff',
-              fontWeight: 500,
-              fontSize: 17,
-              textAlign: 'center',
-              marginTop: 8,
-              textShadow: '0 1px 4px rgba(0,0,0,0.18)'
-            }}>
-              The large rectangle has the supporting color
-            </div>
-          </div>
-        </div>
-        {/* Color list with copy buttons */}
-        <div style={{ marginTop: 24, paddingLeft: 8, paddingRight: 8 }}>
-          <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 8 }}>Palette Colors</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5em' }}>
-            {Object.entries(colors).map(([key, value]) => (
-              <div key={key} style={{ display: 'flex', alignItems: 'center', marginBottom: 8, minWidth: 220 }}>
-                <span style={{
-                  display: 'inline-block',
-                  width: 28,
-                  height: 28,
-                  borderRadius: 6,
-                  background: value,
-                  border: '1px solid #e5e7eb',
-                  marginRight: 10
-                }} />
-                <span style={{ fontWeight: 500, minWidth: 110 }}>{key.replace(/-/g, ' ')}:</span>
-                <span style={{ fontFamily: 'monospace', marginLeft: 6, marginRight: 8 }}>{value}</span>
-                <button
-                  onClick={() => handleCopy(value)}
-                  style={{
-                    background: '#f3f4f6',
-                    border: '1px solid #d1d5db',
-                    borderRadius: 4,
-                    padding: '2px 10px',
-                    fontSize: 13,
-                    cursor: 'pointer',
-                    color: '#333',
-                    marginLeft: 2
-                  }}
-                  title={`Copy ${value} to clipboard`}
-                >
-                  Copy
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </>
-    );
-  };
-
-  // Component to render asset content based on display_as attribute
-  const AssetContent: React.FC<{ asset: BrandAsset }> = ({ asset }) => {
-    if (!asset.content) return <div className="text-red-500">No content available</div>;
-
-    const displayAs = asset.display_as || 'markdown'; // Default to markdown
-    const cleanedContent = asset.content.split('\n').map(line => line.trimStart()).join('\n');
-
-    // Custom renderer for color codes
-    const colorCodeRegex = /#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})/g;
-    function renderWithColorSwatches(text: string) {
-      return text.split(colorCodeRegex).map((part, i, arr) => {
-        if (i % 2 === 1) {
-          const color = `#${part}`;
-          return (
-            <span key={i} style={{
-              background: color,
-              color: '#fff',
-              padding: '0 0.5em',
-              borderRadius: '4px',
-              marginLeft: '0.2em',
-              marginRight: '0.2em',
-              fontWeight: 'bold',
-              display: 'inline-block',
-            }}>{color}</span>
-          );
-        }
-        return part;
-      });
-    }
-
-    // Render palette sample if type or display_as is 'palette'
-    if (String(displayAs) === 'palette' || String(asset.type) === 'palette') {
-      return <PaletteSample content={asset.content} />;
-    }
-
-    if (displayAs === 'markdown') {
-      return (
-        <div className="brand-markdown prose max-w-none">
-          <ReactMarkdown
-            components={{
-              text({ children }) {
-                const childArray = Children.toArray(children);
-                return <>{childArray.map((child: any, i: number) =>
-                  typeof child === 'string' ? renderWithColorSwatches(child) : child
-                )}</>;
-              },
-              // Ensure paragraphs are rendered for empty lines
-              p({ node, children }) {
-                return <p style={{ marginBottom: '1em' }}>{children}</p>;
-              },
-            }}
-          >
-            {cleanedContent}
-          </ReactMarkdown>
-        </div>
-      );
-    }
-    return <div>{cleanedContent}</div>;
-  };
 
   const handleProceedToPayment = async () => {
     if (!brandId || isProgressing) return;
@@ -512,7 +344,10 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-display font-bold text-neutral-800">Brand Assets</h1>
-            <GetHelpButton variant="secondary" size="lg" />
+            <div className="flex items-center gap-3">
+              <HistoryButton brandId={brandId} variant="outline" size="lg" />
+              <GetHelpButton variant="secondary" size="lg" />
+            </div>
           </div>
           <div className="mb-6 flex gap-2 border-b">
             {assetTypes.map(type => (

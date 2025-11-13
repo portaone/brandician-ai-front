@@ -301,6 +301,15 @@ export const brands = {
     });
   },
 
+  // Revert brand to a specific status, cleaning up all data generated after that step
+  revertToStatus: async (brandId: string, targetStatus: BrandStatus) => {
+    const requestId = generateRequestId();
+    logApiCall('POST', apiPath(`/brands/${brandId}/revert/`), requestId, { target_status: targetStatus });
+    const response = await api.post(apiPath(`/brands/${brandId}/revert/`), { target_status: targetStatus });
+    logApiCall('POST-RESPONSE', apiPath(`/brands/${brandId}/revert/`), requestId, undefined, response.data);
+    return response.data;
+  },
+
   getQuestions: async (brandId: string) => {
     const response = await api.get(apiPath(`/brands/${brandId}/questions`));
     return response.data;
@@ -397,6 +406,13 @@ export const brands = {
 
   getSurveyQuestions: async (brandId: string) => {
     const response = await api.get(apiPath(`/brands/${brandId}/survey/questions/`));
+    return response.data;
+  },
+
+  downloadSurveyResponsesCsv: async (brandId: string) => {
+    const response = await api.get(apiPath(`/brands/${brandId}/survey/responses/csv`), {
+      responseType: 'blob'
+    });
     return response.data;
   },
 

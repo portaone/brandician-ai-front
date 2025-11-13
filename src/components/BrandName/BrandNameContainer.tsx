@@ -7,6 +7,7 @@ import BrandAssets from '../BrandAssets/BrandAssets';
 import { navigateAfterProgress } from '../../lib/navigation';
 import Button from '../common/Button';
 import GetHelpButton from '../common/GetHelpButton';
+import HistoryButton from '../common/HistoryButton';
 
 interface BrandNameSuggestion {
   name: string;
@@ -167,7 +168,10 @@ const BrandNameContainer: React.FC = () => {
             <h1 className="text-3xl font-display font-bold text-neutral-800">
               Pick Your Brand Name
             </h1>
-            <GetHelpButton variant="secondary" size="md" />
+            <div className="flex items-center gap-3">
+              {brandId && <HistoryButton brandId={brandId} variant="outline" size="md" />}
+              <GetHelpButton variant="secondary" size="md" />
+            </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-lg p-6 mb-8">

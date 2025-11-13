@@ -231,7 +231,7 @@ const QuestionnaireContainer: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100">
-      <QuestionnaireHeader progress={progress} onSaveExit={handleSaveExit} />
+      <QuestionnaireHeader progress={progress} onSaveExit={handleSaveExit} brandId={brandId} />
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto" ref={questionContainerRef}>
