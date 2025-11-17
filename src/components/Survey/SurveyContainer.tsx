@@ -6,6 +6,7 @@ import { Survey, SurveyQuestion, SurveyStatus } from '../../types';
 import { brands } from '../../lib/api';
 import Button from '../common/Button';
 import GetHelpButton from '../common/GetHelpButton';
+import HistoryButton from '../common/HistoryButton';
 
 const SurveyContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -362,7 +363,10 @@ const SurveyContainer: React.FC = () => {
             <h1 className="text-3xl font-display font-bold text-neutral-800">
               Create Customer Survey
             </h1>
-            <GetHelpButton variant="secondary" size="md" />
+            <div className="flex items-center gap-3">
+              {brandId && <HistoryButton brandId={brandId} variant="outline" size="md" />}
+              <GetHelpButton variant="secondary" size="md" />
+            </div>
           </div>
 
           {!showSuccess ? (

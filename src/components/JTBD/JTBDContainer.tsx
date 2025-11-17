@@ -5,6 +5,7 @@ import { useBrandStore } from '../../store/brand';
 import { JTBD, JTBDImportance, JTBD_IMPORTANCE_LABELS } from '../../types';
 import Button from '../common/Button';
 import GetHelpButton from '../common/GetHelpButton';
+import HistoryButton from '../common/HistoryButton';
 
 type Step = 'rating' | 'editing' | 'drivers';
 
@@ -193,7 +194,10 @@ const JTBDContainer: React.FC = () => {
             <h1 className="text-3xl font-display font-bold text-neutral-800">
               Jobs To Be Done Analysis
             </h1>
-            <GetHelpButton variant="secondary" size="md" />
+            <div className="flex items-center gap-3">
+              {brandId && <HistoryButton brandId={brandId} variant="outline" size="md" />}
+              <GetHelpButton variant="secondary" size="md" />
+            </div>
           </div>
 
           <div className="flex items-center justify-between mb-8">

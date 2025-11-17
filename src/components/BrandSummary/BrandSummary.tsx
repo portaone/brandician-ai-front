@@ -4,6 +4,7 @@ import { Loader, ArrowRight } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import Button from '../common/Button';
 import GetHelpButton from '../common/GetHelpButton';
+import HistoryButton from '../common/HistoryButton';
 
 const BrandSummary: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -186,7 +187,10 @@ const BrandSummary: React.FC = () => {
             <h1 className="text-3xl font-display font-bold text-neutral-800">
               Brand Summary
             </h1>
-            <GetHelpButton variant="secondary" size="md" />
+            <div className="flex items-center gap-3">
+              {brandId && <HistoryButton brandId={brandId} variant="outline" size="md" />}
+              <GetHelpButton variant="secondary" size="md" />
+            </div>
           </div>
           
           <div className="bg-white rounded-lg shadow-lg p-6">

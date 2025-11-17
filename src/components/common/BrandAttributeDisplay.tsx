@@ -86,7 +86,11 @@ export const JTBDDisplay: React.FC<JTBDDisplayProps> = ({
           <h4 className="font-semibold text-gray-800 mb-2">Drivers:</h4>
           <div className="bg-gray-50 p-3 rounded">
             <div className="prose prose-sm max-w-none text-gray-700">
-              <ReactMarkdown>{jtbd.drivers}</ReactMarkdown>
+              <ReactMarkdown>
+                {typeof jtbd.drivers === 'string'
+                  ? jtbd.drivers.replace(/##\s+/g, '\n\n## ').trim()
+                  : jtbd.drivers}
+              </ReactMarkdown>
             </div>
           </div>
         </div>

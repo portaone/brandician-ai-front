@@ -8,6 +8,7 @@ import { navigateAfterProgress } from '../../lib/navigation';
 import { BrandAttributeDisplay, JTBDDisplay, SurveyQuestionsDisplay } from '../common/BrandAttributeDisplay';
 import Button from '../common/Button';
 import GetHelpButton from '../common/GetHelpButton';
+import HistoryButton from '../common/HistoryButton';
 
 const CollectFeedbackContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -171,7 +172,10 @@ const CollectFeedbackContainer: React.FC = () => {
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-gray-900">Survey Collection</h2>
-          <GetHelpButton variant="secondary" size="md" />
+          <div className="flex items-center gap-3">
+            {brandId && <HistoryButton brandId={brandId} variant="outline" size="md" />}
+            <GetHelpButton variant="secondary" size="md" />
+          </div>
         </div>
         
         {/* Survey Status */}

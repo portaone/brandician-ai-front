@@ -25,6 +25,7 @@ import PaymentCancel from './components/Payment/PaymentCancel';
 import PaymentCancelHandler from './components/Payment/PaymentCancelHandler';
 import PaymentSuccessHandler from './components/Payment/PaymentSuccessHandler';
 import CompletedContainer from './components/Completed/CompletedContainer';
+import HistoryContainer from './components/History/HistoryContainer';
 import ColorSchemaPresenter from './components/ColorSchemaPresenter/ColorSchemaPresenter';
 import MarkdownPage from './components/MarkdownPage';
 import Footer from './components/common/Footer';
@@ -239,6 +240,14 @@ const App: React.FC = () => {
             element={
               <AuthGuard>
                 <CompletedContainer />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/brands/:brandId/history"
+            element={
+              <AuthGuard>
+                <HistoryContainer />
               </AuthGuard>
             }
           />

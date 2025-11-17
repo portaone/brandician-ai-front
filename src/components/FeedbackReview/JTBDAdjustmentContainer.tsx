@@ -4,6 +4,7 @@ import { Loader, AlertCircle, Plus } from 'lucide-react';
 import { brands } from '../../lib/api';
 import { AdjustObject, JTBDList } from '../../types';
 import GetHelpButton from '../common/GetHelpButton';
+import HistoryButton from '../common/HistoryButton';
 
 // Global cache to prevent duplicate API calls across component instances
 const adjustmentCache = new Map<string, { loading: boolean; personasData?: AdjustObject[]; driversData?: AdjustObject; error?: string }>();
@@ -571,7 +572,10 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
             <h1 className="text-3xl font-display font-bold text-neutral-800">
               Review Jobs-to-be-Done
             </h1>
-            <GetHelpButton variant="secondary" size="md" />
+            <div className="flex items-center gap-3">
+              {brandId && <HistoryButton brandId={brandId} variant="outline" size="md" />}
+              <GetHelpButton variant="secondary" size="md" />
+            </div>
           </div>
 
           {/* Survey Status */}

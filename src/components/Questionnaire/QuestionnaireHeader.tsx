@@ -2,13 +2,15 @@ import React from 'react';
 import { Brain, Save, Menu } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import GetHelpButton from '../common/GetHelpButton';
+import HistoryButton from '../common/HistoryButton';
 
 interface QuestionnaireHeaderProps {
   progress: number;
   onSaveExit?: () => void;
+  brandId?: string;
 }
 
-const QuestionnaireHeader: React.FC<QuestionnaireHeaderProps> = ({ progress, onSaveExit }) => {
+const QuestionnaireHeader: React.FC<QuestionnaireHeaderProps> = ({ progress, onSaveExit, brandId }) => {
   return (
     <header className="bg-white shadow-sm">
       <div className="container mx-auto px-4 py-4">
@@ -32,8 +34,9 @@ const QuestionnaireHeader: React.FC<QuestionnaireHeaderProps> = ({ progress, onS
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4">
+            {brandId && <HistoryButton brandId={brandId} variant="outline" size="sm" />}
             <GetHelpButton variant="secondary" size="sm" />
             <div className="flex items-center space-x-4 flex-col items-end">
               <button className="hidden md:flex items-center text-neutral-600 hover:text-primary-600 transition-colors" onClick={onSaveExit}>

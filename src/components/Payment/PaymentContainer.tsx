@@ -7,6 +7,7 @@ import { navigateAfterProgress } from '../../lib/navigation';
 import { brands } from '../../lib/api';
 import Button from '../common/Button';
 import GetHelpButton from '../common/GetHelpButton';
+import HistoryButton from '../common/HistoryButton';
 
 interface PaymentMethod {
   id: string;
@@ -203,7 +204,8 @@ const PaymentContainer: React.FC = () => {
                 <h1 className="text-3xl font-display font-bold text-neutral-800 flex-1 text-center">
                   Support Our Mission
                 </h1>
-                <div className="flex-1 flex justify-end">
+                <div className="flex-1 flex justify-end gap-3">
+                  {brandId && <HistoryButton brandId={brandId} variant="outline" size="md" />}
                   <GetHelpButton variant="secondary" size="md" />
                 </div>
               </div>

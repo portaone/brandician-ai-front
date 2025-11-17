@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ArrowRight, Trash2 } from 'lucide-react';
+import { Plus, ArrowRight, Trash2, History, Copy } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
+import { useAuthStore } from '../../store/auth';
 import { getRouteForStatus } from '../../lib/navigation';
 import Button from '../common/Button';
 
 const BrandList: React.FC = () => {
   const { brands, loadBrands, deleteBrand, isLoading, error } = useBrandStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
   const [deleteConfirm, setDeleteConfirm] = useState<{ brandId: string; brandName: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const isAdmin = user?.admin || false;
 
   useEffect(() => {
     loadBrands();
@@ -24,6 +28,12 @@ const BrandList: React.FC = () => {
     console.groupEnd();
 
     navigate(path);
+  };
+
+  const handleClone = (brandId: string, brandName: string) => {
+    // TODO: Implement clone functionality
+    console.log('Clone brand:', brandId, brandName);
+    alert(`Clone functionality for "${brandName}" will be implemented soon`);
   };
 
   const handleDelete = async () => {
@@ -105,6 +115,24 @@ const BrandList: React.FC = () => {
                   >
                     Continue
                   </Button>
+                  <Button
+                    onClick={() => navigate(`/brands/${brand.id}/history`)}
+                    variant="secondary"
+                    leftIcon={<History className="h-4 w-4" />}
+                    className="w-full"
+                  >
+                    History
+                  </Button>
+                  {isAdmin && (
+                    <Button
+                      onClick={() => handleClone(brand.id, brand.name)}
+                      variant="secondary"
+                      leftIcon={<Copy className="h-4 w-4" />}
+                      className="w-full"
+                    >
+                      Clone
+                    </Button>
+                  )}
                   <Button
                     onClick={() => setDeleteConfirm({ brandId: brand.id, brandName: brand.name })}
                     variant="ghost"
