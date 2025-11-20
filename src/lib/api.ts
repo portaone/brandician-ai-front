@@ -310,6 +310,11 @@ export const brands = {
     return response.data;
   },
 
+  cloneBrand: async (brandId: string) => {
+    const response = await api.post(apiPath(`/brands/${brandId}/clone`));
+    return response.data;
+  },
+
   getQuestions: async (brandId: string) => {
     const response = await api.get(apiPath(`/brands/${brandId}/questions`));
     return response.data;

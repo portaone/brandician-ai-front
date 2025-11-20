@@ -4,6 +4,7 @@ import { Plus, ArrowRight, Trash2, History, Copy } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { useAuthStore } from '../../store/auth';
 import { getRouteForStatus } from '../../lib/navigation';
+import { brands as brandsApi } from '../../lib/api';
 import Button from '../common/Button';
 
 const BrandList: React.FC = () => {
@@ -30,10 +31,21 @@ const BrandList: React.FC = () => {
     navigate(path);
   };
 
-  const handleClone = (brandId: string, brandName: string) => {
-    // TODO: Implement clone functionality
-    console.log('Clone brand:', brandId, brandName);
-    alert(`Clone functionality for "${brandName}" will be implemented soon`);
+  const handleClone = async (brandId: string, brandName: string) => {
+    if (!confirm(`Are you sure you want to clone "${brandName}"? This will create an exact copy of the brand with all its data.`)) {
+      return;
+    }
+
+    try {
+      const clonedBrand = await brandsApi.cloneBrand(brandId);
+      console.log('Brand cloned successfully:', clonedBrand);
+      // Reload brands to show the new clone
+      await loadBrands();
+      alert(`Successfully cloned "${brandName}" as "${clonedBrand.name}"`);
+    } catch (error: any) {
+      console.error('Failed to clone brand:', error);
+      alert(`Failed to clone brand: ${error.response?.data?.detail || error.message}`);
+    }
   };
 
   const handleDelete = async () => {

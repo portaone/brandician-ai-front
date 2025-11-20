@@ -132,13 +132,13 @@ const CompletedContainer: React.FC = () => {
           {/* Download Section */}
           <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
+              <h2 className="text-2xl font-semibold text-neutral-800">
+                Download Your Brand Assets
+              </h2>
+              <div className="flex items-center gap-3">
                 {brandId && <HistoryButton brandId={brandId} />}
-                <h2 className="text-2xl font-semibold text-neutral-800">
-                  Download Your Brand Assets
-                </h2>
+                <GetHelpButton variant="secondary" size="md" />
               </div>
-              <GetHelpButton variant="secondary" size="md" />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -202,7 +202,6 @@ const CompletedContainer: React.FC = () => {
                   brandId={brandId}
                   brandName={currentBrand?.name || 'brand'}
                   variant="button"
-                  className="text-lg px-6 py-3"
                 />
               )}
             </div>

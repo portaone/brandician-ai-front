@@ -3,6 +3,7 @@ import { Download } from 'lucide-react';
 import { brands } from '../../lib/api';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import Button from './Button';
 
 interface DownloadAllButtonProps {
   brandId: string;
@@ -126,16 +127,17 @@ Visit https://brandician.ai for more information.
     );
   }
 
-  // Default button variant
+  // Default button variant using Button component
   return (
-    <button
+    <Button
       onClick={handleDownloadAll}
       disabled={isDownloading}
-      className={`inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      size="lg"
+      className={className}
+      leftIcon={<Download className={`h-5 w-5 ${isDownloading ? 'animate-spin' : ''}`} />}
     >
-      <Download className={`h-5 w-5 mr-2 ${isDownloading ? 'animate-spin' : ''}`} />
       {isDownloading ? 'Preparing...' : 'Download All'}
-    </button>
+    </Button>
   );
 };
 
