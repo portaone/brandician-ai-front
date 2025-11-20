@@ -15,7 +15,7 @@ const TopMenu: React.FC = () => {
     };
 
     return (
-        <header className="bg-white sticky top-0 z-50">
+        <header className="bg-white sticky top-0 z-40">
             <div className="container mx-auto relative">
                 <div className="flex items-center justify-between py-[14px] ">
                     <a

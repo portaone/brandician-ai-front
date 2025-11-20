@@ -12,7 +12,7 @@ const SurveyContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
   const { currentBrand, selectBrand, isLoading: isBrandLoading, error: brandError, progressBrandStatus } = useBrandStore();
-  
+
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [surveyStatus, setSurveyStatus] = useState<SurveyStatus | null>(null);
   const [editingQuestion, setEditingQuestion] = useState<SurveyQuestion | null>(null);
@@ -28,16 +28,16 @@ const SurveyContainer: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const loadData = async () => {
       if (!brandId || isLoadingSurvey) return;
-      
+
       try {
         setIsLoadingSurvey(true);
         setSurveyError(null);
         setErrorType(null);
         await selectBrand(brandId);
-        
+
         if (isMounted) {
           // First try to get existing saved survey
           try {
@@ -53,10 +53,10 @@ const SurveyContainer: React.FC = () => {
             // Survey doesn't exist or no results, continue to draft
             console.log('No existing survey found, loading draft...');
           }
-          
+
           // If no existing survey or no results, get draft for editing
           const draftSurvey = await brands.getSurveyDraft(brandId);
-          
+
           // Ensure all questions have sequential numeric IDs
           if (draftSurvey?.questions) {
             draftSurvey.questions = draftSurvey.questions.map((question: SurveyQuestion, index: number) => ({
@@ -64,7 +64,7 @@ const SurveyContainer: React.FC = () => {
               id: question.id || String(index + 1)
             }));
           }
-          
+
           setSurvey(draftSurvey);
         }
       } catch (error: any) {
@@ -109,6 +109,18 @@ const SurveyContainer: React.FC = () => {
     }
   }, [showSuccess, brandId]);
 
+  useEffect(() => {
+    if(editingQuestion){
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'auto'
+    }
+
+    return () => {
+        document.body.style.overflow = 'auto'
+    }
+  }, [editingQuestion]);
+
   const handleAddQuestion = () => {
     // Get the next sequential ID
     const maxId = Math.max(0, ...survey?.questions.map(q => parseInt(q.id || '0') || 0) || [0]);
@@ -125,7 +137,7 @@ const SurveyContainer: React.FC = () => {
 
   const handleDeleteQuestion = (index: number) => {
     if (!survey) return;
-    
+
     const newQuestions = [...survey.questions];
     newQuestions.splice(index, 1);
     setSurvey({ ...survey, questions: newQuestions });
@@ -133,14 +145,14 @@ const SurveyContainer: React.FC = () => {
 
   const handleSaveQuestion = (question: SurveyQuestion) => {
     if (!survey) return;
-    
+
     const newQuestions = [...survey.questions];
-    
+
     // Check if we're editing an existing question
-    const existingIndex = editingQuestion?.id 
+    const existingIndex = editingQuestion?.id
       ? newQuestions.findIndex(q => q.id === editingQuestion.id)
       : -1;
-    
+
     if (existingIndex !== -1 && editingQuestion?.id) {
       // Update existing question
       newQuestions[existingIndex] = { ...question, id: editingQuestion.id };
@@ -152,18 +164,18 @@ const SurveyContainer: React.FC = () => {
         id: String(maxId + 1),
       });
     }
-    
+
     setSurvey({ ...survey, questions: newQuestions });
     setEditingQuestion(null);
   };
 
   const handleMoveQuestion = (fromIndex: number, toIndex: number) => {
     if (!survey || fromIndex === toIndex) return;
-    
+
     const newQuestions = [...survey.questions];
     const [movedQuestion] = newQuestions.splice(fromIndex, 1);
     newQuestions.splice(toIndex, 0, movedQuestion);
-    
+
     setSurvey({ ...survey, questions: newQuestions });
   };
 
@@ -211,11 +223,11 @@ const SurveyContainer: React.FC = () => {
 
   const handleSaveSurvey = async () => {
     if (!survey || !brandId) return;
-    
+
     setIsSubmitting(true);
     try {
       const response = await brands.saveSurvey(brandId, survey);
-      
+
       // Extract URL from SubmissionLink object
       if (response && response.url) {
         console.log('✅ Survey saved successfully, URL received:', response.url);
@@ -224,7 +236,7 @@ const SurveyContainer: React.FC = () => {
         console.warn('⚠️ No URL found in response, using fallback. Response:', response);
         setSurveyUrl(`${window.location.origin}/survey/${brandId}`);
       }
-      
+
       setShowSuccess(true);
       setSurveyError(null);
       setErrorType(null);
@@ -275,14 +287,14 @@ const SurveyContainer: React.FC = () => {
       // Retry loading survey from server
       const loadData = async () => {
         if (!brandId || isLoadingSurvey) return;
-        
+
         try {
           setIsLoadingSurvey(true);
           setSurveyError(null);
           setErrorType(null);
           await selectBrand(brandId);
           const draftSurvey = await brands.getSurveyDraft(brandId);
-          
+
           // Ensure all questions have sequential numeric IDs
           if (draftSurvey?.questions) {
             draftSurvey.questions = draftSurvey.questions.map((question: SurveyQuestion, index: number) => ({
@@ -290,7 +302,7 @@ const SurveyContainer: React.FC = () => {
               id: question.id || String(index + 1)
             }));
           }
-          
+
           setSurvey(draftSurvey);
         } catch (error: any) {
           console.error('Failed to load survey data:', error);
@@ -374,7 +386,7 @@ const SurveyContainer: React.FC = () => {
               <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
                 <div className="space-y-6">
                   {survey?.questions.map((question, index) => (
-                    <div 
+                    <div
                       key={question.id || index}
                       className={`border border-neutral-200 rounded-lg p-4 transition-all ${
                         draggedQuestion === index ? 'opacity-50' : ''
@@ -441,11 +453,11 @@ const SurveyContainer: React.FC = () => {
                               </button>
                             </div>
                           </div>
-                          
+
                           {question.options && (
                             <div className="space-y-2">
                               {question.options.map((option, optionIndex) => (
-                                <div 
+                                <div
                                   key={optionIndex}
                                   className="text-neutral-600 pl-4"
                                 >
@@ -486,7 +498,7 @@ const SurveyContainer: React.FC = () => {
               <h2 className="text-xl font-medium text-neutral-800 mb-4">
                 Survey Created Successfully!
               </h2>
-              
+
               {/* Survey Status Section */}
               {isLoadingStatus ? (
                 <div className="mb-6 p-4 bg-neutral-50 border border-neutral-200 rounded-lg">
@@ -497,8 +509,8 @@ const SurveyContainer: React.FC = () => {
                 </div>
               ) : surveyStatus ? (
                 <div className={`mb-6 p-4 rounded-lg border ${
-                  hasEnoughResponses() 
-                    ? 'bg-green-50 border-green-200' 
+                  hasEnoughResponses()
+                    ? 'bg-green-50 border-green-200'
                     : 'bg-yellow-50 border-yellow-200'
                 }`}>
                   <h3 className={`text-lg font-medium mb-2 ${
@@ -524,7 +536,7 @@ const SurveyContainer: React.FC = () => {
                   </div>
                 </div>
               ) : null}
-              
+
               <div className="mb-6">
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Survey URL
@@ -551,8 +563,8 @@ const SurveyContainer: React.FC = () => {
 
               <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-blue-800 text-sm">
-                  Please copy the survey URL to clipboard and send it to your potential customers to complete. 
-                  Try to have as many people engaged as possible, since the more feedback we receive, 
+                  Please copy the survey URL to clipboard and send it to your potential customers to complete.
+                  Try to have as many people engaged as possible, since the more feedback we receive,
                   the better we will understand the potential customer perception of your brand and can make necessary adjustments.
                 </p>
               </div>
@@ -576,7 +588,7 @@ const SurveyContainer: React.FC = () => {
           )}
 
           {editingQuestion && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-lg shadow-xl p-6 max-w-lg w-full">
                 <h3 className="text-xl font-medium text-neutral-800 mb-4">
                   {editingQuestion.id ? 'Edit Question' : 'Add Question'}
