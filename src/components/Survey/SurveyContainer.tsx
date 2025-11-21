@@ -110,11 +110,7 @@ const SurveyContainer: React.FC = () => {
   }, [showSuccess, brandId]);
 
   useEffect(() => {
-    if(editingQuestion){
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'auto'
-    }
+    document.body.style.overflow = editingQuestion ? 'hidden' : 'auto';
 
     return () => {
         document.body.style.overflow = 'auto'
