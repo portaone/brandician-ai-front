@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useBrandStore } from '../../store/brand';
 import { brands } from '../../lib/api';
+import { Loader } from 'lucide-react';
 
 interface BrandColors {
   primary: string;
@@ -14,6 +15,7 @@ interface BrandColors {
 const ColorSchemaPresenter: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const { currentBrand, selectBrand } = useBrandStore();
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 
   // Default brand colors - using black and white theme
   // Previous Figma theme (purple):
@@ -125,12 +127,22 @@ const ColorSchemaPresenter: React.FC = () => {
               console.error('Failed to parse stored colors:', parseError);
             }
           }
+        } finally {
+            setIsLoadingStatus(false);
         }
       }
     };
 
     loadBrandColors();
   }, [currentBrand, brandId]);
+
+  if(isLoadingStatus){
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader className="animate-spin h-6 w-6 text-primary-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-white" style={{ minHeight: '1024px' }}>
