@@ -22,9 +22,119 @@ interface ChangeReviewFormProps {
   footnotes: { id: string; text: string; url?: string | null }[];
   onChangeClick: (id: string) => void;
   explanationRefs: React.MutableRefObject<{ [id: string]: HTMLDivElement | null }>;
+  isEditing: boolean;
+  editedText: string;
+  onEditStart: () => void;
+  onEditCancel: () => void;
+  onEditChange: (value: string) => void;
+  onEditSave: () => void;
 }
 
-const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({ oldText, newText, changes, footnotes, onChangeClick, explanationRefs }) => {
+type ChangeSegment = NonNullable<AdjustObject['changes']>[number];
+type Footnote = NonNullable<AdjustObject['footnotes']>[number];
+
+const reconcileSuggestionsWithEditedSummary = (
+  editedText: string,
+  previousChanges?: ChangeSegment[],
+  previousFootnotes?: Footnote[]
+) => {
+  const suggestionSegments =
+    previousChanges?.filter((segment): segment is ChangeSegment & { id: string } => {
+      return segment.type === 'change' && Boolean(segment.id) && Boolean(segment.content);
+    }) ?? [];
+
+  const occupiedRanges: Array<{ start: number; end: number }> = [];
+  const matches: Array<{ segment: ChangeSegment & { id: string }; start: number; end: number }> = [];
+
+  const findAvailableIndex = (text: string, snippet: string) => {
+    let searchIndex = 0;
+    const snippetLength = snippet.length;
+
+    while (searchIndex <= text.length - snippetLength) {
+      const nextIndex = text.indexOf(snippet, searchIndex);
+      if (nextIndex === -1) {
+        return -1;
+      }
+
+      const overlaps = occupiedRanges.some(range => nextIndex < range.end && nextIndex + snippetLength > range.start);
+      if (!overlaps) {
+        occupiedRanges.push({ start: nextIndex, end: nextIndex + snippetLength });
+        return nextIndex;
+      }
+
+      searchIndex = nextIndex + 1;
+    }
+
+    return -1;
+  };
+
+  suggestionSegments.forEach(segment => {
+    const content = segment.content ?? '';
+    if (!content || !content.trim()) {
+      return;
+    }
+
+    const index = findAvailableIndex(editedText, content);
+    if (index === -1) {
+      return;
+    }
+
+    matches.push({
+      segment,
+      start: index,
+      end: index + content.length
+    });
+  });
+
+  matches.sort((a, b) => a.start - b.start);
+
+  const rebuiltChanges: ChangeSegment[] = [];
+  const retainedSuggestionIds = new Set<string>();
+  let cursor = 0;
+
+  matches.forEach(match => {
+    if (match.start > cursor) {
+      rebuiltChanges.push({
+        type: 'text',
+        content: editedText.slice(cursor, match.start)
+      } as ChangeSegment);
+    }
+
+    rebuiltChanges.push({ ...match.segment });
+    retainedSuggestionIds.add(match.segment.id);
+    cursor = match.end;
+  });
+
+  if (cursor < editedText.length) {
+    rebuiltChanges.push({
+      type: 'text',
+      content: editedText.slice(cursor)
+    } as ChangeSegment);
+  }
+
+  const filteredFootnotes =
+    previousFootnotes?.filter(note => retainedSuggestionIds.has(note.id)) ?? [];
+
+  return {
+    changes: rebuiltChanges,
+    footnotes: filteredFootnotes
+  };
+};
+
+const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
+  oldText,
+  newText,
+  changes,
+  footnotes,
+  onChangeClick,
+  explanationRefs,
+  isEditing,
+  editedText,
+  onEditStart,
+  onEditCancel,
+  onEditChange,
+  onEditSave
+}) => {
   function renderChanges() {
     if (!changes || changes.length === 0) {
       return <span>{newText || <em>No changes were suggested.</em>}</span>;
@@ -69,26 +179,65 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({ oldText, newText, c
       </div>
       {/* Proposed Summary */}
       <div>
-        <h3 className="text-xl font-medium text-neutral-800 mb-4">Proposed Summary</h3>
-        <div className="prose max-w-none">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-            <div className="whitespace-pre-wrap text-neutral-700 leading-relaxed">
-              {renderChanges()}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-medium text-neutral-800">
+            {isEditing ? 'Edit Proposed Summary' : 'Proposed Summary'}
+          </h3>
+          {!isEditing && (
+            <button
+              onClick={onEditStart}
+              className="px-4 py-2 mt-2 text-sm font-medium text-primary-700 border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors"
+            >
+              Edit Summary
+            </button>
+          )}
+        </div>
+        {isEditing ? (
+          <div className="bg-white border border-primary-200 rounded-lg p-4 shadow-inner">
+            <textarea
+              value={editedText}
+              onChange={event => onEditChange(event.target.value)}
+              className="w-full min-h-[220px] border border-neutral-200 rounded-md p-3 text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="Update the proposed summary..."
+            />
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={onEditCancel}
+                className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onEditSave}
+                className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={!editedText.trim()}
+              >
+                Save Changes
+              </button>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="prose max-w-none">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+              <div className="whitespace-pre-wrap text-neutral-700 leading-relaxed">
+                {renderChanges()}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       {/* Footnotes */}
+    {!!footnotes.length &&
       <div className="mb-8">
         <h3 className="text-lg font-medium text-neutral-800 mb-4">Changes Explained</h3>
         <div className="space-y-4">
-          {(footnotes ?? []).map((note) => (
+          {footnotes.map((note,index) => (
             <div
               key={note.id}
               ref={el => (explanationRefs.current[note.id] = el)}
               className="bg-neutral-50 border border-neutral-200 rounded-lg p-4 transition-all"
             >
-              <p className="text-neutral-700 font-semibold">Suggestion {note.id}</p>
+              <p className="text-neutral-700 font-semibold">Suggestion {index + 1}</p>
               <p className="text-neutral-700">{note.text}</p>
               {note.url && (
                 <a
@@ -104,6 +253,7 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({ oldText, newText, c
           ))}
         </div>
       </div>
+    }
     </>
   );
 };
@@ -116,7 +266,9 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
   const [adjustment, setAdjustment] = useState<AdjustObject | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [isEditingSummary, setIsEditingSummary] = useState(false);
+  const [editedSummary, setEditedSummary] = useState('');
+
   // Prevent duplicate API calls
   const isLoadingRef = useRef(false);
   const hasLoadedRef = useRef(false);
@@ -138,9 +290,15 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
     setAdjustment(null);
     clearAdjustmentCache();
     setIsLoading(true);
+    setIsEditingSummary(false);
+    setEditedSummary('');
     setReloadFlag(flag => !flag);
   };
   const [reloadFlag, setReloadFlag] = useState(false);
+
+  useEffect(() => {
+    setEditedSummary(adjustment?.new_text ?? '');
+  }, [adjustment?.new_text]);
 
   useEffect(() => {
     let isMounted = true;
@@ -250,6 +408,7 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
       const cacheKey = `adjustment-${brandId}`;
       adjustmentCache.delete(cacheKey);
     }
+    setIsEditingSummary(false);
     onComplete();
   };
 
@@ -258,6 +417,8 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
     setAdjustment(null);
     setError(null);
     setIsLoading(true);
+    setIsEditingSummary(false);
+    setEditedSummary('');
     setTimeout(() => setReloadFlag(flag => !flag), 0);
   };
 
@@ -268,6 +429,42 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
       ref.classList.add('ring-2', 'ring-primary-500');
       setTimeout(() => ref.classList.remove('ring-2', 'ring-primary-500'), 1200);
     }
+  };
+
+  const handleStartEditing = () => {
+    if (!adjustment) return;
+    setEditedSummary(adjustment.new_text || '');
+    setIsEditingSummary(true);
+  };
+
+  const handleCancelEditing = () => {
+    setEditedSummary(adjustment?.new_text || '');
+    setIsEditingSummary(false);
+  };
+
+  const handleEditedSummaryChange = (value: string) => {
+    setEditedSummary(value);
+  };
+
+  const handleSaveEditedSummary = () => {
+    setAdjustment(prev => {
+      if (!prev) return prev;
+      const { changes: reconciledChanges, footnotes: reconciledFootnotes } =
+        reconcileSuggestionsWithEditedSummary(editedSummary, prev.changes ?? [], prev.footnotes ?? []);
+
+      const updated = {
+        ...prev,
+        new_text: editedSummary,
+        changes: reconciledChanges,
+        footnotes: reconciledFootnotes
+      };
+      if (brandId) {
+        const cacheKey = `adjustment-${brandId}`;
+        adjustmentCache.set(cacheKey, { loading: false, data: updated });
+      }
+      return updated;
+    });
+    setIsEditingSummary(false);
   };
 
   if (isLoading) {
@@ -341,10 +538,16 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
               footnotes={adjustment.footnotes ?? []}
               onChangeClick={handleChangeClick}
               explanationRefs={explanationRefs}
+              isEditing={isEditingSummary}
+              editedText={editedSummary}
+              onEditStart={handleStartEditing}
+              onEditCancel={handleCancelEditing}
+              onEditChange={handleEditedSummaryChange}
+              onEditSave={handleSaveEditedSummary}
             />
 
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-4">
+            <div className="flex justify-end space-x-4 mt-4">
               <button
                 onClick={handleReject}
                 className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
@@ -372,4 +575,4 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
   );
 };
 
-export default SummaryAdjustmentContainer; 
+export default SummaryAdjustmentContainer;
