@@ -94,7 +94,7 @@ const FeedbackReviewFlowContainer: React.FC = () => {
 
     const currentStepId = getStepFromPath();
     const expectedStep = REVIEW_STEPS.find(step => step.status === currentBrand.current_status);
-    
+
     console.log('[DEBUG] Status check - Current path step:', currentStepId, 'Expected step:', expectedStep?.id, 'Brand status:', currentBrand.current_status);
 
     if (expectedStep && currentStepId !== expectedStep.id) {
@@ -112,25 +112,25 @@ const FeedbackReviewFlowContainer: React.FC = () => {
       console.log('[DEBUG] handleStepComplete: Missing brandId or currentBrand');
       return;
     }
-    
+
     console.log('[DEBUG] FeedbackReviewFlow: handleStepComplete called, current status =', currentBrand.current_status);
-    
+
     try {
       // Always progress to the next status via backend
       console.log('[DEBUG] FeedbackReviewFlow: Calling progressStatus...');
       const progressResp = await brands.progressStatus(brandId);
       console.log('[DEBUG] FeedbackReviewFlow: progress response', progressResp);
-      
+
       // Re-fetch brand to get the latest status from backend
       console.log('[DEBUG] FeedbackReviewFlow: Fetching updated brand...');
       const updatedBrand = await brands.get(brandId);
       console.log('[DEBUG] FeedbackReviewFlow: brand after progress', updatedBrand);
       setCurrentBrand(updatedBrand);
-      
+
       // Check if we're still in the feedback review flow
       const isStillInReviewFlow = REVIEW_STEPS.some(step => step.status === updatedBrand.current_status);
       console.log('[DEBUG] FeedbackReviewFlow: Still in review flow?', isStillInReviewFlow, 'New status:', updatedBrand.current_status);
-      
+
       if (!isStillInReviewFlow) {
         // We've completed all review steps, navigate to the next phase
         console.log('[DEBUG] FeedbackReviewFlow: Exiting review flow, navigating to next phase');
@@ -175,7 +175,7 @@ const FeedbackReviewFlowContainer: React.FC = () => {
 
   const currentStepId = getStepFromPath();
   const currentStep = REVIEW_STEPS.find(step => step.id === currentStepId);
-  
+
   // If no valid step found, show loading while redirect happens
   if (!currentStep) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -185,17 +185,6 @@ const FeedbackReviewFlowContainer: React.FC = () => {
 
   return (
     <div>
-      {error && (
-        <div className="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          <p>{error}</p>
-          <button
-            onClick={() => setError(null)}
-            className="text-red-700 hover:text-red-900 font-bold"
-          >
-            ×
-          </button>
-        </div>
-      )}
       <StepComponent
         onComplete={handleStepComplete}
         onError={handleStepError}
@@ -204,4 +193,4 @@ const FeedbackReviewFlowContainer: React.FC = () => {
   );
 };
 
-export default FeedbackReviewFlowContainer; 
+export default FeedbackReviewFlowContainer;
