@@ -151,6 +151,7 @@ const SurveyContainer: React.FC = () => {
 
     if (existingIndex !== -1 && editingQuestion?.id) {
       // Update existing question
+      question.options = question.options?.map(o => o.trim()).filter(Boolean);
       newQuestions[existingIndex] = { ...question, id: editingQuestion.id };
     } else {
       // This shouldn't happen with our new flow, but handle it gracefully
@@ -634,7 +635,7 @@ const SurveyContainer: React.FC = () => {
                         value={editingQuestion.options?.join('\n') || ''}
                         onChange={(e) => setEditingQuestion({
                           ...editingQuestion,
-                          options: e.target.value.split('\n').map(o => o.trim()).filter(Boolean)
+                          options: e.target.value.split('\n')
                         })}
                         className="w-full p-2 border border-neutral-300 rounded-md min-h-[100px]"
                         placeholder="Enter options, one per line:
