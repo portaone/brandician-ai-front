@@ -38,10 +38,11 @@ const HistoryContainer: React.FC = () => {
   const [loadingAssets, setLoadingAssets] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
-    if (brandId && (!currentBrand || currentBrand.id !== brandId)) {
+    // Always reload brand data when entering history page to ensure we have the latest status
+    if (brandId) {
       selectBrand(brandId);
     }
-  }, [brandId, currentBrand, selectBrand]);
+  }, [brandId, selectBrand]);
 
   // Map brand status to current step number (the step being worked on)
   const getCurrentStepNumber = (status: string): number => {
