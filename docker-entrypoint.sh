@@ -12,6 +12,7 @@ cat > /usr/share/nginx/html/config.js <<EOF
 window.ENV_CONFIG = {
   VITE_API_URL: '${VITE_API_URL:-http://localhost:8000}',
   VITE_DEBUG: '${VITE_DEBUG:-false}'
+  VITE_CLARITY_ID: '${VITE_CLARITY_ID}'
 };
 EOF
 
