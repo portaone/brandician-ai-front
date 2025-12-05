@@ -54,11 +54,18 @@ export const getRouteForStatus = (brandId: string, status: BrandStatus): string 
 };
 
 // Helper function to navigate to the appropriate route after brand progression
+// Accepts either { status: BrandStatus } or { current_status: BrandStatus } (Brand object)
 export const navigateAfterProgress = (
   navigate: (path: string) => void,
   brandId: string,
-  statusUpdate: { status: BrandStatus }
+  statusUpdate: { status?: BrandStatus; current_status?: BrandStatus }
 ) => {
-  const nextRoute = getRouteForStatus(brandId, statusUpdate.status);
+  const status = statusUpdate.status || statusUpdate.current_status;
+  if (!status) {
+    console.error('navigateAfterProgress: No status found in statusUpdate', statusUpdate);
+    navigate(`/brands/${brandId}`);
+    return;
+  }
+  const nextRoute = getRouteForStatus(brandId, status);
   navigate(nextRoute);
 };

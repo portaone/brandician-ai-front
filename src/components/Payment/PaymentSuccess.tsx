@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, Loader, AlertTriangle } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { brands } from '../../lib/api';
@@ -8,54 +8,51 @@ import { navigateAfterProgress } from '../../lib/navigation';
 const PaymentSuccess: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { progressBrandStatus, currentBrand, selectBrand } = useBrandStore();
-  
+  const { currentBrand, selectBrand } = useBrandStore();
+
   const [isVerifying, setIsVerifying] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState<'success' | 'failed' | 'pending'>('pending');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const verifyPayment = async () => {
+    const verifyAndCompletePayment = async () => {
       if (!brandId) return;
 
       try {
         // First, ensure we have the current brand data
         await selectBrand(brandId);
-        
-        // Check payment status from the backend
-        const paymentStatusData = await brands.getPaymentStatus(brandId);
-        
-        if (paymentStatusData.payment_complete) {
-          setPaymentStatus('success');
-          
-          // Automatically progress to next status after successful payment
-          setTimeout(async () => {
-            try {
-              const statusUpdate = await progressBrandStatus(brandId);
-              navigateAfterProgress(navigate, brandId, statusUpdate);
-            } catch (progressError) {
-              console.error('Failed to progress brand status:', progressError);
-              // Still navigate to completed page if progress fails
-              navigate(`/brands/${brandId}/completed`);
-            }
-          }, 2000); // 2 second delay to show success message
-          
-        } else {
-          setPaymentStatus('failed');
-          setError('Payment was not completed successfully.');
-        }
-      } catch (err) {
-        console.error('Failed to verify payment status:', err);
+
+        // Call backend to verify payment flow and progress status
+        // This verifies that user actually went through the payment checkout
+        // (has a payment session record) before allowing status progression
+        const updatedBrand = await brands.completePaymentFlow(brandId);
+
+        setPaymentStatus('success');
+
+        // Navigate to completed page after showing success message
+        setTimeout(() => {
+          navigateAfterProgress(navigate, brandId, updatedBrand);
+        }, 2000); // 2 second delay to show success message
+
+      } catch (err: any) {
+        console.error('Failed to verify payment:', err);
         setPaymentStatus('failed');
-        setError('Failed to verify payment status. Please contact support.');
+
+        // Provide specific error messages based on error type
+        if (err.response?.status === 403) {
+          setError('No payment session found. Please complete the payment flow first.');
+        } else if (err.response?.status === 400) {
+          setError(err.response?.data?.detail || 'Brand is not ready for payment completion.');
+        } else {
+          setError('Failed to verify payment. Please contact support if you completed payment.');
+        }
       } finally {
         setIsVerifying(false);
       }
     };
 
-    verifyPayment();
-  }, [brandId, selectBrand, progressBrandStatus, navigate]);
+    verifyAndCompletePayment();
+  }, [brandId, selectBrand, navigate]);
 
   const handleReturnToPayment = () => {
     if (brandId) {

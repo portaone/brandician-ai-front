@@ -12,8 +12,9 @@ const PaymentSuccessHandler: React.FC = () => {
     const brandId = searchParams.get('brand_id') || searchParams.get('custom') || searchParams.get('item_number');
 
     if (brandId) {
-      // Navigate to completed page
-      const targetUrl = `/brands/${brandId}/completed`;
+      // Navigate to payment success verification page (not directly to completed)
+      // This page will verify payment status and progress the brand status
+      const targetUrl = `/brands/${brandId}/payment/success`;
       navigate(targetUrl);
     } else {
       // If no brandId found, redirect to brands list
