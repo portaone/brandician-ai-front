@@ -71,7 +71,7 @@ const QuestionnaireSummary: React.FC<QuestionnaireSummaryProps> = ({
         </Button>
 
         <Button
-          onClick={() => brandId && navigate(`/brands/${brandId}/summary?regenerate=1`)}
+          onClick={onComplete}
           size="lg"
           tabIndex={-1}
         >
