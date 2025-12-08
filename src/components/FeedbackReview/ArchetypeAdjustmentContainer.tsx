@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
-import { Loader, AlertCircle } from 'lucide-react';
-import { brands } from '../../lib/api';
-import GetHelpButton from '../common/GetHelpButton';
-import HistoryButton from '../common/HistoryButton';
+import React, { useEffect, useState, useRef } from "react";
+import { useParams } from "react-router-dom";
+import { Loader, AlertCircle } from "lucide-react";
+import { brands } from "../../lib/api";
+import GetHelpButton from "../common/GetHelpButton";
+import HistoryButton from "../common/HistoryButton";
 
 interface ArchetypeAdjustment {
   old_archetype: string;
@@ -18,12 +18,13 @@ interface ArchetypeAdjustmentContainerProps {
   onError: (error: string) => void;
 }
 
-const ArchetypeAdjustmentContainer: React.FC<ArchetypeAdjustmentContainerProps> = ({
-  onComplete,
-  onError
-}) => {
+const ArchetypeAdjustmentContainer: React.FC<
+  ArchetypeAdjustmentContainerProps
+> = ({ onComplete, onError }) => {
   const { brandId } = useParams<{ brandId: string }>();
-  const [adjustment, setAdjustment] = useState<ArchetypeAdjustment | null>(null);
+  const [adjustment, setAdjustment] = useState<ArchetypeAdjustment | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const explanationRefs = useRef<{ [id: string]: HTMLDivElement | null }>({});
@@ -33,7 +34,7 @@ const ArchetypeAdjustmentContainer: React.FC<ArchetypeAdjustmentContainerProps> 
   useEffect(() => {
     let isMounted = true;
     if (isLoadingRef.current) {
-      console.log('🛑 Prevented duplicate archetype adjustment call');
+      console.log("🛑 Prevented duplicate archetype adjustment call");
       return;
     }
     isLoadingRef.current = true;
@@ -57,9 +58,11 @@ const ArchetypeAdjustmentContainer: React.FC<ArchetypeAdjustmentContainerProps> 
         }
       } catch (error: any) {
         if (isMounted) {
-          let errorMessage = 'Failed to load archetype adjustment. Please try again.';
+          let errorMessage =
+            "Failed to load archetype adjustment. Please try again.";
           if (error?.response?.status === 500) {
-            errorMessage = 'Server error occurred while analyzing the archetype. Please try again later.';
+            errorMessage =
+              "Server error occurred while analyzing the archetype. Please try again later.";
           } else if (error?.response?.data?.message) {
             errorMessage = error.response.data.message;
           }
@@ -72,46 +75,66 @@ const ArchetypeAdjustmentContainer: React.FC<ArchetypeAdjustmentContainerProps> 
       }
     };
     fetchAdjustment();
-    return () => { isMounted = false; isLoadingRef.current = false; };
+    return () => {
+      isMounted = false;
+      isLoadingRef.current = false;
+    };
   }, [brandId, onError, reloadFlag]);
 
   const handleRetry = () => {
     setError(null);
     setAdjustment(null);
     setIsLoading(true);
-    setReloadFlag(flag => !flag);
+    setReloadFlag((flag) => !flag);
   };
 
   const handleReevaluate = () => {
     setAdjustment(null);
     setError(null);
     setIsLoading(true);
-    setReloadFlag(flag => !flag);
+    setReloadFlag((flag) => !flag);
   };
 
   const handleAccept = async () => {
-    console.log('[DEBUG] handleAccept: brandId =', brandId, 'adjustment =', adjustment);
+    console.log(
+      "[DEBUG] handleAccept: brandId =",
+      brandId,
+      "adjustment =",
+      adjustment
+    );
     if (!brandId || !adjustment) {
-      console.log('[DEBUG] handleAccept: missing brandId or adjustment');
+      console.log("[DEBUG] handleAccept: missing brandId or adjustment");
       return;
     }
     if (!adjustment.new_text) {
-      console.log('[DEBUG] handleAccept: missing new_text in adjustment', adjustment);
-      setError('No proposed archetype found. Please try reloading or re-evaluating.');
-      onError('No proposed archetype found. Please try reloading or re-evaluating.');
+      console.log(
+        "[DEBUG] handleAccept: missing new_text in adjustment",
+        adjustment
+      );
+      setError(
+        "No proposed archetype found. Please try reloading or re-evaluating."
+      );
+      onError(
+        "No proposed archetype found. Please try reloading or re-evaluating."
+      );
       return;
     }
     try {
-      console.log('[DEBUG] handleAccept: calling updateArchetype with', adjustment.new_text);
+      console.log(
+        "[DEBUG] handleAccept: calling updateArchetype with",
+        adjustment.new_text
+      );
       await brands.updateArchetype(brandId, adjustment.new_text);
-      console.log('[DEBUG] handleAccept: updateArchetype success, calling onComplete');
+      console.log(
+        "[DEBUG] handleAccept: updateArchetype success, calling onComplete"
+      );
       onComplete();
     } catch (error: any) {
-      let errorMessage = 'Failed to update archetype. Please try again.';
+      let errorMessage = "Failed to update archetype. Please try again.";
       if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
-      console.error('[DEBUG] handleAccept: error updating archetype', error);
+      console.error("[DEBUG] handleAccept: error updating archetype", error);
       setError(errorMessage);
       onError(errorMessage);
     }
@@ -124,29 +147,46 @@ const ArchetypeAdjustmentContainer: React.FC<ArchetypeAdjustmentContainerProps> 
   const handleChangeClick = (id: string) => {
     const ref = explanationRefs.current[id];
     if (ref) {
-      ref.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      ref.classList.add('ring-2', 'ring-primary-500');
-      setTimeout(() => ref.classList.remove('ring-2', 'ring-primary-500'), 1200);
+      ref.scrollIntoView({ behavior: "smooth", block: "center" });
+      ref.classList.add("ring-2", "ring-primary-500");
+      setTimeout(
+        () => ref.classList.remove("ring-2", "ring-primary-500"),
+        1200
+      );
     }
   };
 
   function renderChanges() {
-    if (!adjustment?.changes) return adjustment?.new_text || '';
+    if (!adjustment?.changes) return adjustment?.new_text || "";
     return adjustment.changes.map((seg, i) => {
-      if (seg.type === 'text') {
+      if (seg.type === "text") {
         return <span key={i}>{seg.content}</span>;
       }
-      if (seg.type === 'change') {
+      if (seg.type === "change") {
         let style = {};
-        let className = "inline cursor-pointer px-1 rounded transition-colors hover:bg-yellow-100";
-        if (seg.t === 'mod') {
-          style = { fontWeight: 'bold', background: '#f0f6ff', color: '#1d4ed8' };
+        let className =
+          "inline cursor-pointer px-1 rounded transition-colors hover:bg-yellow-100";
+        if (seg.t === "mod") {
+          style = {
+            fontWeight: "bold",
+            background: "#f0f6ff",
+            color: "#1d4ed8",
+          };
         }
-        if (seg.t === 'del') {
-          style = { textDecoration: 'line-through', background: '#fef2f2', color: '#b91c1c' };
+        if (seg.t === "del") {
+          style = {
+            textDecoration: "line-through",
+            background: "#fef2f2",
+            color: "#b91c1c",
+          };
         }
-        if (seg.t === 'ref') {
-          style = { fontWeight: 'bold', fontStyle: 'italic', background: '#f3f8ff', color: '#2563eb' };
+        if (seg.t === "ref") {
+          style = {
+            fontWeight: "bold",
+            fontStyle: "italic",
+            background: "#f3f8ff",
+            color: "#2563eb",
+          };
         }
         return (
           <span
@@ -167,9 +207,11 @@ const ArchetypeAdjustmentContainer: React.FC<ArchetypeAdjustmentContainerProps> 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center px-2">
           <Loader className="animate-spin h-8 w-8 text-primary-600 mb-4" />
-          <p className="text-gray-600">Analyzing feedback for adjusting brand archetype...</p>
+          <p className="text-gray-600">
+            Analyzing feedback for adjusting brand archetype...
+          </p>
         </div>
       </div>
     );
@@ -180,7 +222,9 @@ const ArchetypeAdjustmentContainer: React.FC<ArchetypeAdjustmentContainerProps> 
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Analysis Failed</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            Analysis Failed
+          </h2>
           <p className="text-red-600 mb-6">{error}</p>
           <button
             onClick={handleRetry}
@@ -201,22 +245,26 @@ const ArchetypeAdjustmentContainer: React.FC<ArchetypeAdjustmentContainerProps> 
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between flex-wrap gap-2 items-center mb-6">
             <h1 className="text-3xl font-display font-bold text-neutral-800">
               Review Brand Archetype
             </h1>
-            <div className="flex items-center gap-3">
-              {brandId && <HistoryButton brandId={brandId} variant="outline" size="md" />}
+            <div className="flex items-center flex-wrap gap-3">
+              {brandId && (
+                <HistoryButton brandId={brandId} variant="outline" size="md" />
+              )}
               <GetHelpButton variant="secondary" size="md" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <div className="bg-white rounded-lg shadow-lg sm:p-6 mb-8">
             {/* Old Archetype */}
             <div>
-              <h3 className="text-xl font-medium text-neutral-800 mb-4">Current Archetype</h3>
+              <h3 className="text-xl font-medium text-neutral-800 p-2 sm:p-0 mb-4">
+                Current Archetype
+              </h3>
               <div className="prose max-w-none">
-                <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-6">
+                <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-2 sm:p-6">
                   <div className="whitespace-pre-wrap text-neutral-700 leading-relaxed">
                     {adjustment.old_archetype}
                   </div>
@@ -225,9 +273,11 @@ const ArchetypeAdjustmentContainer: React.FC<ArchetypeAdjustmentContainerProps> 
             </div>
             {/* New Archetype */}
             <div>
-              <h3 className="text-xl font-medium text-neutral-800 mb-4">Proposed Archetype</h3>
+              <h3 className="text-xl font-medium text-neutral-800 p-2 sm:p-0 mb-4">
+                Proposed Archetype
+              </h3>
               <div className="prose max-w-none">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-2 sm:p-6">
                   <div className="whitespace-pre-wrap text-neutral-700 leading-relaxed">
                     {renderChanges()}
                   </div>
@@ -236,15 +286,19 @@ const ArchetypeAdjustmentContainer: React.FC<ArchetypeAdjustmentContainerProps> 
             </div>
             {/* Footnotes */}
             <div className="mb-8">
-              <h3 className="text-lg font-medium text-neutral-800 mb-4">Changes Explained</h3>
+              <h3 className="text-lg font-medium text-neutral-800 mb-4">
+                Changes Explained
+              </h3>
               <div className="space-y-4">
                 {(adjustment.footnotes ?? []).map((note) => (
                   <div
                     key={note.id}
-                    ref={el => (explanationRefs.current[note.id] = el)}
-                    className="bg-neutral-50 border border-neutral-200 rounded-lg p-4 transition-all"
+                    ref={(el) => (explanationRefs.current[note.id] = el)}
+                    className="bg-neutral-50 border border-neutral-200 rounded-lg p-2 sm:p-4 transition-all"
                   >
-                    <p className="text-neutral-700 font-semibold">Suggestion {note.id}</p>
+                    <p className="text-neutral-700 font-semibold">
+                      Suggestion {note.id}
+                    </p>
                     <p className="text-neutral-700">{note.text}</p>
                     {note.url && (
                       <a
@@ -261,10 +315,10 @@ const ArchetypeAdjustmentContainer: React.FC<ArchetypeAdjustmentContainerProps> 
               </div>
             </div>
             {/* Action Buttons */}
-            <div className="flex justify-end space-x-4">
+            <div className="flex justify-end flex-wrap gap-2 p-2">
               <button
                 onClick={handleReject}
-                className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+                className="sm:px-6 sm:py-3 p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
               >
                 Keep Current Archetype
               </button>
@@ -277,7 +331,7 @@ const ArchetypeAdjustmentContainer: React.FC<ArchetypeAdjustmentContainerProps> 
               </button>
               <button
                 onClick={handleAccept}
-                className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
+                className="sm:px-6 sm:py-3 p-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
               >
                 Accept New Archetype
               </button>
@@ -289,4 +343,4 @@ const ArchetypeAdjustmentContainer: React.FC<ArchetypeAdjustmentContainerProps> 
   );
 };
 
-export default ArchetypeAdjustmentContainer; 
+export default ArchetypeAdjustmentContainer;

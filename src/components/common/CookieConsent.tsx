@@ -1,24 +1,23 @@
 import Clarity from "@microsoft/clarity";
-import { CookieModal } from "@schlomoh/react-cookieconsent";
+import { CookieBanner } from "@schlomoh/react-cookieconsent";
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { config } from "../../config";
 
 const CookieConsent: React.FC = () => {
   useEffect(() => {
-    const cookieInfo = document.querySelector(".cookie-consent-info");
+    setTimeout(() => {
+      const cookieButtonContainer: HTMLElement | null = document.querySelector(
+        ".cookie-consent-info"
+      )?.nextElementSibling as HTMLElement | null;
 
-    if (cookieInfo) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
+      console.log(cookieButtonContainer);
 
-    return () => {
-      document.body.style.overflow = "auto";
-    };
+      if (cookieButtonContainer) {
+        cookieButtonContainer.style.flexWrap = "wrap";
+      }
+    }, 1000);
   }, []);
-
   const info: JSX.Element = (
     <span className="mr-2 mb-2 md:mb-0 cookie-consent-info">
       We use cookies to improve your experience. By using this site, you agree
@@ -38,24 +37,16 @@ const CookieConsent: React.FC = () => {
       Clarity.init(config.clarityId);
       Clarity.consentV2({ analytics_Storage: "granted", ad_Storage: "denied" });
     }
-
-    document.body.style.overflow = "auto";
   };
-
-  const handleReject = () => {
-    document.body.style.overflow = "auto";
-  };
-
   return (
-    <CookieModal
+    <CookieBanner
       enableManagement
       infoContent={info}
       managementButtonText="Manage cookie preferences"
       cookieCategories={["Analytics"]}
       accentColor="#FD615E"
-      containerStyle={{ accentColor: "#FD615E", overflow: "auto" }}
+      containerStyle={{ accentColor: "#FD615E" }}
       onAccept={handleAccept}
-      onDecline={handleReject}
     />
   );
 };

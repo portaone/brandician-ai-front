@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Mail, User, AlertCircle, RefreshCw } from 'lucide-react';
-import { useAuthStore } from '../../store/auth';
-import Button from '../common/Button';
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Mail, User, AlertCircle, RefreshCw } from "lucide-react";
+import { useAuthStore } from "../../store/auth";
+import Button from "../common/Button";
 
 const RegisterForm: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [otp, setOtp] = useState('');
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [otp, setOtp] = useState("");
   const [otpId, setOtpId] = useState<string | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const { register, verifyOTP, isLoading, error, clearError } = useAuthStore();
@@ -20,12 +20,14 @@ const RegisterForm: React.FC = () => {
     };
   }, [clearError]);
 
-  const handleInputChange = (setter: (value: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setter(e.target.value);
-    if (error) {
-      clearError();
-    }
-  };
+  const handleInputChange =
+    (setter: (value: string) => void) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setter(e.target.value);
+      if (error) {
+        clearError();
+      }
+    };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,32 +38,37 @@ const RegisterForm: React.FC = () => {
       } else {
         await verifyOTP(otpId, otp);
         // After successful verification, navigate to brand creation
-        navigate('/brands/new');
+        navigate("/brands/new");
       }
     } catch (error: any) {
-      console.error('Registration error:', error?.response?.data || error?.message || 'An unexpected error occurred');
+      console.error(
+        "Registration error:",
+        error?.response?.data ||
+          error?.message ||
+          "An unexpected error occurred"
+      );
     }
   };
 
   const handleRetry = () => {
     clearError();
     setOtpId(null);
-    setOtp('');
+    setOtp("");
   };
 
   // Check if error is a connection error
-  const isConnectionError = error && (
-    error.includes('Unable to connect to the server') ||
-    error.includes('Network Error') ||
-    error.includes('ERR_CONNECTION_REFUSED')
-  );
+  const isConnectionError =
+    error &&
+    (error.includes("Unable to connect to the server") ||
+      error.includes("Network Error") ||
+      error.includes("ERR_CONNECTION_REFUSED"));
 
   return (
-    <div className="bg-gradient-to-b from-neutral-50 to-neutral-100 flex justify-center pt-4 pb-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-6 bg-white p-6 rounded-lg shadow-md">
+    <div className="bg-gradient-to-b from-neutral-50 to-neutral-100 flex justify-center pt-4 pb-8 px-2 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-6 bg-white px-2 pb-4 sm:p-6 rounded-lg shadow-md">
         <div>
           <h2 className="mt-1.5 text-center text-3xl font-extrabold text-gray-900">
-            {otpId ? 'Verify your email' : 'Create your account'}
+            {otpId ? "Verify your email" : "Create your account"}
           </h2>
           {otpId && (
             <p className="mt-1.5 text-center text-sm text-gray-600">
@@ -74,7 +81,10 @@ const RegisterForm: React.FC = () => {
           {!otpId ? (
             <>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Email address
                 </label>
                 <div className="mt-1 relative">
@@ -88,12 +98,15 @@ const RegisterForm: React.FC = () => {
                     className="appearance-none block w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     placeholder="Enter your email"
                   />
-                  <Mail className="absolute right-3 top-2 h-5 w-5 text-gray-400" />
+                  <Mail className="absolute right-3 top-2 h-5 w-5 text-gray-400 hidden sm:block" />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Full name
                 </label>
                 <div className="mt-1 relative">
@@ -107,7 +120,7 @@ const RegisterForm: React.FC = () => {
                     className="appearance-none block w-full px-3 py-1.5 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     placeholder="Enter your full name"
                   />
-                  <User className="absolute right-3 top-2 h-5 w-5 text-gray-400" />
+                  <User className="absolute right-3 top-2 h-5 w-5 text-gray-400 hidden sm:block" />
                 </div>
               </div>
 
@@ -117,13 +130,21 @@ const RegisterForm: React.FC = () => {
                   name="terms"
                   type="checkbox"
                   checked={acceptedTerms}
-                  onChange={e => setAcceptedTerms(e.target.checked)}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
                   className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                   required
                 />
-                <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-                  I accept Brandician.AI{' '}
-                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary-600 underline">
+                <label
+                  htmlFor="terms"
+                  className="ml-2 block text-sm text-gray-700"
+                >
+                  I accept Brandician.AI{" "}
+                  <a
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary-600 underline"
+                  >
                     terms of use
                   </a>
                 </label>
@@ -131,7 +152,10 @@ const RegisterForm: React.FC = () => {
             </>
           ) : (
             <div>
-              <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="otp"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Verification Code
               </label>
               <input
@@ -149,16 +173,34 @@ const RegisterForm: React.FC = () => {
           )}
 
           {error && (
-            <div className={`rounded-md p-3 ${isConnectionError ? 'bg-orange-50 border border-orange-200' : 'bg-red-50 border border-red-200'}`}>
+            <div
+              className={`rounded-md p-3 ${
+                isConnectionError
+                  ? "bg-orange-50 border border-orange-200"
+                  : "bg-red-50 border border-red-200"
+              }`}
+            >
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <AlertCircle className={`h-5 w-5 ${isConnectionError ? 'text-orange-400' : 'text-red-400'}`} />
+                  <AlertCircle
+                    className={`h-5 w-5 ${
+                      isConnectionError ? "text-orange-400" : "text-red-400"
+                    }`}
+                  />
                 </div>
                 <div className="ml-3">
-                  <h3 className={`text-sm font-medium ${isConnectionError ? 'text-orange-800' : 'text-red-800'}`}>
-                    {isConnectionError ? 'Connection Issue' : 'Error'}
+                  <h3
+                    className={`text-sm font-medium ${
+                      isConnectionError ? "text-orange-800" : "text-red-800"
+                    }`}
+                  >
+                    {isConnectionError ? "Connection Issue" : "Error"}
                   </h3>
-                  <div className={`mt-1 text-sm ${isConnectionError ? 'text-orange-700' : 'text-red-700'}`}>
+                  <div
+                    className={`mt-1 text-sm ${
+                      isConnectionError ? "text-orange-700" : "text-red-700"
+                    }`}
+                  >
                     {error}
                   </div>
                   {isConnectionError && (
@@ -187,7 +229,7 @@ const RegisterForm: React.FC = () => {
             loading={isLoading}
             className="w-full"
           >
-            {otpId ? 'Verify Email' : 'Create Account'}
+            {otpId ? "Verify Email" : "Create Account"}
           </Button>
 
           {otpId && (
@@ -204,8 +246,11 @@ const RegisterForm: React.FC = () => {
         </form>
 
         <div className="text-center text-sm text-gray-600">
-          Already have an account?{' '}
-          <Link to="/login" className="font-medium text-primary-600 hover:text-primary-500">
+          Already have an account?{" "}
+          <Link
+            to="/login"
+            className="font-medium text-primary-600 hover:text-primary-500"
+          >
             Sign in here
           </Link>
         </div>

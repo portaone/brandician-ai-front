@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import { useBrandStore } from '../../store/brand';
-import Button from '../common/Button';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { useBrandStore } from "../../store/brand";
+import Button from "../common/Button";
 
 const CreateBrand: React.FC = () => {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const { createBrand, isLoading, error } = useBrandStore();
   const navigate = useNavigate();
 
@@ -16,15 +16,15 @@ const CreateBrand: React.FC = () => {
       const brand = await createBrand(name, description);
       navigate(`/brands/${brand.id}/explanation`);
     } catch (error) {
-      console.error('Failed to create brand:', error);
+      console.error("Failed to create brand:", error);
     }
   };
 
   return (
     <div className="container mx-auto px-4">
-      <div className="max-w-2xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl mx-auto py-4 sm:py-8 sm:px-6 lg:px-8">
         <Button
-          onClick={() => navigate('/brands')}
+          onClick={() => navigate("/brands")}
           variant="ghost"
           leftIcon={<ArrowLeft className="h-5 w-5" />}
           className="mb-6"
@@ -32,12 +32,17 @@ const CreateBrand: React.FC = () => {
           Back to Brands
         </Button>
 
-        <div className="bg-white rounded-lg shadow px-6 py-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Brand</h2>
+        <div className="bg-white rounded-lg shadow px-2 md:px-6 py-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            Create New Brand
+          </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Project Name
               </label>
               <input
@@ -50,12 +55,16 @@ const CreateBrand: React.FC = () => {
                 required
               />
               <p className="mt-2 text-sm text-gray-500">
-                This is just to identify this project among others; you will create the actual brand name later in the process
+                This is just to identify this project among others; you will
+                create the actual brand name later in the process
               </p>
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Description (Optional)
               </label>
               <textarea
@@ -68,11 +77,7 @@ const CreateBrand: React.FC = () => {
               />
             </div>
 
-            {error && (
-              <div className="text-red-600 text-sm">
-                {error}
-              </div>
-            )}
+            {error && <div className="text-red-600 text-sm">{error}</div>}
 
             <Button
               type="submit"
