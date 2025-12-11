@@ -405,7 +405,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-2 md:p-8">
+    <div className="bg-white rounded-lg shadow p-2 md:p-8 md:py-4">
       <h3
         ref={questionTitleRef}
         className="text-xl font-medium text-gray-800 mb-2"
@@ -417,10 +417,11 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
       <div className="mb-6">
         <div className="relative">
           <textarea
+            rows={5}
             value={answer}
             onChange={handleAnswerChange}
             placeholder="Your answer"
-            className="w-full p-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 min-h-[150px]"
+            className="w-full p-2 md:p-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 min-h-[150px]"
           />
 
           <div className="absolute right-3 bottom-3">
