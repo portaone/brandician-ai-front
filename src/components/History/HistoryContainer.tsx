@@ -881,7 +881,11 @@ const HistoryContainer: React.FC = () => {
                                 console.log('🔵 History Continue button clicked');
                                 console.log('Brand ID:', brandId);
                                 console.log('Current status:', currentBrand.current_status);
-                                const route = getRouteForStatus(brandId, currentBrand.current_status as any);
+                                let route = getRouteForStatus(brandId, currentBrand.current_status as any);
+                                // For questionnaire step, navigate directly to summary view
+                                if (step.number === 1 && currentBrand.current_status === 'questionnaire') {
+                                  route = `/brands/${brandId}/questionnaire?summary=1`;
+                                }
                                 console.log('Navigating to:', route);
                                 navigate(route);
                               } else {
