@@ -659,6 +659,11 @@ export const brands = {
   }) => {
     await api.put(apiPath(`/brands/${brandId}/feedback/`), feedback);
   },
+
+  getGuestToken: async (brandId: string) => {
+    const response = await api.get(apiPath(`/brands/${brandId}/guest-token`));
+    return response.data;
+  },
 };
 
 export default api;
