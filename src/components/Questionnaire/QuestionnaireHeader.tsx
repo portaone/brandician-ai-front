@@ -1,6 +1,5 @@
 import React from "react";
-import { Brain, Save, Menu } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Save } from "lucide-react";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 
@@ -11,83 +10,30 @@ interface QuestionnaireHeaderProps {
 }
 
 const QuestionnaireHeader: React.FC<QuestionnaireHeaderProps> = ({
-  progress,
   onSaveExit,
   brandId,
 }) => {
   return (
     <header className="bg-white shadow-sm">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto sm:p-4 p-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="hidden md:flex flex-wrap gap-2 ml-12 space-x-1">
-              <div
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  progress >= 0
-                    ? "bg-primary-100 text-primary-800"
-                    : "bg-neutral-100 text-neutral-400"
-                }`}
-              >
-                Discovery
-              </div>
-              <div
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  progress >= 40
-                    ? "bg-primary-100 text-primary-800"
-                    : "bg-neutral-100 text-neutral-400"
-                }`}
-              >
-                Analysis
-              </div>
-              <div
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  progress >= 60
-                    ? "bg-primary-100 text-primary-800"
-                    : "bg-neutral-100 text-neutral-400"
-                }`}
-              >
-                Survey
-              </div>
-              <div
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  progress >= 80
-                    ? "bg-primary-100 text-primary-800"
-                    : "bg-neutral-100 text-neutral-400"
-                }`}
-              >
-                Assets
-              </div>
-              <div
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  progress >= 100
-                    ? "bg-primary-100 text-primary-800"
-                    : "bg-neutral-100 text-neutral-400"
-                }`}
-              >
-                Review
-              </div>
-            </div>
+          <div className="flex items-center gap-2 flex-grow flex-wrap">
+            {brandId && (
+              <HistoryButton brandId={brandId} variant="outline" size="sm" />
+            )}
+            <GetHelpButton variant="secondary" size="sm" />
           </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex justify-center items-center gap-2 flex-wrap">
-              {brandId && (
-                <HistoryButton brandId={brandId} variant="outline" size="sm" />
-              )}
-              <GetHelpButton variant="secondary" size="sm" />
-            </div>
-            <div className="flex items-center space-x-4 flex-col items-end">
-              <button
-                className="hidden md:flex items-center text-neutral-600 hover:text-primary-600 transition-colors"
-                onClick={onSaveExit}
-              >
-                <Save className="h-5 w-5 mr-1" />
-                <span>Exit</span>
-              </button>
-              <span className="text-xs text-neutral-500 mt-1 text-center hidden md:block">
-                All the progress you made so far will be saved
-              </span>
-            </div>
+          <div className="flex items-end space-x-4 flex-col">
+            <button
+              className="flex items-center text-neutral-600 hover:text-primary-600 transition-colors"
+              onClick={onSaveExit}
+            >
+              <Save className="h-5 w-5 mr-1" />
+              <span>Exit</span>
+            </button>
+            <span className="text-xs text-neutral-500 mt-1 text-center hidden md:block">
+              All the progress you made so far will be saved
+            </span>
           </div>
         </div>
       </div>
