@@ -181,13 +181,6 @@ const ExplanationScreen: React.FC = () => {
                 Process overview
               </h2>
               <div className="flex items-center flex-wrap gap-3">
-                {brandId && (
-                  <HistoryButton
-                    brandId={brandId}
-                    variant="outline"
-                    size="md"
-                  />
-                )}
                 <GetHelpButton variant="secondary" size="md" />
               </div>
             </div>
