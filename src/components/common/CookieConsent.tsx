@@ -11,8 +11,6 @@ const CookieConsent: React.FC = () => {
         ".cookie-consent-info"
       )?.nextElementSibling as HTMLElement | null;
 
-      console.log(cookieButtonContainer);
-
       if (cookieButtonContainer) {
         cookieButtonContainer.style.flexWrap = "wrap";
       }

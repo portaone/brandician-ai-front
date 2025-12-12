@@ -379,7 +379,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
 
   const handleSubmit = async () => {
     const finalAnswer = useAiAnswer ? aiEnhancedAnswer : answer;
-    if (!finalAnswer.trim() || augmentationError) return;
+    if (augmentationError) return;
     setIsSubmitting(true);
     try {
       await onNext(finalAnswer);
@@ -626,12 +626,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
         <Button
           type="button"
           onClick={handleSubmit}
-          disabled={
-            !answer.trim() ||
-            isSubmitting ||
-            isProcessing ||
-            !!augmentationError
-          }
+          disabled={isSubmitting || isProcessing || !!augmentationError}
           size="md"
         >
           {isSubmitting ? (

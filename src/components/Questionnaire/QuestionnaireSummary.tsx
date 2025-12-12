@@ -15,7 +15,6 @@ const QuestionnaireSummary: React.FC<QuestionnaireSummaryProps> = ({
   questions,
   answers,
   onEditAnswer,
-  onComplete,
 }) => {
   const navigate = useNavigate();
   const { brandId } = useParams<{ brandId: string }>();
@@ -82,6 +81,7 @@ const QuestionnaireSummary: React.FC<QuestionnaireSummaryProps> = ({
           }
           size="lg"
           tabIndex={-1}
+          disabled={!answers.length || questions.length !== answers.length}
         >
           Generate Brand Summary
           <ArrowRight className="ml-2 h-5 w-5 inline" />
