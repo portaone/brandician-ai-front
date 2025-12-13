@@ -5,6 +5,7 @@ import { brands } from "../../lib/api";
 import { AdjustObject } from "../../types";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import { scrollToTop } from "../../lib/utils";
 
 // Global cache to prevent duplicate API calls across component instances
 const adjustmentCache = new Map<
@@ -451,6 +452,8 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
       setError(errorMessage);
       onError(errorMessage);
     }
+
+    scrollToTop();
   };
 
   const handleReject = () => {
@@ -460,6 +463,7 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
     }
     setIsEditingSummary(false);
     onComplete();
+    scrollToTop();
   };
 
   const handleReevaluate = () => {
@@ -470,6 +474,7 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
     setIsEditingSummary(false);
     setEditedSummary("");
     setTimeout(() => setReloadFlag((flag) => !flag), 0);
+    scrollToTop();
   };
 
   const handleChangeClick = (id: string) => {

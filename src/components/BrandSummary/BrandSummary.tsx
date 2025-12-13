@@ -5,6 +5,7 @@ import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import { scrollToTop } from "../../lib/utils";
 
 const BrandSummary: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -109,6 +110,8 @@ const BrandSummary: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
+
+    scrollToTop();
   };
 
   if (isLoading || isGenerating) {

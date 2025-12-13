@@ -4,6 +4,7 @@ import { Loader, AlertCircle } from "lucide-react";
 import { brands } from "../../lib/api";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import { scrollToTop } from "../../lib/utils";
 
 interface ArchetypeAdjustment {
   old_archetype: string;
@@ -93,6 +94,7 @@ const ArchetypeAdjustmentContainer: React.FC<
     setError(null);
     setIsLoading(true);
     setReloadFlag((flag) => !flag);
+    scrollToTop();
   };
 
   const handleAccept = async () => {
@@ -138,10 +140,12 @@ const ArchetypeAdjustmentContainer: React.FC<
       setError(errorMessage);
       onError(errorMessage);
     }
+    scrollToTop();
   };
 
   const handleReject = () => {
     onComplete();
+    scrollToTop();
   };
 
   const handleChangeClick = (id: string) => {

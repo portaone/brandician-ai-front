@@ -18,6 +18,7 @@ import { brands } from "../../lib/api";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import { scrollToTop } from "../../lib/utils";
 
 const SurveyContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -292,6 +293,7 @@ const SurveyContainer: React.FC = () => {
       setErrorType("save");
     } finally {
       setIsSubmitting(false);
+      scrollToTop();
     }
   };
 

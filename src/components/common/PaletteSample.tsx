@@ -1,5 +1,6 @@
 import React from "react";
 import { useBrandStore } from "../../store/brand";
+import { useParams } from "react-router-dom";
 
 interface PaletteSampleProps {
   content: string;
@@ -12,6 +13,7 @@ interface PaletteSampleProps {
  */
 const PaletteSample: React.FC<PaletteSampleProps> = ({ content, brandId }) => {
   const { currentBrand } = useBrandStore();
+  const params = useParams();
 
   let colors: { [key: string]: string } = {};
   try {
@@ -27,7 +29,7 @@ const PaletteSample: React.FC<PaletteSampleProps> = ({ content, brandId }) => {
   const background = colors["background-color"] || "#F4F2F2";
 
   const handleOpenColorSchema = () => {
-    const targetBrandId = brandId || currentBrand?.id;
+    const targetBrandId = brandId || currentBrand?.id || params?.brandId;
 
     if (targetBrandId) {
       window.open(`/brands/${targetBrandId}/color-schema`, "_blank");

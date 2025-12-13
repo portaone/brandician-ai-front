@@ -4,7 +4,11 @@ import { ArrowRight, RefreshCw, Loader } from "lucide-react";
 import { brands } from "../../lib/api";
 import { useBrandStore } from "../../store/brand";
 import { navigateAfterProgress } from "../../lib/navigation";
-import { BrandAssetSummary, BrandAssetsListResponse } from "../../types";
+import {
+  BrandAsset,
+  BrandAssetSummary,
+  BrandAssetsListResponse,
+} from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
@@ -37,7 +41,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
   const isLoadingRef = useRef(false);
   const hasLoadedRef = useRef(false);
   const isGeneratingRef = useRef(false);
-  const pollingTimeoutRef = useRef<number | null>(null);
+  const pollingTimeoutRef = useRef<any | null>(null);
 
   // Function to start asset generation (regenerate all assets)
   const startAssetGeneration = async () => {

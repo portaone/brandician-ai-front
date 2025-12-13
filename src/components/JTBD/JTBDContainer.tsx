@@ -6,6 +6,7 @@ import { JTBD, JTBDImportance, JTBD_IMPORTANCE_LABELS } from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import { scrollToTop } from "../../lib/utils";
 
 type Step = "rating" | "editing" | "drivers";
 
@@ -158,6 +159,8 @@ const JTBDContainer: React.FC = () => {
         setIsSubmitting(false);
       }
     }
+
+    scrollToTop();
   };
 
   const handleRegeneratePersonas = async () => {
@@ -173,6 +176,8 @@ const JTBDContainer: React.FC = () => {
       setIsRegenerating(false);
       isRegeneratingRef.current = false;
     }
+
+    scrollToTop();
   };
 
   if (isLoading) {

@@ -5,6 +5,7 @@ import { brands } from "../../lib/api";
 import { AdjustObject, JTBDList } from "../../types";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import { scrollToTop } from "../../lib/utils";
 
 // Global cache to prevent duplicate API calls across component instances
 const adjustmentCache = new Map<
@@ -598,6 +599,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
       setError(errorMessage);
       onError(errorMessage);
     }
+    scrollToTop();
   };
 
   const handleReject = () => {
@@ -606,6 +608,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
       adjustmentCache.delete(cacheKey);
     }
     onComplete();
+    scrollToTop();
   };
 
   const handleReevaluate = () => {
@@ -617,6 +620,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
     setError(null);
     setIsLoading(true);
     setTimeout(() => setReloadFlag((flag) => !flag), 0);
+    scrollToTop();
   };
 
   const handleChangeClick = (id: string) => {

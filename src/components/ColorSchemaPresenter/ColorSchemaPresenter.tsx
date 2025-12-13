@@ -38,145 +38,142 @@ const ColorSchemaPresenter: React.FC = () => {
     }
   }, [brandId, currentBrand, selectBrand]);
 
-  useEffect(() => {
-    // Load brand-specific colors from assets
-    const loadBrandColors = async () => {
-      if (currentBrand && brandId) {
-        try {
-          // First, produce/get the list of assets
-          const response = await brands.produceAssets(brandId);
-          console.log("Assets response:", response);
-          console.log(
-            "Available asset types:",
-            response.assets.map((a: any) => a.type)
-          );
+  // Load brand-specific colors from assets
+  const loadBrandColors = async () => {
+    if (currentBrand && brandId) {
+      try {
+        // First, produce/get the list of assets
+        const response = await brands.listAssets(brandId);
+        console.log("Assets response:", response);
+        console.log(
+          "Available asset types:",
+          response.assets.map((a: any) => a.type)
+        );
 
-          // Find color palette asset
-          const colorAsset = response.assets.find(
-            (asset: any) =>
-              asset.type === "palette" ||
-              asset.type === "color_palette" ||
-              asset.type === "colors" ||
-              asset.type.includes("color")
-          );
+        // Find color palette asset
+        const colorAsset = response.assets.find(
+          (asset: any) =>
+            asset.type === "palette" ||
+            asset.type === "color_palette" ||
+            asset.type === "colors" ||
+            asset.type.includes("color")
+        );
 
-          console.log("Found color asset:", colorAsset);
+        console.log("Found color asset:", colorAsset);
 
-          if (colorAsset) {
-            // Fetch the full color asset content
-            const fullColorAsset = await brands.getAsset(
-              brandId,
-              colorAsset.id
-            );
-            console.log("Full color asset:", fullColorAsset);
+        if (colorAsset) {
+          // Fetch the full color asset content
+          const fullColorAsset = await brands.getAsset(brandId, colorAsset.id);
+          console.log("Full color asset:", fullColorAsset);
 
-            if (fullColorAsset.content) {
-              try {
-                // Try to parse as JSON
-                const colors = JSON.parse(fullColorAsset.content);
-                console.log("Parsed colors:", colors);
-
-                // Extract colors from the asset content
-                setBrandColors({
-                  primary:
-                    colors["main-color"] ||
-                    colors.primary ||
-                    colors.main ||
-                    brandColors.primary,
-                  supporting:
-                    colors["supporting-color"] ||
-                    colors.supporting ||
-                    colors.secondary ||
-                    brandColors.supporting,
-                  background:
-                    colors["background-color"] ||
-                    colors.background ||
-                    colors.neutral ||
-                    "#F4F2F2",
-                  accent:
-                    colors["accent-color"] ||
-                    colors.accent ||
-                    colors.cta ||
-                    brandColors.accent,
-                  text:
-                    colors["body-text-color"] ||
-                    colors.text ||
-                    colors.foreground ||
-                    brandColors.text,
-                });
-                console.log("Setting brand colors to:", {
-                  primary: colors["main-color"],
-                  supporting: colors["supporting-color"],
-                  background: colors["background-color"] || "#F4F2F2",
-                  accent: colors["accent-color"],
-                  text: colors["body-text-color"],
-                });
-              } catch (parseError) {
-                // If not JSON, try to parse as CSS or text format
-                const lines = fullColorAsset.content.split("\n");
-                const extractedColors: any = {};
-
-                lines.forEach((line: string) => {
-                  // Match patterns like "primary: #XXXXXX" or "--primary: #XXXXXX"
-                  const colorMatch = line.match(
-                    /(primary|main|brand|supporting|secondary|background|accent|cta|action|text|foreground)[:\s]+#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/i
-                  );
-                  if (colorMatch) {
-                    const key = colorMatch[1].toLowerCase();
-                    const value = `#${colorMatch[2]}`;
-                    extractedColors[key] = value;
-                  }
-                });
-
-                setBrandColors({
-                  primary:
-                    extractedColors.primary ||
-                    extractedColors.main ||
-                    extractedColors.brand ||
-                    brandColors.primary,
-                  supporting:
-                    extractedColors.supporting ||
-                    extractedColors.secondary ||
-                    brandColors.supporting,
-                  background:
-                    extractedColors.background || brandColors.background,
-                  accent:
-                    extractedColors.accent ||
-                    extractedColors.cta ||
-                    extractedColors.action ||
-                    brandColors.accent,
-                  text:
-                    extractedColors.text ||
-                    extractedColors.foreground ||
-                    brandColors.text,
-                });
-              }
-            }
-          }
-        } catch (error) {
-          console.error("Failed to load brand colors from assets:", error);
-          // Fall back to localStorage if available
-          const storedColors = localStorage.getItem(`brand_colors_${brandId}`);
-          if (storedColors) {
+          if (fullColorAsset.content) {
             try {
-              const colors = JSON.parse(storedColors);
+              // Try to parse as JSON
+              const colors = JSON.parse(fullColorAsset.content);
+              console.log("Parsed colors:", colors);
+
+              // Extract colors from the asset content
               setBrandColors({
-                primary: colors.primary || brandColors.primary,
-                supporting: colors.supporting || brandColors.supporting,
-                background: colors.background || brandColors.background,
-                accent: colors.accent || brandColors.accent,
-                text: colors.text || brandColors.text,
+                primary:
+                  colors["main-color"] ||
+                  colors.primary ||
+                  colors.main ||
+                  brandColors.primary,
+                supporting:
+                  colors["supporting-color"] ||
+                  colors.supporting ||
+                  colors.secondary ||
+                  brandColors.supporting,
+                background:
+                  colors["background-color"] ||
+                  colors.background ||
+                  colors.neutral ||
+                  "#F4F2F2",
+                accent:
+                  colors["accent-color"] ||
+                  colors.accent ||
+                  colors.cta ||
+                  brandColors.accent,
+                text:
+                  colors["body-text-color"] ||
+                  colors.text ||
+                  colors.foreground ||
+                  brandColors.text,
+              });
+              console.log("Setting brand colors to:", {
+                primary: colors["main-color"],
+                supporting: colors["supporting-color"],
+                background: colors["background-color"] || "#F4F2F2",
+                accent: colors["accent-color"],
+                text: colors["body-text-color"],
               });
             } catch (parseError) {
-              console.error("Failed to parse stored colors:", parseError);
+              // If not JSON, try to parse as CSS or text format
+              const lines = fullColorAsset.content.split("\n");
+              const extractedColors: any = {};
+
+              lines.forEach((line: string) => {
+                // Match patterns like "primary: #XXXXXX" or "--primary: #XXXXXX"
+                const colorMatch = line.match(
+                  /(primary|main|brand|supporting|secondary|background|accent|cta|action|text|foreground)[:\s]+#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/i
+                );
+                if (colorMatch) {
+                  const key = colorMatch[1].toLowerCase();
+                  const value = `#${colorMatch[2]}`;
+                  extractedColors[key] = value;
+                }
+              });
+
+              setBrandColors({
+                primary:
+                  extractedColors.primary ||
+                  extractedColors.main ||
+                  extractedColors.brand ||
+                  brandColors.primary,
+                supporting:
+                  extractedColors.supporting ||
+                  extractedColors.secondary ||
+                  brandColors.supporting,
+                background:
+                  extractedColors.background || brandColors.background,
+                accent:
+                  extractedColors.accent ||
+                  extractedColors.cta ||
+                  extractedColors.action ||
+                  brandColors.accent,
+                text:
+                  extractedColors.text ||
+                  extractedColors.foreground ||
+                  brandColors.text,
+              });
             }
           }
-        } finally {
-          setIsLoadingStatus(false);
         }
+      } catch (error) {
+        console.error("Failed to load brand colors from assets:", error);
+        // Fall back to localStorage if available
+        const storedColors = localStorage.getItem(`brand_colors_${brandId}`);
+        if (storedColors) {
+          try {
+            const colors = JSON.parse(storedColors);
+            setBrandColors({
+              primary: colors.primary || brandColors.primary,
+              supporting: colors.supporting || brandColors.supporting,
+              background: colors.background || brandColors.background,
+              accent: colors.accent || brandColors.accent,
+              text: colors.text || brandColors.text,
+            });
+          } catch (parseError) {
+            console.error("Failed to parse stored colors:", parseError);
+          }
+        }
+      } finally {
+        setIsLoadingStatus(false);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     loadBrandColors();
   }, [currentBrand, brandId]);
 

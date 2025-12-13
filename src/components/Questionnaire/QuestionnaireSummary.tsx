@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Edit2, ArrowRight } from "lucide-react";
 import { Question, Answer } from "../../types";
 import Button from "../common/Button";
+import { scrollToTop } from "../../lib/utils";
 
 interface QuestionnaireSummaryProps {
   questions: Question[];
@@ -76,9 +77,10 @@ const QuestionnaireSummary: React.FC<QuestionnaireSummaryProps> = ({
         </Button>
 
         <Button
-          onClick={() =>
-            brandId && navigate(`/brands/${brandId}/summary?regenerate=1`)
-          }
+          onClick={() => {
+            brandId && navigate(`/brands/${brandId}/summary?regenerate=1`);
+            scrollToTop();
+          }}
           size="lg"
           tabIndex={-1}
           disabled={!answers.length || questions.length !== answers.length}
