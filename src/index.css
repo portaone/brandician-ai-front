@@ -58,7 +58,18 @@
         scroll-behavior: smooth;
     }
 
-    body, p, div, span, a, li, td, th, input, textarea, select, button {
+    body,
+    p,
+    div,
+    span,
+    a,
+    li,
+    td,
+    th,
+    input,
+    textarea,
+    select,
+    button {
         font-family: var(--body-font-family);
         font-weight: var(--body-font-weight);
         font-style: var(--body-font-style);
@@ -67,19 +78,26 @@
         letter-spacing: var(--body-letter-spacing);
     }
 
-    h1, h2, h3, h4, h5, h6 {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
         font-family: 'Montserrat', system-ui, sans-serif;
     }
 }
 
 @layer components {
+
     /* Global Button Styles */
     .btn {
         @apply inline-flex items-center justify-center transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
         font-family: 'Source Sans Pro', sans-serif;
         font-style: normal;
         font-weight: 700;
-        font-size: var(--btn-font-size, 18px); /* Use CSS custom property */
+        font-size: var(--btn-font-size, 18px);
+        /* Use CSS custom property */
         line-height: 202%;
         text-align: center;
         letter-spacing: 0.12em;
@@ -179,6 +197,7 @@
         border: 2px solid #DC2626;
         box-shadow: 0px 2px 12px rgba(220, 38, 38, 0.2);
     }
+
     .btn-danger:hover {
         background: #B91C1C;
         border-color: #B91C1C;
@@ -385,4 +404,8 @@
     margin-left: auto;
     margin-right: auto;
     width: 100%;
+}
+
+* {
+    white-space: inherit;
 }
