@@ -26,7 +26,7 @@ interface BrandName {
 const BrandNameContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { selectBrand, currentBrand, progressBrandStatus } = useBrandStore();
+  const { selectBrand, updateBrandName, progressBrandStatus } = useBrandStore();
 
   const [suggestions, setSuggestions] = useState<BrandNameSuggestion[]>([]);
   const [selectedName, setSelectedName] = useState<string>("");
@@ -90,6 +90,9 @@ const BrandNameContainer: React.FC = () => {
     try {
       // Use proper progress endpoint instead of calling pickName again
       const statusUpdate = await progressBrandStatus(brandId);
+
+      await updateBrandName(brandId, selectedName);
+
       // Navigate to the next step as determined by the backend
       navigateAfterProgress(navigate, brandId, statusUpdate);
     } catch (error) {
