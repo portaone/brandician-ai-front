@@ -40,7 +40,7 @@ const BrandNameContainer: React.FC = () => {
   const [currentDraft, setCurrentDraft] = useState<BrandName | null>(null);
 
   useEffect(() => {
-    const loadBrandAndSuggestions = async () => {
+    const loadBrand = async () => {
       if (!brandId) return;
 
       setIsLoading(true);
@@ -50,16 +50,6 @@ const BrandNameContainer: React.FC = () => {
         const nameOptions = await brands.pickName(brandId);
         // Store draft separately
         setCurrentDraft(nameOptions.draft || null);
-        // Only set alt_options as suggestions
-        const altSuggestions = Array.isArray(nameOptions.alt_options)
-          ? nameOptions.alt_options.map((opt: BrandName) => ({
-              name: opt.name,
-              rationale: opt.description,
-              domains_available: opt.domains_available || [],
-              score: opt.score,
-            }))
-          : [];
-        setSuggestions(altSuggestions);
       } catch (error) {
         setError("Failed to generate brand name suggestions");
       } finally {
@@ -67,7 +57,7 @@ const BrandNameContainer: React.FC = () => {
       }
     };
 
-    loadBrandAndSuggestions();
+    loadBrand();
   }, [brandId]);
 
   const handleSelectName = (name: string) => {
@@ -339,6 +329,12 @@ const BrandNameContainer: React.FC = () => {
                   </div>
                 ))}
               </div>
+              {suggestions.length === 0 && (
+                <span className="text-center">
+                  Need ideas for the new brand name?<br></br> Click on the
+                  button above to generate suggestions
+                </span>
+              )}
             </div>
 
             {/* Custom Name Input */}
