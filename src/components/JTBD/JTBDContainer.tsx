@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Loader, ArrowRight, X, Edit2, RefreshCw } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { useBrandStore } from "../../store/brand";
 import { JTBD, JTBDImportance, JTBD_IMPORTANCE_LABELS } from "../../types";
 import Button from "../common/Button";
@@ -21,6 +22,7 @@ const JTBDContainer: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<Step>("rating");
   const [editingPersona, setEditingPersona] = useState<JTBD | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isEditingDrivers, setIsEditingDrivers] = useState(false);
   const isRegeneratingRef = useRef<boolean>(false);
   const hasInitialized = useRef(false);
 
@@ -459,20 +461,45 @@ const JTBDContainer: React.FC = () => {
 
           {currentStep === "drivers" && (
             <div className="bg-white rounded-lg shadow-lg p-2 sm:p-6 mb-8">
-              <h2 className="text-xl font-medium text-neutral-800 mb-2">
-                Functional, Emotional and Social Drivers
-              </h2>
+              <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                <h2 className="text-xl font-medium text-neutral-800">
+                  Functional, Emotional and Social Drivers
+                </h2>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  onClick={() => setIsEditingDrivers((v) => !v)}
+                  disabled={isSubmitting}
+                >
+                  {isEditingDrivers ? "Preview" : "Edit"}
+                </Button>
+              </div>
               <p className="text-neutral-600 mb-6">
                 Review the factors that motivate your personas to engage with
                 your brand. Did we get everything right? Did we miss something
                 important?
               </p>
-              <textarea
-                value={drivers}
-                onChange={handleDriversChange}
-                className="w-full min-h-[300px] p-4 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Enter your functional drivers, with each driver on a new line..."
-              />
+              {isEditingDrivers ? (
+                <textarea
+                  value={drivers}
+                  onChange={handleDriversChange}
+                  className="w-full min-h-[300px] p-4 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="Enter your functional drivers (Markdown supported)..."
+                />
+              ) : (
+                <div className="w-full min-h-[300px] p-4 border border-neutral-200 rounded-lg bg-neutral-50">
+                  {drivers && drivers.trim() ? (
+                    <div className="prose prose-sm max-w-none text-neutral-800">
+                      <ReactMarkdown>{drivers}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <div className="text-neutral-500 italic">
+                      No drivers yet. Click Edit to add them.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

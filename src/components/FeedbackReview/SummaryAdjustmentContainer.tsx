@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Loader, AlertCircle } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { brands } from "../../lib/api";
 import { AdjustObject } from "../../types";
 import GetHelpButton from "../common/GetHelpButton";
@@ -158,13 +159,39 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
   onEditChange,
   onEditSave,
 }) => {
+  const MarkdownBlock: React.FC<{ text: string }> = ({ text }) => {
+    return (
+      <div className="prose prose-sm max-w-none text-neutral-700 leading-relaxed">
+        <ReactMarkdown>{text}</ReactMarkdown>
+      </div>
+    );
+  };
+
+  const MarkdownInline: React.FC<{ text: string }> = ({ text }) => {
+    return (
+      <ReactMarkdown
+        components={{
+          p({ children }) {
+            return <span>{children}</span>;
+          },
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    );
+  };
+
   function renderChanges() {
     if (!changes || changes.length === 0) {
-      return <span>{newText || <em>No changes were suggested.</em>}</span>;
+      return newText ? (
+        <MarkdownBlock text={newText} />
+      ) : (
+        <em>No changes were suggested.</em>
+      );
     }
     return changes.map((seg, i) => {
       if (seg.type === "text") {
-        return <span key={i}>{seg.content}</span>;
+        return <MarkdownInline key={i} text={seg.content} />;
       }
       if (seg.type === "change") {
         let style = {};
@@ -194,7 +221,7 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
             title="Click to see the explanation of the suggestion"
             onClick={() => seg.id && onChangeClick(seg.id)}
           >
-            {seg.content}
+            <MarkdownInline text={seg.content} />
           </span>
         );
       }
@@ -211,9 +238,7 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
         </h3>
         <div className="prose max-w-none">
           <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-2 sm:p-6">
-            <div className="whitespace-pre-wrap text-neutral-700 leading-relaxed">
-              {oldText}
-            </div>
+            <MarkdownBlock text={oldText} />
           </div>
         </div>
       </div>
@@ -259,7 +284,7 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
         ) : (
           <div className="prose max-w-none">
             <div className="bg-green-50 border border-green-200 rounded-lg p-2 sm:p-6">
-              <div className="whitespace-pre-wrap text-neutral-700 leading-relaxed">
+              <div className="text-neutral-700 leading-relaxed">
                 {renderChanges()}
               </div>
             </div>

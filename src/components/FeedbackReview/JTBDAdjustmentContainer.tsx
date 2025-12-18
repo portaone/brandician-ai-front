@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { Loader, AlertCircle, Plus } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { brands } from "../../lib/api";
 import { AdjustObject, JTBDList } from "../../types";
 import GetHelpButton from "../common/GetHelpButton";
@@ -45,15 +46,42 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
   choice,
   onChoiceChange,
 }) => {
+  const personaScope = `persona-${index}`;
+  const makeSuggestionKey = (id: string) => `${personaScope}-${id}`;
+
+  const MarkdownBlock: React.FC<{ text: string }> = ({ text }) => {
+    return (
+      <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+        <ReactMarkdown>{text}</ReactMarkdown>
+      </div>
+    );
+  };
+
+  const MarkdownInline: React.FC<{ text: string }> = ({ text }) => {
+    return (
+      <ReactMarkdown
+        components={{
+          p({ children }) {
+            return <span>{children}</span>;
+          },
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    );
+  };
+
   function renderChanges() {
     if (!persona.changes || persona.changes.length === 0) {
-      return (
-        <span>{persona.new_text || <em>No changes were suggested.</em>}</span>
+      return persona.new_text ? (
+        <MarkdownBlock text={persona.new_text} />
+      ) : (
+        <em>No changes were suggested.</em>
       );
     }
     return persona.changes.map((seg, i) => {
       if (seg.type === "text") {
-        return <span key={i}>{seg.content}</span>;
+        return <MarkdownInline key={i} text={seg.content} />;
       }
       if (seg.type === "change") {
         let style = {};
@@ -81,9 +109,9 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
             style={style}
             className="inline cursor-pointer px-1 rounded transition-colors hover:bg-yellow-100"
             title="Click to see the explanation of the suggestion"
-            onClick={() => seg.id && onChangeClick(seg.id)}
+            onClick={() => seg.id && onChangeClick(makeSuggestionKey(seg.id))}
           >
-            {seg.content}
+            <MarkdownInline text={seg.content} />
           </span>
         );
       }
@@ -118,10 +146,12 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
             {isNewPersona ? "Additional Persona" : "Current"}
           </h4>
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-h-[120px]">
-            <div className="whitespace-pre-wrap text-gray-700 text-sm leading-relaxed">
-              {isNewPersona
-                ? "This is a newly suggested persona based on feedback analysis."
-                : persona.old_text}
+            <div className="text-gray-700 text-sm leading-relaxed">
+              {isNewPersona ? (
+                <MarkdownBlock text="This is a newly suggested persona based on feedback analysis." />
+              ) : (
+                <MarkdownBlock text={persona.old_text} />
+              )}
             </div>
           </div>
         </div>
@@ -138,7 +168,7 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
                 : "bg-blue-50 border-blue-200"
             }`}
           >
-            <div className="whitespace-pre-wrap text-gray-700 text-sm leading-relaxed">
+            <div className="text-gray-700 text-sm leading-relaxed">
               {renderChanges()}
             </div>
           </div>
@@ -155,13 +185,15 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
             {persona.footnotes.map((note) => (
               <div
                 key={note.id}
-                ref={(el) => (explanationRefs.current[note.id] = el)}
+                ref={(el) =>
+                  (explanationRefs.current[makeSuggestionKey(note.id)] = el)
+                }
                 className="bg-gray-50 border border-gray-200 rounded-lg sm:p-3 p-2 transition-all text-sm"
               >
                 <p className="text-gray-700 font-medium">
                   Suggestion {note.id}
                 </p>
-                <p className="text-gray-600">{note.text}</p>
+                <MarkdownBlock text={note.text} />
                 {note.url && (
                   <a
                     href={note.url}
@@ -257,17 +289,42 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
   choice,
   onChoiceChange,
 }) => {
+  const driversScope = "drivers";
+  const makeSuggestionKey = (id: string) => `${driversScope}-${id}`;
+
+  const MarkdownBlock: React.FC<{ text: string }> = ({ text }) => {
+    return (
+      <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+        <ReactMarkdown>{text}</ReactMarkdown>
+      </div>
+    );
+  };
+
+  const MarkdownInline: React.FC<{ text: string }> = ({ text }) => {
+    return (
+      <ReactMarkdown
+        components={{
+          p({ children }) {
+            return <span>{children}</span>;
+          },
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    );
+  };
+
   function renderChanges() {
     if (!driversAdjustment.changes || driversAdjustment.changes.length === 0) {
-      return (
-        <span>
-          {driversAdjustment.new_text || <em>No changes were suggested.</em>}
-        </span>
+      return driversAdjustment.new_text ? (
+        <MarkdownBlock text={driversAdjustment.new_text} />
+      ) : (
+        <em>No changes were suggested.</em>
       );
     }
     return driversAdjustment.changes.map((seg, i) => {
       if (seg.type === "text") {
-        return <span key={i}>{seg.content}</span>;
+        return <MarkdownInline key={i} text={seg.content} />;
       }
       if (seg.type === "change") {
         let style = {};
@@ -295,9 +352,9 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
             style={style}
             className="inline cursor-pointer px-1 rounded transition-colors hover:bg-yellow-100"
             title="Click to see the explanation of the suggestion"
-            onClick={() => seg.id && onChangeClick(seg.id)}
+            onClick={() => seg.id && onChangeClick(makeSuggestionKey(seg.id))}
           >
-            {seg.content}
+            <MarkdownInline text={seg.content} />
           </span>
         );
       }
@@ -318,9 +375,7 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
             Current Drivers
           </h4>
           <div className="bg-gray-50 border border-gray-200 rounded-lg sm:p-4 min-h-[200px]">
-            <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
-              {driversAdjustment.old_text}
-            </div>
+            <MarkdownBlock text={driversAdjustment.old_text} />
           </div>
         </div>
 
@@ -330,7 +385,7 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
             Proposed Drivers
           </h4>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 min-h-[200px]">
-            <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+            <div className="text-gray-700 leading-relaxed">
               {renderChanges()}
             </div>
           </div>
@@ -348,13 +403,15 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
               {driversAdjustment.footnotes.map((note) => (
                 <div
                   key={note.id}
-                  ref={(el) => (explanationRefs.current[note.id] = el)}
+                  ref={(el) =>
+                    (explanationRefs.current[makeSuggestionKey(note.id)] = el)
+                  }
                   className="bg-gray-50 border border-gray-200 rounded-lg p-4 transition-all"
                 >
                   <p className="text-gray-700 font-semibold">
                     Suggestion {note.id}
                   </p>
-                  <p className="text-gray-700">{note.text}</p>
+                  <MarkdownBlock text={note.text} />
                   {note.url && (
                     <a
                       href={note.url}
