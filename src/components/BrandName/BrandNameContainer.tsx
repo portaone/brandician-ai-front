@@ -265,12 +265,11 @@ const BrandNameContainer: React.FC = () => {
                 {suggestions.map((suggestion, index) => (
                   <div
                     key={index}
-                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                    className={`p-4 border rounded-lg transition-all ${
                       selectedName === suggestion.name
                         ? "border-primary-500 bg-primary-50"
                         : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                     }`}
-                    onClick={() => handleSelectName(suggestion.name)}
                   >
                     <div className="flex items-center justify-between">
                       <h4 className="font-medium text-gray-900">
@@ -322,6 +321,21 @@ const BrandNameContainer: React.FC = () => {
                           </Button>
                         </>
                       )}
+                    <div className="mt-3 flex justify-end">
+                      <Button
+                        onClick={() => handleSelectName(suggestion.name)}
+                        variant={
+                          selectedName === suggestion.name
+                            ? "primary"
+                            : "secondary"
+                        }
+                        size="sm"
+                      >
+                        {selectedName === suggestion.name
+                          ? "✓ Selected"
+                          : "Select this brand"}
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
