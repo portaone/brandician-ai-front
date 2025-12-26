@@ -1,28 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { CreditCard, Loader, AlertCircle, Copy, Share2 } from 'lucide-react';
-import { useBrandStore } from '../../store/brand';
-import { useAuthStore } from '../../store/auth';
-import { navigateAfterProgress } from '../../lib/navigation';
-import { brands } from '../../lib/api';
-import Button from '../common/Button';
-import GetHelpButton from '../common/GetHelpButton';
-import HistoryButton from '../common/HistoryButton';
-
-// Social sharing URL generators
-const createShareUrl = {
-  linkedin: (text: string) => {
-    // LinkedIn sharing API
-    return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://brandician.ai/')}&summary=${encodeURIComponent(text)}`;
-  },
-  twitter: (text: string) => {
-    return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-  },
-  facebook: (text: string) => {
-    // Facebook only supports URL sharing, text must be on the page
-    return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://brandician.ai/')}&quote=${encodeURIComponent(text)}`;
-  },
-};
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { CreditCard, Loader, AlertCircle, Copy } from "lucide-react";
+import { useBrandStore } from "../../store/brand";
+import { useAuthStore } from "../../store/auth";
+import { navigateAfterProgress } from "../../lib/navigation";
+import { brands } from "../../lib/api";
+import Button from "../common/Button";
+import GetHelpButton from "../common/GetHelpButton";
+import HistoryButton from "../common/HistoryButton";
 
 interface PaymentMethod {
   id: string;
@@ -35,32 +20,39 @@ const PaymentContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { currentBrand, selectBrand, progressBrandStatus, isLoading } = useBrandStore();
+  const { currentBrand, selectBrand, progressBrandStatus, isLoading } =
+    useBrandStore();
   const { user } = useAuthStore();
-  
+
   // Payment state
-  const [paymentAmount, setPaymentAmount] = useState<string>('');
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('credit_card');
+  const [paymentAmount, setPaymentAmount] = useState<string>("");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<string>("credit_card");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [availablePaymentMethods, setAvailablePaymentMethods] = useState<PaymentMethod[]>([]);
+  const [availablePaymentMethods, setAvailablePaymentMethods] = useState<
+    PaymentMethod[]
+  >([]);
   const [isLoadingMethods, setIsLoadingMethods] = useState(true);
-  
+
   // Form validation and error handling
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
   // Social sharing state for zero-amount
-  const [sharedNetworks, setSharedNetworks] = useState<{[key: string]: boolean}>({
+  const [sharedNetworks, setSharedNetworks] = useState<{
+    [key: string]: boolean;
+  }>({
     facebook: false,
     linkedin: false,
     twitter: false,
     other: false,
   });
   const shareText =
-    'I have just created a branding for my new business idea using Brandician.AI and it was awesome! AI-powered tool analyzes your business idea, suggests the brand archetype, generates brand assets, etc. Visit https://brandician.ai/ to create a brand for your idea!';
+    "I have just created a branding for my new business idea using Brandician.AI and it was awesome! AI-powered tool analyzes your business idea, suggests the brand archetype, generates brand assets, etc. Visit https://brandician.ai/ to create a brand for your idea!";
   const atLeastOneShared = Object.values(sharedNetworks).some(Boolean);
-  const isZeroAmount = paymentAmount !== '' && parseFloat(paymentAmount) === 0;
-  const canProceed = paymentAmount !== '' && (!isZeroAmount || atLeastOneShared);
+  const isZeroAmount = paymentAmount !== "" && parseFloat(paymentAmount) === 0;
+  const canProceed =
+    paymentAmount !== "" && (!isZeroAmount || atLeastOneShared);
 
   // Ref for amount input
   const amountInputRef = useRef<HTMLInputElement>(null);
@@ -73,9 +65,11 @@ const PaymentContainer: React.FC = () => {
 
   // Check for payment error from URL params
   useEffect(() => {
-    const error = searchParams.get('error');
-    if (error === 'payment_cancelled') {
-      setPaymentError('Your PayPal payment was cancelled. Please try a different payment method or try again.');
+    const error = searchParams.get("error");
+    if (error === "payment_cancelled") {
+      setPaymentError(
+        "Your PayPal payment was cancelled. Please try a different payment method or try again."
+      );
     }
   }, [searchParams]);
 
@@ -84,46 +78,53 @@ const PaymentContainer: React.FC = () => {
     const loadPaymentMethods = async () => {
       try {
         const response = await brands.getPaymentMethods();
-        
+
         const paymentMethods: PaymentMethod[] = [
           {
-            id: 'credit_card',
-            name: 'Credit Card',
+            id: "credit_card",
+            name: "Credit Card",
             icon: <CreditCard className="h-5 w-5" />,
-            enabled: response.payment_methods.includes('credit_card')
+            enabled: response.payment_methods.includes("credit_card"),
           },
           {
-            id: 'paypal',
-            name: 'PayPal',
-            icon: <div className="h-5 w-5 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">P</div>,
-            enabled: response.payment_methods.includes('paypal')
+            id: "paypal",
+            name: "PayPal",
+            icon: (
+              <div className="h-5 w-5 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">
+                P
+              </div>
+            ),
+            enabled: response.payment_methods.includes("paypal"),
           },
           {
-            id: 'google_pay',
-            name: 'Google Pay',
-            icon: <div className="h-5 w-5 bg-green-500 rounded text-white text-xs flex items-center justify-center font-bold">G</div>,
-            enabled: response.payment_methods.includes('google_pay')
-          }
+            id: "google_pay",
+            name: "Google Pay",
+            icon: (
+              <div className="h-5 w-5 bg-green-500 rounded text-white text-xs flex items-center justify-center font-bold">
+                G
+              </div>
+            ),
+            enabled: response.payment_methods.includes("google_pay"),
+          },
         ];
-        
+
         setAvailablePaymentMethods(paymentMethods);
-        
+
         // Set default to first enabled method
-        const firstEnabled = paymentMethods.find(method => method.enabled);
+        const firstEnabled = paymentMethods.find((method) => method.enabled);
         if (firstEnabled) {
           setSelectedPaymentMethod(firstEnabled.id);
         }
-        
       } catch (error) {
-        console.error('Failed to load payment methods:', error);
+        console.error("Failed to load payment methods:", error);
         // Fallback to default methods
         setAvailablePaymentMethods([
           {
-            id: 'credit_card',
-            name: 'Credit Card',
+            id: "credit_card",
+            name: "Credit Card",
             icon: <CreditCard className="h-5 w-5" />,
-            enabled: true
-          }
+            enabled: true,
+          },
         ]);
       } finally {
         setIsLoadingMethods(false);
@@ -140,13 +141,13 @@ const PaymentContainer: React.FC = () => {
   }, []);
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
+    const newErrors: { [key: string]: string } = {};
     // Accept zero as valid
-    if (paymentAmount === '' || isNaN(Number(paymentAmount))) {
-      newErrors.payment = 'Please enter a payment amount';
+    if (paymentAmount === "" || isNaN(Number(paymentAmount))) {
+      newErrors.payment = "Please enter a payment amount";
     }
     if (!selectedPaymentMethod) {
-      newErrors.paymentMethod = 'Please select a payment method';
+      newErrors.paymentMethod = "Please select a payment method";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -167,42 +168,40 @@ const PaymentContainer: React.FC = () => {
       }
       // Create payment session with the backend including payment method
       const paymentSession = await brands.createPaymentSession(
-        brandId, 
+        brandId,
         parseFloat(paymentAmount),
-        `Brand creation payment for ${currentBrand?.name || 'brand'}`,
+        `Brand creation payment for ${currentBrand?.name || "brand"}`,
         selectedPaymentMethod
       );
       // Redirect to payment processor checkout (no popup - avoids blocker issues)
-      console.log('Redirecting to payment checkout:', paymentSession.checkout_url);
+      console.log(
+        "Redirecting to payment checkout:",
+        paymentSession.checkout_url
+      );
 
       // Direct redirect - no popup blockers, cleaner UX
       // PayPal will redirect back to success/cancel URLs configured in backend
       window.location.href = paymentSession.checkout_url;
     } catch (error) {
-      console.error('Payment submission failed:', error);
-      setErrors({ payment: 'Failed to process payment. Please try again.' });
+      console.error("Payment submission failed:", error);
+      setErrors({ payment: "Failed to process payment. Please try again." });
       setIsProcessingPayment(false);
     }
   };
 
-  const handlePaymentAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePaymentAmountChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setPaymentAmount(e.target.value);
-    setErrors({ ...errors, payment: '' });
+    setErrors({ ...errors, payment: "" });
   };
 
   const handleCheckboxChange = (network: string) => {
-    setSharedNetworks(prev => ({ ...prev, [network]: !prev[network] }));
+    setSharedNetworks((prev) => ({ ...prev, [network]: !prev[network] }));
   };
 
   const handleCopyShareText = () => {
     navigator.clipboard.writeText(shareText);
-  };
-
-  const handleShareOnNetwork = (network: 'linkedin' | 'twitter' | 'facebook') => {
-    const shareUrl = createShareUrl[network](shareText);
-    window.open(shareUrl, '_blank', 'width=600,height=400');
-    // Auto-check the checkbox when user clicks share
-    setSharedNetworks(prev => ({ ...prev, [network]: true }));
   };
 
   if (isLoading || !currentBrand) {
@@ -220,20 +219,28 @@ const PaymentContainer: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="mb-8">
-              <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-display font-bold text-neutral-800">
+          <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4 md:p-8">
+            <div className="text-center mb-8">
+              <CreditCard className="h-12 w-12 text-primary-600 mx-auto mb-4" />
+              <div className="flex sm:justify-between flex-wrap gap-2 items-center mb-4">
+                <div className="flex-1 hidden sm:block"></div>
+                <h1 className="text-3xl font-display font-bold text-neutral-800 flex-1 text-center">
                   Support Our Mission
                 </h1>
-                <div className="flex items-center gap-3">
-                  {brandId && <HistoryButton brandId={brandId} variant="outline" size="md" />}
+                <div className="flex-1 flex flex-wrap sm:justify-end gap-3">
+                  {brandId && (
+                    <HistoryButton
+                      brandId={brandId}
+                      variant="outline"
+                      size="md"
+                    />
+                  )}
                   <GetHelpButton variant="secondary" size="md" />
                 </div>
               </div>
               <p className="text-lg text-neutral-600 mb-6">
-                Your brand <strong>{currentBrand.name}</strong> is ready!
-                We ask for a contribution based on the value we've provided.
+                Your brand <strong>{currentBrand.name}</strong> is ready! We ask
+                for a contribution based on the value we've provided.
               </p>
             </div>
 
@@ -256,7 +263,9 @@ const PaymentContainer: React.FC = () => {
                 {isLoadingMethods ? (
                   <div className="flex items-center justify-center py-4">
                     <Loader className="animate-spin h-5 w-5 text-primary-600 mr-2" />
-                    <span className="text-gray-600">Loading payment methods...</span>
+                    <span className="text-gray-600">
+                      Loading payment methods...
+                    </span>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -264,11 +273,11 @@ const PaymentContainer: React.FC = () => {
                       <label
                         key={method.id}
                         className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                          method.enabled 
+                          method.enabled
                             ? selectedPaymentMethod === method.id
-                              ? 'border-primary-500 bg-primary-50'
-                              : 'border-gray-300 hover:border-gray-400'
-                            : 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                              ? "border-primary-500 bg-primary-50"
+                              : "border-gray-300 hover:border-gray-400"
+                            : "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60"
                         }`}
                       >
                         <input
@@ -276,28 +285,37 @@ const PaymentContainer: React.FC = () => {
                           name="paymentMethod"
                           value={method.id}
                           checked={selectedPaymentMethod === method.id}
-                          onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                          onChange={(e) =>
+                            setSelectedPaymentMethod(e.target.value)
+                          }
                           disabled={!method.enabled}
                           className="sr-only"
                         />
                         <div className="flex items-center">
                           {method.icon}
-                          <span className="ml-3 font-medium text-gray-900">{method.name}</span>
+                          <span className="ml-3 font-medium text-gray-900">
+                            {method.name}
+                          </span>
                           {!method.enabled && (
-                            <span className="ml-2 text-xs text-gray-500">(Not available)</span>
+                            <span className="ml-2 text-xs text-gray-500">
+                              (Not available)
+                            </span>
                           )}
                         </div>
-                        {selectedPaymentMethod === method.id && method.enabled && (
-                          <div className="ml-auto">
-                            <div className="h-4 w-4 rounded-full bg-primary-600 flex items-center justify-center">
-                              <div className="h-2 w-2 rounded-full bg-white" />
+                        {selectedPaymentMethod === method.id &&
+                          method.enabled && (
+                            <div className="ml-auto">
+                              <div className="h-4 w-4 rounded-full bg-primary-600 flex items-center justify-center">
+                                <div className="h-2 w-2 rounded-full bg-white" />
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
                       </label>
                     ))}
                     {errors.paymentMethod && (
-                      <p className="mt-1 text-sm text-red-600">{errors.paymentMethod}</p>
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.paymentMethod}
+                      </p>
                     )}
                   </div>
                 )}
@@ -310,21 +328,27 @@ const PaymentContainer: React.FC = () => {
                 </h2>
                 <p className="text-neutral-600 mb-4">
                   We ask for a contribution of <strong>any amount</strong> based
-                  on the value we've added to your brand's future success. 
-                  Your support helps us cover AI costs and continue developing new features
-                  for entrepreneurs like you. 
+                  on the value we've added to your brand's future success. Your
+                  support helps us cover AI costs and continue developing new
+                  features for entrepreneurs like you.
                   <br />
-                  Yes, the amount can even be zero! If you absolutely cannot contribute now,
-                  please enter <strong>0</strong> in the Amount field and spread the word
-                  about us in as many as possible of your favorite social networks.
+                  Yes, the amount can even be zero! If you absolutely cannot
+                  contribute now, please enter <strong>0</strong> in the Amount
+                  field and spread the word about us in as many as possible of
+                  your favorite social networks.
                 </p>
-                
+
                 <div className="mb-4">
-                  <label htmlFor="payment" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="payment"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Contribution Amount ($)
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                      $
+                    </span>
                     <input
                       id="payment"
                       type="number"
@@ -333,14 +357,16 @@ const PaymentContainer: React.FC = () => {
                       value={paymentAmount}
                       onChange={handlePaymentAmountChange}
                       className={`w-full pl-8 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                        errors.payment ? 'border-red-300' : 'border-gray-300'
+                        errors.payment ? "border-red-300" : "border-gray-300"
                       }`}
                       placeholder="Enter amount"
                       ref={amountInputRef}
                     />
                   </div>
                   {errors.payment && (
-                    <p className="mt-1 text-sm text-red-600">{errors.payment}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.payment}
+                    </p>
                   )}
                 </div>
 
@@ -361,70 +387,62 @@ const PaymentContainer: React.FC = () => {
                 {isZeroAmount && (
                   <div className="mb-6 p-6 bg-blue-50 border-2 border-blue-300 rounded-lg text-center">
                     <div className="text-xl font-bold text-blue-900 mb-4">
-                      <p>It is ok to pay nothing - sometimes the cash situation is tight.
-                      But can you then please do a thing, that will not cost you anything -
-                      but will help Brandician and our customers?
+                      <p>
+                        It is ok to pay nothing - sometimes the cash situation
+                        is tight. But can you then please do a thing, that will
+                        not cost you anything - but will help Brandician and our
+                        customers?
                       </p>
-                      <p>Please share the text below (or your own wording) on as many as possible
-                        of your favorite social networks.</p>
+                      <p>
+                        Please share the text below (or your own wording) on as
+                        many as possible of your favorite social networks.
+                      </p>
                     </div>
-
-                    {/* Share buttons */}
-                    <div className="mb-6">
-                      <div className="font-semibold text-lg mb-3">Click to share:</div>
-                      <div className="flex flex-wrap justify-center gap-3">
-                        <button
-                          onClick={() => handleShareOnNetwork('facebook')}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                            sharedNetworks.facebook
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-white border border-blue-600 text-blue-600 hover:bg-blue-50'
-                          }`}
-                        >
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                          Facebook {sharedNetworks.facebook && '✓'}
-                        </button>
-                        <button
-                          onClick={() => handleShareOnNetwork('linkedin')}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                            sharedNetworks.linkedin
-                              ? 'bg-blue-700 text-white'
-                              : 'bg-white border border-blue-700 text-blue-700 hover:bg-blue-50'
-                          }`}
-                        >
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                          LinkedIn {sharedNetworks.linkedin && '✓'}
-                        </button>
-                        <button
-                          onClick={() => handleShareOnNetwork('twitter')}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                            sharedNetworks.twitter
-                              ? 'bg-black text-white'
-                              : 'bg-white border border-black text-black hover:bg-gray-50'
-                          }`}
-                        >
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                          X (Twitter) {sharedNetworks.twitter && '✓'}
-                        </button>
-                        <label className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium cursor-pointer transition-colors ${
-                          sharedNetworks.other
-                            ? 'bg-gray-600 text-white'
-                            : 'bg-white border border-gray-400 text-gray-600 hover:bg-gray-50'
-                        }`}>
+                    <div className="mb-4 mt-4">
+                      <div className="font-semibold text-lg mb-2">
+                        Yes, I shared it on:
+                      </div>
+                      <div className="flex flex-wrap justify-center gap-6">
+                        <label className="flex items-center gap-2 text-lg">
+                          <input
+                            type="checkbox"
+                            checked={sharedNetworks.facebook}
+                            onChange={() => handleCheckboxChange("facebook")}
+                          />
+                          Facebook
+                        </label>
+                        <label className="flex items-center gap-2 text-lg">
+                          <input
+                            type="checkbox"
+                            checked={sharedNetworks.linkedin}
+                            onChange={() => handleCheckboxChange("linkedin")}
+                          />
+                          LinkedIn
+                        </label>
+                        <label className="flex items-center gap-2 text-lg">
+                          <input
+                            type="checkbox"
+                            checked={sharedNetworks.twitter}
+                            onChange={() => handleCheckboxChange("twitter")}
+                          />
+                          Twitter(X)
+                        </label>
+                        <label className="flex items-center gap-2 text-lg">
                           <input
                             type="checkbox"
                             checked={sharedNetworks.other}
-                            onChange={() => handleCheckboxChange('other')}
-                            className="sr-only"
+                            onChange={() => handleCheckboxChange("other")}
                           />
-                          Other {sharedNetworks.other && '✓'}
+                          Other
                         </label>
                       </div>
                     </div>
 
                     <div className="bg-white border border-gray-200 rounded p-4 mb-2 text-left max-w-2xl mx-auto">
                       <div className="mb-2 text-gray-700">Share this text:</div>
-                      <div className="font-mono text-base text-gray-900 mb-3 whitespace-pre-line">{shareText}</div>
+                      <div className="font-mono text-base text-gray-900 mb-2 whitespace-pre-line">
+                        {shareText}
+                      </div>
                       <Button
                         onClick={handleCopyShareText}
                         leftIcon={<Copy className="h-4 w-4" />}
@@ -439,44 +457,20 @@ const PaymentContainer: React.FC = () => {
                 {/* Always show share text section below suggested amounts, outside zero-amount block */}
                 {!isZeroAmount && (
                   <div className="bg-white border border-gray-200 rounded p-4 mb-6 text-left max-w-2xl mx-auto">
-                    <div className="mb-2 text-gray-700 font-semibold">Share about us on social networks:</div>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      <button
-                        onClick={() => handleShareOnNetwork('facebook')}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                        Facebook
-                      </button>
-                      <button
-                        onClick={() => handleShareOnNetwork('linkedin')}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-blue-700 text-blue-700 hover:bg-blue-50 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                        LinkedIn
-                      </button>
-                      <button
-                        onClick={() => handleShareOnNetwork('twitter')}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-black text-black hover:bg-gray-50 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                        X (Twitter)
-                      </button>
-                      <button
-                        onClick={handleCopyShareText}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-gray-400 text-gray-600 hover:bg-gray-50 transition-colors"
-                      >
-                        <Copy className="w-4 h-4" />
-                        Copy Text
-                      </button>
+                    <div className="mb-2 text-gray-700 font-semibold">
+                      Share this text on social networks:
                     </div>
-                    <details className="text-sm">
-                      <summary className="cursor-pointer text-gray-500 hover:text-gray-700">Show share text</summary>
-                      <div className="font-mono text-sm text-gray-700 mt-2 p-2 bg-gray-50 rounded">{shareText}</div>
-                    </details>
+                    <div className="font-mono text-base text-gray-900 mb-2 whitespace-pre-line">
+                      {shareText}
+                    </div>
+                    <Button
+                      onClick={handleCopyShareText}
+                      leftIcon={<Copy className="h-4 w-4" />}
+                    >
+                      Copy to Clipboard
+                    </Button>
                   </div>
                 )}
-
               </div>
 
               {/* Submit Button */}
@@ -485,20 +479,24 @@ const PaymentContainer: React.FC = () => {
                   onClick={handlePaymentSubmit}
                   disabled={isProcessingPayment || !canProceed}
                   loading={isProcessingPayment}
-                  leftIcon={!isProcessingPayment ? <CreditCard className="h-5 w-5" /> : undefined}
+                  leftIcon={
+                    !isProcessingPayment ? (
+                      <CreditCard className="h-5 w-5" />
+                    ) : undefined
+                  }
                   className="w-full"
                 >
                   {isProcessingPayment
-                    ? 'Processing...'
+                    ? "Processing..."
                     : isZeroAmount
-                      ? 'Proceed without payment'
-                      : 'Proceed to Secure Payment'}
+                    ? "Proceed without payment"
+                    : "Proceed to Secure Payment"}
                 </Button>
 
                 <p className="text-xs text-gray-500 text-center mt-2">
                   {isZeroAmount
-                    ? 'Your download will be available immediately'
-                    : 'Secure payment processing • Your download will be available immediately after payment'}
+                    ? "Your download will be available immediately"
+                    : "Secure payment processing • Your download will be available immediately after payment"}
                 </p>
               </div>
             </div>

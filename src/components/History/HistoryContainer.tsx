@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronUp, Loader } from 'lucide-react';
+import { ChevronDown, ChevronUp, Loader, Share2 } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { brands } from '../../lib/api';
 import Button from '../common/Button';
@@ -8,6 +8,7 @@ import GetHelpButton from '../common/GetHelpButton';
 import { JTBDDisplay } from '../common/BrandAttributeDisplay';
 import AssetContent from '../common/AssetContent';
 import DownloadAllButton from '../common/DownloadAllButton';
+import ShareLinkModal from '../common/ShareLinkModal';
 import CopyButton from '../common/CopyButton';
 import { getRouteForStatus } from '../../lib/navigation';
 import { BrandAsset, BrandAssetSummary } from '../../types';
@@ -36,6 +37,9 @@ const HistoryContainer: React.FC = () => {
   const [expandedAssets, setExpandedAssets] = useState<{ [key: string]: boolean }>({});
   const [loadedAssets, setLoadedAssets] = useState<{ [key: string]: BrandAsset }>({});
   const [loadingAssets, setLoadingAssets] = useState<{ [key: string]: boolean }>({});
+
+  // State for share modal
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
   useEffect(() => {
     // Always reload brand data when entering history page to ensure we have the latest status
@@ -653,11 +657,20 @@ const HistoryContainer: React.FC = () => {
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-semibold text-gray-900">Brand Assets:</h4>
               {brandId && (
-                <DownloadAllButton
-                  brandId={brandId}
-                  brandName={currentBrand?.name || 'brand'}
-                  variant="link"
-                />
+                <div className="flex items-center gap-3">
+                  <DownloadAllButton
+                    brandId={brandId}
+                    brandName={currentBrand?.name || 'brand'}
+                    variant="link"
+                  />
+                  <button
+                    onClick={() => setShareModalOpen(true)}
+                    className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700"
+                  >
+                    <Share2 className="h-4 w-4 mr-1" />
+                    Share
+                  </button>
+                </div>
               )}
             </div>
             {data.data?.assets && Array.isArray(data.data.assets) ? (
@@ -881,7 +894,11 @@ const HistoryContainer: React.FC = () => {
                                 console.log('🔵 History Continue button clicked');
                                 console.log('Brand ID:', brandId);
                                 console.log('Current status:', currentBrand.current_status);
-                                const route = getRouteForStatus(brandId, currentBrand.current_status as any);
+                                let route = getRouteForStatus(brandId, currentBrand.current_status as any);
+                                // For questionnaire step, navigate directly to summary view
+                                if (step.number === 1 && currentBrand.current_status === 'questionnaire') {
+                                  route = `/brands/${brandId}/questionnaire?summary=1`;
+                                }
                                 console.log('Navigating to:', route);
                                 navigate(route);
                               } else {
@@ -971,6 +988,16 @@ const HistoryContainer: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Share Link Modal */}
+      {brandId && (
+        <ShareLinkModal
+          isOpen={shareModalOpen}
+          onClose={() => setShareModalOpen(false)}
+          brandId={brandId}
+          brandName={currentBrand?.name}
+        />
       )}
     </div>
   );

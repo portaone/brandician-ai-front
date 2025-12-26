@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@microsoft/clarity": "^1.0.2",
+    "@schlomoh/react-cookieconsent": "^1.6.1",
     "@types/file-saver": "^2.0.7",
     "axios": "^1.6.7",
     "clsx": "^2.1.1",

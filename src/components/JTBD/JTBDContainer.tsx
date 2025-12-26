@@ -1,22 +1,24 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Loader, ArrowRight, X, Edit2, RefreshCw } from 'lucide-react';
-import { useBrandStore } from '../../store/brand';
-import { JTBD, JTBDImportance, JTBD_IMPORTANCE_LABELS } from '../../types';
-import Button from '../common/Button';
-import GetHelpButton from '../common/GetHelpButton';
-import HistoryButton from '../common/HistoryButton';
+import React, { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Loader, ArrowRight, X, Edit2, RefreshCw } from "lucide-react";
+import { useBrandStore } from "../../store/brand";
+import { JTBD, JTBDImportance, JTBD_IMPORTANCE_LABELS } from "../../types";
+import Button from "../common/Button";
+import GetHelpButton from "../common/GetHelpButton";
+import HistoryButton from "../common/HistoryButton";
+import { scrollToTop } from "../../lib/utils";
 
-type Step = 'rating' | 'editing' | 'drivers';
+type Step = "rating" | "editing" | "drivers";
 
 const JTBDContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { currentBrand, selectBrand, loadJTBD, updateJTBD, isLoading, error } = useBrandStore();
+  const { currentBrand, selectBrand, loadJTBD, updateJTBD, isLoading, error } =
+    useBrandStore();
   const [personas, setPersonas] = useState<JTBD[]>([]);
-  const [drivers, setDrivers] = useState('');
+  const [drivers, setDrivers] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentStep, setCurrentStep] = useState<Step>('rating');
+  const [currentStep, setCurrentStep] = useState<Step>("rating");
   const [editingPersona, setEditingPersona] = useState<JTBD | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const isRegeneratingRef = useRef<boolean>(false);
@@ -37,28 +39,44 @@ const JTBDContainer: React.FC = () => {
     if (currentBrand?.jtbd) {
       const jtbdData = currentBrand.jtbd;
       if (jtbdData.personas) {
-        const personasArray = Object.entries(jtbdData.personas).map(([id, data]) => ({
-          ...data,
-          id: data.id ?? id,
-        }));
+        const personasArray = Object.entries(jtbdData.personas).map(
+          ([id, data]) => ({
+            ...data,
+            id: data.id ?? id,
+          })
+        );
         setPersonas(personasArray);
       }
-      setDrivers(jtbdData.drivers || '');
+      setDrivers(jtbdData.drivers || "");
     }
   }, [currentBrand]);
+  useEffect(() => {
+    if (editingPersona) {
+      setTimeout(() => {
+        const scrollElement = document.querySelector(".scroll-object");
+        scrollElement?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 300);
+    }
+  }, [editingPersona]);
 
-  const handleImportanceChange = (personaId: string, importance: JTBDImportance) => {
-    if (importance === 'not_applicable') {
+  const handleImportanceChange = (
+    personaId: string,
+    importance: JTBDImportance
+  ) => {
+    if (importance === "not_applicable") {
       handleRemovePersona(personaId);
     } else {
-      setPersonas(prev => prev.map(p => 
-        p.id === personaId ? { ...p, importance } : p
-      ));
+      setPersonas((prev) =>
+        prev.map((p) => (p.id === personaId ? { ...p, importance } : p))
+      );
     }
   };
 
   const handleRemovePersona = (personaId: string) => {
-    setPersonas(prev => prev.filter(p => p.id !== personaId));
+    setPersonas((prev) => prev.filter((p) => p.id !== personaId));
   };
 
   const handleEditPersona = (persona: JTBD) => {
@@ -69,9 +87,9 @@ const JTBDContainer: React.FC = () => {
     e.preventDefault();
     if (!editingPersona) return;
 
-    setPersonas(prev => prev.map(p => 
-      p.id === editingPersona.id ? editingPersona : p
-    ));
+    setPersonas((prev) =>
+      prev.map((p) => (p.id === editingPersona.id ? editingPersona : p))
+    );
     setEditingPersona(null);
   };
 
@@ -80,7 +98,8 @@ const JTBDContainer: React.FC = () => {
   };
 
   const getSelectedPersonas = () => {
-    return personas.filter(p => p.importance && p.importance !== 'not_applicable')
+    return personas
+      .filter((p) => p.importance && p.importance !== "not_applicable")
       .sort((a, b) => {
         const importanceOrder = {
           very_important: 5,
@@ -88,15 +107,18 @@ const JTBDContainer: React.FC = () => {
           somewhat_important: 3,
           rarely_important: 2,
           not_important: 1,
-          not_applicable: 0
+          not_applicable: 0,
         };
-        return (importanceOrder[b.importance!] || 0) - (importanceOrder[a.importance!] || 0);
+        return (
+          (importanceOrder[b.importance!] || 0) -
+          (importanceOrder[a.importance!] || 0)
+        );
       })
       .slice(0, 3);
   };
 
   const renderParagraphs = (text: string) => {
-    return text.split('\n').map((paragraph, index) => (
+    return text.split("\n").map((paragraph, index) => (
       <p key={index} className="text-neutral-600 mb-2 last:mb-0">
         {paragraph.trim()}
       </p>
@@ -104,34 +126,41 @@ const JTBDContainer: React.FC = () => {
   };
 
   const canProceedFromRating = getSelectedPersonas().length >= 3;
-  const canProceedFromEditing = getSelectedPersonas().every(p => p.description && p.description.trim().length > 0);
+  const canProceedFromEditing = getSelectedPersonas().every(
+    (p) => p.description && p.description.trim().length > 0
+  );
   const canProceedFromDrivers = drivers.trim().length > 0;
 
   const handleProceed = async () => {
-    if (currentStep === 'rating' && canProceedFromRating) {
-      setCurrentStep('editing');
-    } else if (currentStep === 'editing' && canProceedFromEditing) {
-      setCurrentStep('drivers');
-    } else if (currentStep === 'drivers' && canProceedFromDrivers && brandId) {
+    if (currentStep === "rating" && canProceedFromRating) {
+      setCurrentStep("editing");
+    } else if (currentStep === "editing" && canProceedFromEditing) {
+      setCurrentStep("drivers");
+    } else if (currentStep === "drivers" && canProceedFromDrivers && brandId) {
       setIsSubmitting(true);
       try {
         const selectedPersonas = getSelectedPersonas();
         const jtbdData = {
-          personas: selectedPersonas.reduce((acc, persona) => ({
-            ...acc,
-            [persona.id]: persona
-          }), {}),
-          drivers
+          personas: selectedPersonas.reduce(
+            (acc, persona) => ({
+              ...acc,
+              [persona.id]: persona,
+            }),
+            {}
+          ),
+          drivers,
         };
 
         await updateJTBD(brandId, jtbdData);
         navigate(`/brands/${brandId}/survey`);
       } catch (error) {
-        console.error('Failed to update JTBD:', error);
+        console.error("Failed to update JTBD:", error);
       } finally {
         setIsSubmitting(false);
       }
     }
+
+    scrollToTop();
   };
 
   const handleRegeneratePersonas = async () => {
@@ -147,6 +176,8 @@ const JTBDContainer: React.FC = () => {
       setIsRegenerating(false);
       isRegeneratingRef.current = false;
     }
+
+    scrollToTop();
   };
 
   if (isLoading) {
@@ -175,7 +206,7 @@ const JTBDContainer: React.FC = () => {
             Try again
           </Button>
           <Button
-            onClick={() => navigate('/brands')}
+            onClick={() => navigate("/brands")}
             variant="secondary"
             size="md"
           >
@@ -190,54 +221,94 @@ const JTBDContainer: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between flex-wrap gap-3 items-center mb-6">
             <h1 className="text-3xl font-display font-bold text-neutral-800">
               Jobs To Be Done Analysis
             </h1>
-            <div className="flex items-center gap-3">
-              {brandId && <HistoryButton brandId={brandId} variant="outline" size="md" />}
+            <div className="flex items-center flex-wrap gap-3">
+              {brandId && (
+                <HistoryButton brandId={brandId} variant="outline" size="md" />
+              )}
               <GetHelpButton variant="secondary" size="md" />
             </div>
           </div>
 
           <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-4">
-              <div className={`flex items-center ${currentStep === 'rating' ? 'text-primary-600' : 'text-neutral-400'}`}>
-                <div className={`h-8 w-8 rounded-full flex items-center justify-center border-2 ${
-                  currentStep === 'rating' ? 'border-primary-600 bg-primary-50' : 'border-neutral-300'
-                }`}>1</div>
+            <div className="flex items-center flex-wrap gap-x-6 gap-y-4">
+              <div
+                className={`flex items-center ${
+                  currentStep === "rating"
+                    ? "text-primary-600"
+                    : "text-neutral-400"
+                }`}
+              >
+                <div
+                  className={`h-8 w-8 rounded-full flex items-center justify-center border-2 ${
+                    currentStep === "rating"
+                      ? "border-primary-600 bg-primary-50"
+                      : "border-neutral-300"
+                  }`}
+                >
+                  1
+                </div>
                 <span className="ml-2 font-medium">Rate Personas</span>
               </div>
-              <div className="h-px w-8 bg-neutral-300" />
-              <div className={`flex items-center ${currentStep === 'editing' ? 'text-primary-600' : 'text-neutral-400'}`}>
-                <div className={`h-8 w-8 rounded-full flex items-center justify-center border-2 ${
-                  currentStep === 'editing' ? 'border-primary-600 bg-primary-50' : 'border-neutral-300'
-                }`}>2</div>
+              <div className="hidden md:block h-px w-8 bg-neutral-300" />
+              <div
+                className={`flex items-center ${
+                  currentStep === "editing"
+                    ? "text-primary-600"
+                    : "text-neutral-400"
+                }`}
+              >
+                <div
+                  className={`h-8 w-8 rounded-full flex items-center justify-center border-2 ${
+                    currentStep === "editing"
+                      ? "border-primary-600 bg-primary-50"
+                      : "border-neutral-300"
+                  }`}
+                >
+                  2
+                </div>
                 <span className="ml-2 font-medium">Edit Descriptions</span>
               </div>
-              <div className="h-px w-8 bg-neutral-300" />
-              <div className={`flex items-center ${currentStep === 'drivers' ? 'text-primary-600' : 'text-neutral-400'}`}>
-                <div className={`h-8 w-8 rounded-full flex items-center justify-center border-2 ${
-                  currentStep === 'drivers' ? 'border-primary-600 bg-primary-50' : 'border-neutral-300'
-                }`}>3</div>
+              <div className="hidden md:block h-px w-8 bg-neutral-300" />
+              <div
+                className={`flex items-center ${
+                  currentStep === "drivers"
+                    ? "text-primary-600"
+                    : "text-neutral-400"
+                }`}
+              >
+                <div
+                  className={`h-8 w-8 rounded-full flex items-center justify-center border-2 ${
+                    currentStep === "drivers"
+                      ? "border-primary-600 bg-primary-50"
+                      : "border-neutral-300"
+                  }`}
+                >
+                  3
+                </div>
                 <span className="ml-2 font-medium">Functional Drivers</span>
               </div>
             </div>
           </div>
 
-          {currentStep === 'rating' && (
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          {currentStep === "rating" && (
+            <div className="bg-white rounded-lg shadow-lg p-2 sm:p-6 mb-8">
               <p className="text-neutral-600 mb-6">
-                Rate the importance of each persona for your business. You need to rate at least 3 personas
-                to proceed. If some things are not correct about the persona - do not worry, you will
-                have a chance to edit the persona later. Remove any personas that are not applicable to your business.
+                Rate the importance of each persona for your business. You need
+                to rate at least 3 personas to proceed. If some things are not
+                correct about the persona - do not worry, you will have a chance
+                to edit the persona later. Remove any personas that are not
+                applicable to your business.
               </p>
 
               <div className="space-y-6">
                 {personas.map((persona) => (
-                  <div 
+                  <div
                     key={persona.id}
-                    className="border border-neutral-200 rounded-lg p-4"
+                    className="border border-neutral-200 rounded-lg p-2"
                   >
                     <div className="flex justify-between items-start mb-4">
                       <div>
@@ -258,19 +329,26 @@ const JTBDContainer: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {Object.entries(JTBD_IMPORTANCE_LABELS).map(([value, label]) => (
-                        <button
-                          key={value}
-                          onClick={() => handleImportanceChange(persona.id, value as JTBDImportance)}
-                          className={`p-2 text-sm rounded-md transition-colors ${
-                            persona.importance === value
-                              ? 'bg-primary-100 text-primary-700 border-primary-200'
-                              : 'bg-neutral-50 text-neutral-700 hover:bg-neutral-100'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
+                      {Object.entries(JTBD_IMPORTANCE_LABELS).map(
+                        ([value, label]) => (
+                          <button
+                            key={value}
+                            onClick={() =>
+                              handleImportanceChange(
+                                persona.id,
+                                value as JTBDImportance
+                              )
+                            }
+                            className={`p-2 text-sm rounded-md transition-colors ${
+                              persona.importance === value
+                                ? "bg-primary-100 text-primary-700 border-primary-200"
+                                : "bg-neutral-50 text-neutral-700 hover:bg-neutral-100"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        )
+                      )}
                     </div>
                   </div>
                 ))}
@@ -290,15 +368,15 @@ const JTBDContainer: React.FC = () => {
                   )}
                   Suggest new personas
                 </Button>
-
               </div>
             </div>
           )}
 
-          {currentStep === 'editing' && (
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          {currentStep === "editing" && (
+            <div className="bg-white rounded-lg shadow-lg p-2 sm:p-6 mb-8 scroll-object">
               <p className="text-neutral-600 mb-6">
-                Edit the descriptions of your top 3 selected personas to better match your business context.
+                Edit the descriptions of your top 3 selected personas to better
+                match your business context.
               </p>
 
               {editingPersona ? (
@@ -310,7 +388,12 @@ const JTBDContainer: React.FC = () => {
                     <input
                       type="text"
                       value={editingPersona.name}
-                      onChange={e => setEditingPersona({ ...editingPersona, name: e.target.value })}
+                      onChange={(e) =>
+                        setEditingPersona({
+                          ...editingPersona,
+                          name: e.target.value,
+                        })
+                      }
                       className="w-full p-2 border border-neutral-300 rounded-md"
                     />
                   </div>
@@ -320,7 +403,12 @@ const JTBDContainer: React.FC = () => {
                     </label>
                     <textarea
                       value={editingPersona.description}
-                      onChange={e => setEditingPersona({ ...editingPersona, description: e.target.value })}
+                      onChange={(e) =>
+                        setEditingPersona({
+                          ...editingPersona,
+                          description: e.target.value,
+                        })
+                      }
                       className="w-full min-h-[150px] p-2 border border-neutral-300 rounded-md"
                       placeholder="Enter description with each section on a new line..."
                     />
@@ -334,10 +422,7 @@ const JTBDContainer: React.FC = () => {
                     >
                       Cancel
                     </Button>
-                    <Button
-                      type="submit"
-                      size="md"
-                    >
+                    <Button type="submit" size="md">
                       Save Changes
                     </Button>
                   </div>
@@ -345,9 +430,9 @@ const JTBDContainer: React.FC = () => {
               ) : (
                 <div className="space-y-4">
                   {getSelectedPersonas().map((persona) => (
-                    <div 
+                    <div
                       key={persona.id}
-                      className="border border-neutral-200 rounded-lg p-4"
+                      className="border border-neutral-200 rounded-lg p-2 sm:p-4"
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -372,14 +457,15 @@ const JTBDContainer: React.FC = () => {
             </div>
           )}
 
-          {currentStep === 'drivers' && (
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          {currentStep === "drivers" && (
+            <div className="bg-white rounded-lg shadow-lg p-2 sm:p-6 mb-8">
               <h2 className="text-xl font-medium text-neutral-800 mb-2">
                 Functional, Emotional and Social Drivers
               </h2>
               <p className="text-neutral-600 mb-6">
-                Review the factors that motivate your personas to engage with your brand.
-                Did we get everything right? Did we miss something important?
+                Review the factors that motivate your personas to engage with
+                your brand. Did we get everything right? Did we miss something
+                important?
               </p>
               <textarea
                 value={drivers}
@@ -390,47 +476,49 @@ const JTBDContainer: React.FC = () => {
             </div>
           )}
 
-          <div className="flex justify-between items-center">
-            {currentStep === 'rating' && (
+          <div className="flex justify-between items-center flex-wrap gap-2">
+            {currentStep === "rating" && (
               <p className="text-sm text-neutral-500">
-                {canProceedFromRating 
-                  ? 'You can now proceed to edit persona descriptions'
-                  : `Rate at least ${3 - getSelectedPersonas().length} more personas to proceed`
-                }
+                {canProceedFromRating
+                  ? "You can now proceed to edit persona descriptions"
+                  : `Rate at least ${
+                      3 - getSelectedPersonas().length
+                    } more personas to proceed`}
               </p>
             )}
-            {currentStep === 'editing' && (
+            {currentStep === "editing" && (
               <p className="text-sm text-neutral-500">
                 {canProceedFromEditing
-                  ? 'You can now proceed to define functional drivers'
-                  : 'Please edit all persona descriptions before proceeding'
-                }
+                  ? "You can now proceed to define functional drivers"
+                  : "Please edit all persona descriptions before proceeding"}
               </p>
             )}
-            {currentStep === 'drivers' && (
+            {currentStep === "drivers" && (
               <p className="text-sm text-neutral-500">
                 {canProceedFromDrivers
-                  ? 'You can now proceed to create the survey'
-                  : 'Please describe your functional drivers before proceeding'
-                }
+                  ? "You can now proceed to create the survey"
+                  : "Please describe your functional drivers before proceeding"}
               </p>
             )}
-            
+
             <Button
               onClick={handleProceed}
               disabled={
-                (currentStep === 'rating' && !canProceedFromRating) ||
-                (currentStep === 'editing' && !canProceedFromEditing) ||
-                (currentStep === 'drivers' && !canProceedFromDrivers) ||
+                (currentStep === "rating" && !canProceedFromRating) ||
+                (currentStep === "editing" && !canProceedFromEditing) ||
+                (currentStep === "drivers" && !canProceedFromDrivers) ||
                 isSubmitting ||
                 !!editingPersona
               }
               size="lg"
             >
-              {isSubmitting && <Loader className="animate-spin h-5 w-5 mr-2 inline" />}
-              {currentStep === 'rating' && 'Continue to Edit Personas'}
-              {currentStep === 'editing' && 'Continue to Review Persona\'s Drivers'}
-              {currentStep === 'drivers' && 'Proceed to Survey'}
+              {isSubmitting && (
+                <Loader className="animate-spin h-5 w-5 mr-2 inline" />
+              )}
+              {currentStep === "rating" && "Continue to Edit Personas"}
+              {currentStep === "editing" &&
+                "Continue to Review Persona's Drivers"}
+              {currentStep === "drivers" && "Proceed to Survey"}
               <ArrowRight className="ml-2 h-5 w-5 inline" />
             </Button>
           </div>
