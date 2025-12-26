@@ -628,6 +628,11 @@ export const brands = {
     return response.data;
   },
 
+  skipPayment: async (brandId: string) => {
+    const response = await api.post(apiPath(`/brands/${brandId}/skip-payment`));
+    return response.data;
+  },
+
   listBrandPayments: async (brandId: string) => {
     const key = createRequestKey('GET', apiPath(`/brands/${brandId}/payments`));
     return deduplicate(key, async () => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { CreditCard, Loader, AlertCircle, Copy } from 'lucide-react';
+import { CreditCard, Loader, AlertCircle, Copy, Share2 } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { useAuthStore } from '../../store/auth';
 import { navigateAfterProgress } from '../../lib/navigation';
@@ -8,6 +8,21 @@ import { brands } from '../../lib/api';
 import Button from '../common/Button';
 import GetHelpButton from '../common/GetHelpButton';
 import HistoryButton from '../common/HistoryButton';
+
+// Social sharing URL generators
+const createShareUrl = {
+  linkedin: (text: string) => {
+    // LinkedIn sharing API
+    return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent('https://brandician.ai/')}&summary=${encodeURIComponent(text)}`;
+  },
+  twitter: (text: string) => {
+    return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+  },
+  facebook: (text: string) => {
+    // Facebook only supports URL sharing, text must be on the page
+    return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://brandician.ai/')}&quote=${encodeURIComponent(text)}`;
+  },
+};
 
 interface PaymentMethod {
   id: string;
@@ -144,9 +159,10 @@ const PaymentContainer: React.FC = () => {
 
     try {
       if (isZeroAmount) {
-        // Just progress status and move on
-        const statusUpdate = await progressBrandStatus(brandId);
-        navigateAfterProgress(navigate, brandId, statusUpdate);
+        // Use dedicated skip-payment endpoint for zero-amount contributions
+        // This creates a proper payment record and progresses status securely
+        const updatedBrand = await brands.skipPayment(brandId);
+        navigateAfterProgress(navigate, brandId, updatedBrand);
         return;
       }
       // Create payment session with the backend including payment method
@@ -177,8 +193,16 @@ const PaymentContainer: React.FC = () => {
   const handleCheckboxChange = (network: string) => {
     setSharedNetworks(prev => ({ ...prev, [network]: !prev[network] }));
   };
+
   const handleCopyShareText = () => {
     navigator.clipboard.writeText(shareText);
+  };
+
+  const handleShareOnNetwork = (network: 'linkedin' | 'twitter' | 'facebook') => {
+    const shareUrl = createShareUrl[network](shareText);
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+    // Auto-check the checkbox when user clicks share
+    setSharedNetworks(prev => ({ ...prev, [network]: true }));
   };
 
   if (isLoading || !currentBrand) {
@@ -344,33 +368,67 @@ const PaymentContainer: React.FC = () => {
                       <p>Please share the text below (or your own wording) on as many as possible
                         of your favorite social networks.</p>
                     </div>
-                    <div className="mb-4 mt-4">
-                      <div className="font-semibold text-lg mb-2">Yes, I shared it on:</div>
-                      <div className="flex flex-wrap justify-center gap-6">
-                        <label className="flex items-center gap-2 text-lg">
-                          <input type="checkbox" checked={sharedNetworks.facebook} onChange={() => handleCheckboxChange('facebook')} />
-                          Facebook
-                        </label>
-                        <label className="flex items-center gap-2 text-lg">
-                          <input type="checkbox" checked={sharedNetworks.linkedin} onChange={() => handleCheckboxChange('linkedin')} />
-                          LinkedIn
-                        </label>
-                        <label className="flex items-center gap-2 text-lg">
-                          <input type="checkbox" checked={sharedNetworks.twitter} onChange={() => handleCheckboxChange('twitter')} />
-                          Twitter(X)
-                        </label>
-                        <label className="flex items-center gap-2 text-lg">
-                          <input type="checkbox" checked={sharedNetworks.other} onChange={() => handleCheckboxChange('other')} />
-                          Other
+
+                    {/* Share buttons */}
+                    <div className="mb-6">
+                      <div className="font-semibold text-lg mb-3">Click to share:</div>
+                      <div className="flex flex-wrap justify-center gap-3">
+                        <button
+                          onClick={() => handleShareOnNetwork('facebook')}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                            sharedNetworks.facebook
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-white border border-blue-600 text-blue-600 hover:bg-blue-50'
+                          }`}
+                        >
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                          Facebook {sharedNetworks.facebook && '✓'}
+                        </button>
+                        <button
+                          onClick={() => handleShareOnNetwork('linkedin')}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                            sharedNetworks.linkedin
+                              ? 'bg-blue-700 text-white'
+                              : 'bg-white border border-blue-700 text-blue-700 hover:bg-blue-50'
+                          }`}
+                        >
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                          LinkedIn {sharedNetworks.linkedin && '✓'}
+                        </button>
+                        <button
+                          onClick={() => handleShareOnNetwork('twitter')}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                            sharedNetworks.twitter
+                              ? 'bg-black text-white'
+                              : 'bg-white border border-black text-black hover:bg-gray-50'
+                          }`}
+                        >
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                          X (Twitter) {sharedNetworks.twitter && '✓'}
+                        </button>
+                        <label className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium cursor-pointer transition-colors ${
+                          sharedNetworks.other
+                            ? 'bg-gray-600 text-white'
+                            : 'bg-white border border-gray-400 text-gray-600 hover:bg-gray-50'
+                        }`}>
+                          <input
+                            type="checkbox"
+                            checked={sharedNetworks.other}
+                            onChange={() => handleCheckboxChange('other')}
+                            className="sr-only"
+                          />
+                          Other {sharedNetworks.other && '✓'}
                         </label>
                       </div>
                     </div>
+
                     <div className="bg-white border border-gray-200 rounded p-4 mb-2 text-left max-w-2xl mx-auto">
                       <div className="mb-2 text-gray-700">Share this text:</div>
-                      <div className="font-mono text-base text-gray-900 mb-2 whitespace-pre-line">{shareText}</div>
+                      <div className="font-mono text-base text-gray-900 mb-3 whitespace-pre-line">{shareText}</div>
                       <Button
                         onClick={handleCopyShareText}
                         leftIcon={<Copy className="h-4 w-4" />}
+                        variant="secondary"
                       >
                         Copy to Clipboard
                       </Button>
@@ -381,14 +439,41 @@ const PaymentContainer: React.FC = () => {
                 {/* Always show share text section below suggested amounts, outside zero-amount block */}
                 {!isZeroAmount && (
                   <div className="bg-white border border-gray-200 rounded p-4 mb-6 text-left max-w-2xl mx-auto">
-                    <div className="mb-2 text-gray-700 font-semibold">Share this text on social networks:</div>
-                    <div className="font-mono text-base text-gray-900 mb-2 whitespace-pre-line">{shareText}</div>
-                    <Button
-                      onClick={handleCopyShareText}
-                      leftIcon={<Copy className="h-4 w-4" />}
-                    >
-                      Copy to Clipboard
-                    </Button>
+                    <div className="mb-2 text-gray-700 font-semibold">Share about us on social networks:</div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      <button
+                        onClick={() => handleShareOnNetwork('facebook')}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-blue-600 text-blue-600 hover:bg-blue-50 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        Facebook
+                      </button>
+                      <button
+                        onClick={() => handleShareOnNetwork('linkedin')}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-blue-700 text-blue-700 hover:bg-blue-50 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                        LinkedIn
+                      </button>
+                      <button
+                        onClick={() => handleShareOnNetwork('twitter')}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-black text-black hover:bg-gray-50 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        X (Twitter)
+                      </button>
+                      <button
+                        onClick={handleCopyShareText}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-white border border-gray-400 text-gray-600 hover:bg-gray-50 transition-colors"
+                      >
+                        <Copy className="w-4 h-4" />
+                        Copy Text
+                      </button>
+                    </div>
+                    <details className="text-sm">
+                      <summary className="cursor-pointer text-gray-500 hover:text-gray-700">Show share text</summary>
+                      <div className="font-mono text-sm text-gray-700 mt-2 p-2 bg-gray-50 rounded">{shareText}</div>
+                    </details>
                   </div>
                 )}
 

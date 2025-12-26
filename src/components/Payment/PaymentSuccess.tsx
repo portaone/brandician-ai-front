@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CheckCircle, Loader, AlertTriangle } from 'lucide-react';
+import { CheckCircle, Loader, AlertTriangle, Clock } from 'lucide-react';
 import { useBrandStore } from '../../store/brand';
 import { brands } from '../../lib/api';
 import { navigateAfterProgress } from '../../lib/navigation';
+
+const MAX_RETRY_ATTEMPTS = 10;
+const RETRY_DELAY_MS = 3000; // 3 seconds between retries
 
 const PaymentSuccess: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -11,47 +14,83 @@ const PaymentSuccess: React.FC = () => {
   const { currentBrand, selectBrand } = useBrandStore();
 
   const [isVerifying, setIsVerifying] = useState(true);
-  const [paymentStatus, setPaymentStatus] = useState<'success' | 'failed' | 'pending'>('pending');
+  const [paymentStatus, setPaymentStatus] = useState<'success' | 'failed' | 'pending' | 'processing'>('pending');
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  // Use ref to track if verification is already running to prevent duplicate runs
+  const isRunningRef = useRef(false);
+  const retryCountRef = useRef(0);
 
   useEffect(() => {
-    const verifyAndCompletePayment = async () => {
-      if (!brandId) return;
+    let timeoutId: NodeJS.Timeout;
+    let isCancelled = false;
+
+    const verifyPayment = async (): Promise<boolean> => {
+      if (!brandId) return false;
 
       try {
-        // First, ensure we have the current brand data
         await selectBrand(brandId);
-
-        // Call backend to verify payment flow and progress status
-        // This verifies that user actually went through the payment checkout
-        // (has a payment session record) before allowing status progression
         const updatedBrand = await brands.completePaymentFlow(brandId);
 
-        setPaymentStatus('success');
-
-        // Navigate to completed page after showing success message
-        setTimeout(() => {
-          navigateAfterProgress(navigate, brandId, updatedBrand);
-        }, 2000); // 2 second delay to show success message
-
-      } catch (err: any) {
-        console.error('Failed to verify payment:', err);
-        setPaymentStatus('failed');
-
-        // Provide specific error messages based on error type
-        if (err.response?.status === 403) {
-          setError('No payment session found. Please complete the payment flow first.');
-        } else if (err.response?.status === 400) {
-          setError(err.response?.data?.detail || 'Brand is not ready for payment completion.');
-        } else {
-          setError('Failed to verify payment. Please contact support if you completed payment.');
+        if (!isCancelled) {
+          setPaymentStatus('success');
+          setTimeout(() => {
+            navigateAfterProgress(navigate, brandId, updatedBrand);
+          }, 2000);
         }
-      } finally {
+        return true;
+      } catch (err: any) {
+        console.error(`Payment verification attempt ${retryCountRef.current + 1} failed:`, err);
+
+        if (err.response?.status === 402) {
+          return false; // Can retry
+        }
+
+        // Final failure
+        if (!isCancelled) {
+          setPaymentStatus('failed');
+          if (err.response?.status === 403) {
+            setError('No payment session found. Please complete the payment flow first.');
+          } else if (err.response?.status === 400) {
+            setError(err.response?.data?.detail || 'Brand is not ready for payment completion.');
+          } else {
+            setError('Failed to verify payment. Please contact support if you completed payment.');
+          }
+        }
+        return true; // Stop retrying
+      }
+    };
+
+    const attemptVerification = async () => {
+      if (!brandId || isCancelled || isRunningRef.current) return;
+
+      isRunningRef.current = true;
+      const isDone = await verifyPayment();
+      isRunningRef.current = false;
+
+      if (isCancelled) return;
+
+      if (!isDone && retryCountRef.current < MAX_RETRY_ATTEMPTS) {
+        setPaymentStatus('processing');
+        retryCountRef.current += 1;
+        setRetryCount(retryCountRef.current);
+        timeoutId = setTimeout(attemptVerification, RETRY_DELAY_MS);
+      } else if (!isDone) {
+        setPaymentStatus('failed');
+        setError('Payment confirmation is taking longer than expected. Please wait a few minutes and refresh this page, or contact support.');
+        setIsVerifying(false);
+      } else {
         setIsVerifying(false);
       }
     };
 
-    verifyAndCompletePayment();
+    attemptVerification();
+
+    return () => {
+      isCancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [brandId, selectBrand, navigate]);
 
   const handleReturnToPayment = () => {
@@ -65,17 +104,28 @@ const PaymentSuccess: React.FC = () => {
     window.open('mailto:support@brandician.ai?subject=Payment Issue', '_blank');
   };
 
-  if (isVerifying) {
+  if (isVerifying || paymentStatus === 'processing') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <Loader className="animate-spin h-12 w-12 text-primary-600 mx-auto mb-4" />
+          {paymentStatus === 'processing' ? (
+            <Clock className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+          ) : (
+            <Loader className="animate-spin h-12 w-12 text-primary-600 mx-auto mb-4" />
+          )}
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Verifying Payment
+            {paymentStatus === 'processing' ? 'Waiting for Payment Confirmation' : 'Verifying Payment'}
           </h2>
           <p className="text-gray-600">
-            Please wait while we confirm your payment...
+            {paymentStatus === 'processing'
+              ? 'Your payment is being processed. This may take a few moments...'
+              : 'Please wait while we confirm your payment...'}
           </p>
+          {retryCount > 0 && (
+            <p className="text-sm text-gray-500 mt-4">
+              Checking payment status... (attempt {retryCount}/{MAX_RETRY_ATTEMPTS})
+            </p>
+          )}
         </div>
       </div>
     );
