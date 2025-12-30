@@ -5,6 +5,7 @@ import { brands } from "../../lib/api";
 import { scrollToTop } from "../../lib/utils";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import ReactMarkdown from "react-markdown";
 
 interface ArchetypeAdjustment {
   old_archetype: string;
@@ -31,6 +32,26 @@ const ArchetypeAdjustmentContainer: React.FC<
   const explanationRefs = useRef<{ [id: string]: HTMLDivElement | null }>({});
   const [reloadFlag, setReloadFlag] = useState(false);
   const isLoadingRef = useRef(false);
+  const scope = "archetype";
+  const makeSuggestionKey = (id: string) => `${scope}-${id}`;
+
+  const MarkdownBlock: React.FC<{ text: string }> = ({ text }) => (
+    <div className="prose prose-sm max-w-none text-neutral-700 leading-relaxed">
+      <ReactMarkdown>{text}</ReactMarkdown>
+    </div>
+  );
+
+  const MarkdownInline: React.FC<{ text: string }> = ({ text }) => (
+    <ReactMarkdown
+      components={{
+        p({ children }) {
+          return <span>{children}</span>;
+        },
+      }}
+    >
+      {text}
+    </ReactMarkdown>
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -161,10 +182,16 @@ const ArchetypeAdjustmentContainer: React.FC<
   };
 
   function renderChanges() {
-    if (!adjustment?.changes) return adjustment?.new_text || "";
+    if (!adjustment?.changes || adjustment.changes.length === 0) {
+      return adjustment?.new_text ? (
+        <MarkdownBlock text={adjustment.new_text} />
+      ) : (
+        <em>No changes were suggested.</em>
+      );
+    }
     return adjustment.changes.map((seg, i) => {
       if (seg.type === "text") {
-        return <span key={i}>{seg.content}</span>;
+        return <MarkdownInline key={i} text={seg.content} />;
       }
       if (seg.type === "change") {
         let style = {};
@@ -198,9 +225,11 @@ const ArchetypeAdjustmentContainer: React.FC<
             style={style}
             className={className}
             title="Click to see the explanation of the suggestion"
-            onClick={() => seg.id && handleChangeClick(seg.id)}
+            onClick={() =>
+              seg.id && handleChangeClick(makeSuggestionKey(seg.id))
+            }
           >
-            {seg.content}
+            <MarkdownInline text={seg.content} />
           </span>
         );
       }
@@ -269,9 +298,7 @@ const ArchetypeAdjustmentContainer: React.FC<
               </h3>
               <div className="prose max-w-none">
                 <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-2 sm:p-6">
-                  <div className="whitespace-pre-wrap text-neutral-700 leading-relaxed">
-                    {adjustment.old_archetype}
-                  </div>
+                  <MarkdownBlock text={adjustment.old_archetype} />
                 </div>
               </div>
             </div>
@@ -282,7 +309,7 @@ const ArchetypeAdjustmentContainer: React.FC<
               </h3>
               <div className="prose max-w-none">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-2 sm:p-6">
-                  <div className="whitespace-pre-wrap text-neutral-700 leading-relaxed">
+                  <div className="text-neutral-700 leading-relaxed">
                     {renderChanges()}
                   </div>
                 </div>
@@ -297,13 +324,15 @@ const ArchetypeAdjustmentContainer: React.FC<
                 {(adjustment.footnotes ?? []).map((note) => (
                   <div
                     key={note.id}
-                    ref={(el) => (explanationRefs.current[note.id] = el)}
+                    ref={(el) =>
+                      (explanationRefs.current[makeSuggestionKey(note.id)] = el)
+                    }
                     className="bg-neutral-50 border border-neutral-200 rounded-lg p-2 sm:p-4 transition-all"
                   >
                     <p className="text-neutral-700 font-semibold">
                       Suggestion {note.id}
                     </p>
-                    <p className="text-neutral-700">{note.text}</p>
+                    <MarkdownBlock text={note.text} />
                     {note.url && (
                       <a
                         href={note.url}

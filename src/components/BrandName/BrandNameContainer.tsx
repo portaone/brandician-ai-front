@@ -40,7 +40,7 @@ const BrandNameContainer: React.FC = () => {
   const [currentDraft, setCurrentDraft] = useState<BrandName | null>(null);
 
   useEffect(() => {
-    const loadBrandAndSuggestions = async () => {
+    const loadBrand = async () => {
       if (!brandId) return;
 
       setIsLoading(true);
@@ -50,16 +50,6 @@ const BrandNameContainer: React.FC = () => {
         const nameOptions = await brands.pickName(brandId);
         // Store draft separately
         setCurrentDraft(nameOptions.draft || null);
-        // Only set alt_options as suggestions
-        const altSuggestions = Array.isArray(nameOptions.alt_options)
-          ? nameOptions.alt_options.map((opt: BrandName) => ({
-              name: opt.name,
-              rationale: opt.description,
-              domains_available: opt.domains_available || [],
-              score: opt.score,
-            }))
-          : [];
-        setSuggestions(altSuggestions);
       } catch (error) {
         setError("Failed to generate brand name suggestions");
       } finally {
@@ -67,7 +57,7 @@ const BrandNameContainer: React.FC = () => {
       }
     };
 
-    loadBrandAndSuggestions();
+    loadBrand();
   }, [brandId]);
 
   const handleSelectName = (name: string) => {
@@ -265,12 +255,11 @@ const BrandNameContainer: React.FC = () => {
                 {suggestions.map((suggestion, index) => (
                   <div
                     key={index}
-                    className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                    className={`p-4 border rounded-lg transition-all ${
                       selectedName === suggestion.name
                         ? "border-primary-500 bg-primary-50"
                         : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                     }`}
-                    onClick={() => handleSelectName(suggestion.name)}
                   >
                     <div className="flex items-center justify-between">
                       <h4 className="font-medium text-gray-900">
@@ -322,9 +311,30 @@ const BrandNameContainer: React.FC = () => {
                           </Button>
                         </>
                       )}
+                    <div className="mt-3 flex justify-end">
+                      <Button
+                        onClick={() => handleSelectName(suggestion.name)}
+                        variant={
+                          selectedName === suggestion.name
+                            ? "primary"
+                            : "secondary"
+                        }
+                        size="sm"
+                      >
+                        {selectedName === suggestion.name
+                          ? "✓ Selected"
+                          : "Select this brand"}
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
+              {suggestions.length === 0 && (
+                <span className="text-center">
+                  Need ideas for the new brand name?<br></br> Click on the
+                  button above to generate suggestions
+                </span>
+              )}
             </div>
 
             {/* Custom Name Input */}

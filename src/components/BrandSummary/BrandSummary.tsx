@@ -1,7 +1,12 @@
 import { ArrowRight, Loader } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+<<<<<<< HEAD
 import { scrollToTop } from "../../lib/utils";
+=======
+import { Loader, ArrowRight } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+>>>>>>> bug-fixes
 import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
@@ -18,12 +23,13 @@ const BrandSummary: React.FC = () => {
     generateBrandSummary,
     loadSummary,
     isLoading,
-    error,
+    error: _error,
   } = useBrandStore();
   const [summary, setSummary] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(true);
   const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [errorState, setError] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<"generation" | "save" | null>(
     null
@@ -207,19 +213,45 @@ const BrandSummary: React.FC = () => {
             </p>
 
             <div className="mb-6">
-              <label
-                htmlFor="summary"
-                className="block text-sm font-medium text-neutral-700 mb-2"
-              >
-                Brand Summary
-              </label>
-              <textarea
-                id="summary"
-                value={summary}
-                onChange={handleSummaryChange}
-                className="w-full min-h-[300px] p-4 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                placeholder="Loading summary..."
-              />
+              <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                <label
+                  htmlFor="summary"
+                  className="block text-sm font-medium text-neutral-700"
+                >
+                  Brand Summary
+                </label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  onClick={() => setIsEditing((v) => !v)}
+                  disabled={isSubmitting}
+                >
+                  {isEditing ? "Preview" : "Edit"}
+                </Button>
+              </div>
+
+              {isEditing ? (
+                <textarea
+                  id="summary"
+                  value={summary}
+                  onChange={handleSummaryChange}
+                  className="w-full min-h-[300px] p-4 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="Write your brand summary (Markdown supported)..."
+                />
+              ) : (
+                <div className="w-full min-h-[300px] p-4 border border-neutral-200 rounded-lg bg-neutral-50">
+                  {summary && summary.trim() ? (
+                    <div className="prose prose-sm max-w-none text-neutral-800">
+                      <ReactMarkdown>{summary}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <div className="text-neutral-500 italic">
+                      No summary yet. Click Edit to add one.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex justify-between items-center gap-3 flex-wrap">
