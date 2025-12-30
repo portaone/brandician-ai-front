@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useBrandStore } from "../../store/brand";
-import { brands } from "../../lib/api";
+import { API_URL, brands } from "../../lib/api";
 import { Loader } from "lucide-react";
+import axios, { AxiosInstance } from "axios";
 
 interface BrandColors {
   primary: string;
@@ -13,6 +14,7 @@ interface BrandColors {
 }
 
 const ColorSchemaPresenter: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const { brandId } = useParams<{ brandId: string }>();
   const { currentBrand, selectBrand } = useBrandStore();
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
@@ -32,9 +34,22 @@ const ColorSchemaPresenter: React.FC = () => {
     text: "#000000", // Text color (black)
   });
 
+  const token = searchParams.get("token") ?? "";
+  let guestApi: AxiosInstance | undefined;
+
+  if (token) {
+    guestApi = axios.create({
+      baseURL: API_URL,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+
   useEffect(() => {
     if (brandId && (!currentBrand || currentBrand.id !== brandId)) {
-      selectBrand(brandId);
+      selectBrand(brandId, guestApi);
     }
   }, [brandId, currentBrand, selectBrand]);
 
@@ -43,7 +58,7 @@ const ColorSchemaPresenter: React.FC = () => {
     if (currentBrand && brandId) {
       try {
         // First, produce/get the list of assets
-        const response = await brands.listAssets(brandId);
+        const response = await brands.listAssets(brandId, guestApi);
         console.log("Assets response:", response);
         console.log(
           "Available asset types:",
@@ -63,7 +78,11 @@ const ColorSchemaPresenter: React.FC = () => {
 
         if (colorAsset) {
           // Fetch the full color asset content
-          const fullColorAsset = await brands.getAsset(brandId, colorAsset.id);
+          const fullColorAsset = await brands.getAsset(
+            brandId,
+            colorAsset.id,
+            guestApi
+          );
           console.log("Full color asset:", fullColorAsset);
 
           if (fullColorAsset.content) {

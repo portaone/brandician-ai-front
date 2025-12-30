@@ -1,20 +1,24 @@
-import { create } from 'zustand';
-import { brands } from '../lib/api';
-import { Brand, Question, Answer, JTBDList } from '../types';
-import { BrandStatus } from '../lib/navigation';
+import { create } from "zustand";
+import { brands } from "../lib/api";
+import { Brand, Question, Answer, JTBDList } from "../types";
+import { BrandStatus } from "../lib/navigation";
+import { AxiosInstance } from "axios";
 
 // Helper function to get user-friendly error messages
 const getErrorMessage = (error: any, defaultMessage: string): string => {
   // Check for network/connection errors
-  if (error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_REFUSED' ||
-      error.message?.includes('Network Error') ||
-      !error.response) {
-    return 'Unable to connect to the server. Please check your internet connection and try again.';
+  if (
+    error.code === "ERR_NETWORK" ||
+    error.code === "ERR_CONNECTION_REFUSED" ||
+    error.message?.includes("Network Error") ||
+    !error.response
+  ) {
+    return "Unable to connect to the server. Please check your internet connection and try again.";
   }
 
   // Check for server errors (5xx)
   if (error.response?.status >= 500) {
-    return 'The server is experiencing issues. Please try again later.';
+    return "The server is experiencing issues. Please try again later.";
   }
 
   // Check for specific error messages from the API
@@ -40,12 +44,17 @@ interface BrandState {
   error: string | null;
   loadBrands: () => Promise<void>;
   createBrand: (name: string, description?: string) => Promise<Brand>;
-  selectBrand: (brandId: string) => Promise<void>;
+  selectBrand: (brandId: string, currentApi?: AxiosInstance) => Promise<void>;
   loadQuestions: (brandId: string) => Promise<void>;
   loadAnswers: (brandId: string) => Promise<void>;
-  submitAnswer: (brandId: string, questionId: string, answer: string, question: string) => Promise<void>;
+  submitAnswer: (
+    brandId: string,
+    questionId: string,
+    answer: string,
+    question: string
+  ) => Promise<void>;
   updateBrandStatus: (brandId: string, status: BrandStatus) => Promise<void>;
-  progressBrandStatus: (brandId: string) => Promise<{status: BrandStatus}>;
+  progressBrandStatus: (brandId: string) => Promise<{ status: BrandStatus }>;
   loadJTBD: (brandId: string) => Promise<void>;
   updateJTBD: (brandId: string, jtbd: JTBDList) => Promise<void>;
   generateBrandSummary: (brandId: string) => Promise<void>;
@@ -72,7 +81,7 @@ export const useBrandStore = create<BrandState>((set, get) => ({
       const brandList = await brands.list();
       set({ brands: brandList, isLoading: false });
     } catch (error) {
-      const errorMessage = getErrorMessage(error, 'Failed to load brands');
+      const errorMessage = getErrorMessage(error, "Failed to load brands");
       set({ isLoading: false, error: errorMessage });
       throw error;
     }
@@ -89,19 +98,19 @@ export const useBrandStore = create<BrandState>((set, get) => ({
       }));
       return brand;
     } catch (error) {
-      const errorMessage = getErrorMessage(error, 'Failed to create brand');
+      const errorMessage = getErrorMessage(error, "Failed to create brand");
       set({ isLoading: false, error: errorMessage });
       throw error;
     }
   },
 
-  selectBrand: async (brandId: string) => {
+  selectBrand: async (brandId: string, currentApi?: AxiosInstance) => {
     set({ isLoading: true, error: null, answers: [], answersMap: new Map() });
     try {
-      const brand = await brands.get(brandId);
+      const brand = await brands.get(brandId, currentApi);
       set({ currentBrand: brand, isLoading: false });
     } catch (error) {
-      const errorMessage = getErrorMessage(error, 'Failed to load brand data');
+      const errorMessage = getErrorMessage(error, "Failed to load brand data");
       set({ isLoading: false, error: errorMessage });
       throw error;
     }
@@ -112,7 +121,7 @@ export const useBrandStore = create<BrandState>((set, get) => ({
       const questions = await brands.getQuestions(brandId);
       set({ questions });
     } catch (error) {
-      const errorMessage = getErrorMessage(error, 'Failed to load questions');
+      const errorMessage = getErrorMessage(error, "Failed to load questions");
       set({ error: errorMessage });
       throw error;
     }
@@ -121,27 +130,41 @@ export const useBrandStore = create<BrandState>((set, get) => ({
   loadAnswers: async (brandId: string) => {
     try {
       const answersData = await brands.getAnswers(brandId);
-      const answers = Object.entries(answersData).map(([questionId, data]: [string, any]) => ({
-        id: questionId,
-        question: questionId,
-        answer: data.answer,
-      }));
+      const answers = Object.entries(answersData).map(
+        ([questionId, data]: [string, any]) => ({
+          id: questionId,
+          question: questionId,
+          answer: data.answer,
+        })
+      );
 
       // Create optimized map for O(1) lookups
-      const answersMap = new Map(answers.map(answer => [answer.question, answer]));
+      const answersMap = new Map(
+        answers.map((answer) => [answer.question, answer])
+      );
 
       set({ answers, answersMap });
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error, 'Failed to load answers');
+      const errorMessage = getErrorMessage(error, "Failed to load answers");
       set({ error: errorMessage });
       throw error;
     }
   },
 
-  submitAnswer: async (brandId: string, questionId: string, answer: string, question: string) => {
+  submitAnswer: async (
+    brandId: string,
+    questionId: string,
+    answer: string,
+    question: string
+  ) => {
     set({ isLoading: true, error: null });
     try {
-      const newAnswer = await brands.submitAnswer(brandId, questionId, answer, question);
+      const newAnswer = await brands.submitAnswer(
+        brandId,
+        questionId,
+        answer,
+        question
+      );
 
       set((state) => {
         const updatedAnswer = {
@@ -151,7 +174,10 @@ export const useBrandStore = create<BrandState>((set, get) => ({
         };
 
         // Update both array and map efficiently
-        const answers = [...state.answers.filter(a => a.question !== questionId), updatedAnswer];
+        const answers = [
+          ...state.answers.filter((a) => a.question !== questionId),
+          updatedAnswer,
+        ];
         const answersMap = new Map(state.answersMap);
         answersMap.set(questionId, updatedAnswer);
 
@@ -162,7 +188,7 @@ export const useBrandStore = create<BrandState>((set, get) => ({
         };
       });
     } catch (error) {
-      const errorMessage = getErrorMessage(error, 'Failed to submit answer');
+      const errorMessage = getErrorMessage(error, "Failed to submit answer");
       set({ isLoading: false, error: errorMessage });
       throw error;
     }
@@ -173,12 +199,15 @@ export const useBrandStore = create<BrandState>((set, get) => ({
     try {
       const updatedBrand = await brands.updateStatus(brandId, status);
       set((state) => ({
-        brands: state.brands.map(b => b.id === brandId ? updatedBrand : b),
-        currentBrand: state.currentBrand?.id === brandId ? updatedBrand : state.currentBrand,
+        brands: state.brands.map((b) => (b.id === brandId ? updatedBrand : b)),
+        currentBrand:
+          state.currentBrand?.id === brandId
+            ? updatedBrand
+            : state.currentBrand,
         isLoading: false,
       }));
     } catch (error) {
-      set({ isLoading: false, error: 'Failed to update brand status' });
+      set({ isLoading: false, error: "Failed to update brand status" });
       throw error;
     }
   },
@@ -190,13 +219,16 @@ export const useBrandStore = create<BrandState>((set, get) => ({
       // Refresh the brand to get the updated status and any server-side changes
       const updatedBrand = await brands.get(brandId);
       set((state) => ({
-        brands: state.brands.map(b => b.id === brandId ? updatedBrand : b),
-        currentBrand: state.currentBrand?.id === brandId ? updatedBrand : state.currentBrand,
+        brands: state.brands.map((b) => (b.id === brandId ? updatedBrand : b)),
+        currentBrand:
+          state.currentBrand?.id === brandId
+            ? updatedBrand
+            : state.currentBrand,
         isLoading: false,
       }));
       return statusUpdate;
     } catch (error) {
-      set({ isLoading: false, error: 'Failed to progress brand status' });
+      set({ isLoading: false, error: "Failed to progress brand status" });
       throw error;
     }
   },
@@ -206,20 +238,22 @@ export const useBrandStore = create<BrandState>((set, get) => ({
     try {
       const jtbdData = await brands.getJTBD(brandId);
       set((state) => ({
-        currentBrand: state.currentBrand ? {
-          ...state.currentBrand,
-          jtbd: jtbdData
-        } : null,
+        currentBrand: state.currentBrand
+          ? {
+              ...state.currentBrand,
+              jtbd: jtbdData,
+            }
+          : null,
         isLoading: false,
       }));
     } catch (error: any) {
-      console.error('Failed to load JTBD data:', error);
-      console.error('Error details:', {
+      console.error("Failed to load JTBD data:", error);
+      console.error("Error details:", {
         message: error.message,
         response: error.response?.data,
-        status: error.response?.status
+        status: error.response?.status,
       });
-      set({ isLoading: false, error: 'Failed to load JTBD data' });
+      set({ isLoading: false, error: "Failed to load JTBD data" });
       throw error;
     }
   },
@@ -230,34 +264,38 @@ export const useBrandStore = create<BrandState>((set, get) => ({
       await brands.updateJTBD(brandId, jtbd);
       // Update current brand's JTBD locally since the API doesn't return the full brand
       set((state) => ({
-        currentBrand: state.currentBrand ? {
-          ...state.currentBrand,
-          jtbd: jtbd
-        } : null,
+        currentBrand: state.currentBrand
+          ? {
+              ...state.currentBrand,
+              jtbd: jtbd,
+            }
+          : null,
         isLoading: false,
       }));
     } catch (error) {
-      set({ isLoading: false, error: 'Failed to update JTBD' });
+      set({ isLoading: false, error: "Failed to update JTBD" });
       throw error;
     }
   },
 
   generateBrandSummary: async (brandId: string) => {
-    console.log('🔄 Starting brand summary generation in store...');
+    console.log("🔄 Starting brand summary generation in store...");
     set({ isLoading: true, error: null });
     try {
       const summaryData = await brands.generateSummary(brandId);
-      console.log('✅ Summary generated in store:', summaryData);
+      console.log("✅ Summary generated in store:", summaryData);
       set((state) => ({
-        currentBrand: state.currentBrand ? {
-          ...state.currentBrand,
-          summary: summaryData.summary
-        } : null,
+        currentBrand: state.currentBrand
+          ? {
+              ...state.currentBrand,
+              summary: summaryData.summary,
+            }
+          : null,
         isLoading: false,
       }));
     } catch (error: any) {
-      console.error('❌ Failed to generate summary:', error);
-      set({ isLoading: false, error: 'Failed to generate brand summary' });
+      console.error("❌ Failed to generate summary:", error);
+      set({ isLoading: false, error: "Failed to generate brand summary" });
       throw error;
     }
   },
@@ -267,15 +305,17 @@ export const useBrandStore = create<BrandState>((set, get) => ({
     try {
       const summaryData = await brands.getSummary(brandId);
       set((state) => ({
-        currentBrand: state.currentBrand ? {
-          ...state.currentBrand,
-          summary: summaryData.summary
-        } : null,
+        currentBrand: state.currentBrand
+          ? {
+              ...state.currentBrand,
+              summary: summaryData.summary,
+            }
+          : null,
         isLoading: false,
       }));
       return summaryData.summary;
     } catch (error: any) {
-      set({ isLoading: false, error: 'Failed to load brand summary' });
+      set({ isLoading: false, error: "Failed to load brand summary" });
       throw error;
     }
   },
@@ -286,14 +326,16 @@ export const useBrandStore = create<BrandState>((set, get) => ({
       await brands.updateSummary(brandId, summary);
       // Update current brand's summary locally since the API doesn't return the full brand
       set((state) => ({
-        currentBrand: state.currentBrand ? {
-          ...state.currentBrand,
-          summary: summary
-        } : null,
+        currentBrand: state.currentBrand
+          ? {
+              ...state.currentBrand,
+              summary: summary,
+            }
+          : null,
         isLoading: false,
       }));
     } catch (error: any) {
-      set({ isLoading: false, error: 'Failed to update brand summary' });
+      set({ isLoading: false, error: "Failed to update brand summary" });
       throw error;
     }
   },
@@ -303,14 +345,16 @@ export const useBrandStore = create<BrandState>((set, get) => ({
     try {
       const archetypeData = await brands.getArchetype(brandId);
       set((state) => ({
-        currentBrand: state.currentBrand ? {
-          ...state.currentBrand,
-          archetype: archetypeData.archetype
-        } : null,
+        currentBrand: state.currentBrand
+          ? {
+              ...state.currentBrand,
+              archetype: archetypeData.archetype,
+            }
+          : null,
         isLoading: false,
       }));
     } catch (error: any) {
-      set({ isLoading: false, error: 'Failed to load archetype data' });
+      set({ isLoading: false, error: "Failed to load archetype data" });
       throw error;
     }
   },
@@ -321,14 +365,16 @@ export const useBrandStore = create<BrandState>((set, get) => ({
       await brands.updateArchetype(brandId, archetype);
       // Update current brand's archetype locally since the API doesn't return the full brand
       set((state) => ({
-        currentBrand: state.currentBrand ? {
-          ...state.currentBrand,
-          archetype: archetype
-        } : null,
+        currentBrand: state.currentBrand
+          ? {
+              ...state.currentBrand,
+              archetype: archetype,
+            }
+          : null,
         isLoading: false,
       }));
     } catch (error: any) {
-      set({ isLoading: false, error: 'Failed to update archetype' });
+      set({ isLoading: false, error: "Failed to update archetype" });
       throw error;
     }
   },
@@ -340,31 +386,37 @@ export const useBrandStore = create<BrandState>((set, get) => ({
       // Remove the brand from the list
       set((state) => ({
         brands: state.brands.filter((brand) => brand.id !== brandId),
-        currentBrand: state.currentBrand?.id === brandId ? null : state.currentBrand,
+        currentBrand:
+          state.currentBrand?.id === brandId ? null : state.currentBrand,
         isLoading: false,
       }));
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error, 'Failed to delete brand');
+      const errorMessage = getErrorMessage(error, "Failed to delete brand");
       set({ isLoading: false, error: errorMessage });
       throw new Error(errorMessage);
     }
   },
 
   updateBrandName: async (brandId: string, brandName: string) => {
-    set({isLoading: true, error: null});
+    set({ isLoading: true, error: null });
     try {
-        await brands.patch(brandId, {brand_name: brandName})
-        set((state)=> ({
-            currentBrand: state.currentBrand ? ({
-                ...state.currentBrand,
-                brand_name: brandName
-            }): null,
-            isLoading: false
-        }))
+      await brands.patch(brandId, { brand_name: brandName });
+      set((state) => ({
+        currentBrand: state.currentBrand
+          ? {
+              ...state.currentBrand,
+              brand_name: brandName,
+            }
+          : null,
+        isLoading: false,
+      }));
     } catch (error: any) {
-      const errorMessage = getErrorMessage(error, 'Failed to update brand name');
+      const errorMessage = getErrorMessage(
+        error,
+        "Failed to update brand name"
+      );
       set({ isLoading: false, error: errorMessage });
       throw new Error(errorMessage);
     }
-  }
+  },
 }));

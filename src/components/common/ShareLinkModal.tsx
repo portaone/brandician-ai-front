@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { X, Copy, Check, Loader2, Share2, AlertCircle } from 'lucide-react';
-import { brands } from '../../lib/api';
-import Button from './Button';
+import React, { useState, useEffect } from "react";
+import { X, Copy, Check, Loader2, Share2, AlertCircle } from "lucide-react";
+import { brands } from "../../lib/api";
+import Button from "./Button";
 
 interface ShareLinkModalProps {
   isOpen: boolean;
@@ -14,7 +14,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
   isOpen,
   onClose,
   brandId,
-  brandName = 'brand'
+  brandName = "brand",
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,16 +46,18 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
       const response = await brands.getGuestToken(brandId);
       const token = response.access_token;
       const baseUrl = window.location.origin;
-      const url = `${baseUrl}/download?token=${token}`;
+      const url = `${baseUrl}/completed?token=${token}`;
       setShareUrl(url);
 
       if (response.access_token_expires) {
         const expDate = new Date(response.access_token_expires);
-        setExpiresAt(expDate.toLocaleDateString() + ' ' + expDate.toLocaleTimeString());
+        setExpiresAt(
+          expDate.toLocaleDateString() + " " + expDate.toLocaleTimeString()
+        );
       }
     } catch (err: any) {
-      console.error('Failed to generate share link:', err);
-      setError(err.response?.data?.detail || 'Failed to generate share link');
+      console.error("Failed to generate share link:", err);
+      setError(err.response?.data?.detail || "Failed to generate share link");
     } finally {
       setIsLoading(false);
     }
@@ -69,13 +71,13 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error("Failed to copy:", err);
       // Fallback for older browsers
-      const textarea = document.createElement('textarea');
+      const textarea = document.createElement("textarea");
       textarea.value = shareUrl;
       document.body.appendChild(textarea);
       textarea.select();
-      document.execCommand('copy');
+      document.execCommand("copy");
       document.body.removeChild(textarea);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -91,7 +93,9 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Share2 className="h-5 w-5 text-primary-600" />
-            <h2 className="text-xl font-bold text-gray-900">Share Brand Assets</h2>
+            <h2 className="text-xl font-bold text-gray-900">
+              Share Brand Assets
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -103,8 +107,9 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
 
         {/* Description */}
         <p className="text-gray-600 mb-4">
-          Share this link to allow others to download the brand assets for <strong>{brandName}</strong>.
-          The link provides read-only access to download the assets.
+          Share this link to allow others to download the brand assets for{" "}
+          <strong>{brandName}</strong>. The link provides read-only access to
+          download the assets.
         </p>
 
         {/* Loading State */}
@@ -125,11 +130,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
                 <p className="text-red-600 text-sm">{error}</p>
               </div>
             </div>
-            <Button
-              onClick={generateLink}
-              size="sm"
-              className="mt-3"
-            >
+            <Button onClick={generateLink} size="sm" className="mt-3">
               Try Again
             </Button>
           </div>
@@ -158,9 +159,15 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
               onClick={handleCopy}
               size="md"
               className="w-full"
-              leftIcon={copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              leftIcon={
+                copied ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )
+              }
             >
-              {copied ? 'Copied!' : 'Copy to Clipboard'}
+              {copied ? "Copied!" : "Copy to Clipboard"}
             </Button>
 
             {/* Expiration Info */}
@@ -173,8 +180,8 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
             {/* Instructions */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
               <p className="text-sm text-blue-700">
-                <strong>Note:</strong> Anyone with this link can download the brand assets.
-                Share it only with people you trust.
+                <strong>Note:</strong> Anyone with this link can download the
+                brand assets. Share it only with people you trust.
               </p>
             </div>
           </div>
@@ -182,11 +189,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
 
         {/* Footer */}
         <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
-          <Button
-            onClick={onClose}
-            variant="secondary"
-            size="md"
-          >
+          <Button onClick={onClose} variant="secondary" size="md">
             Close
           </Button>
         </div>

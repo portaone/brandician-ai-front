@@ -33,7 +33,6 @@ import PaymentSuccessHandler from "./components/Payment/PaymentSuccessHandler";
 import CompletedContainer from "./components/Completed/CompletedContainer";
 import HistoryContainer from "./components/History/HistoryContainer";
 import ColorSchemaPresenter from "./components/ColorSchemaPresenter/ColorSchemaPresenter";
-import ReadOnlyDownloadContainer from "./components/ReadOnlyDownload/ReadOnlyDownloadContainer";
 import MarkdownPage from "./components/MarkdownPage";
 import Footer from "./components/common/Footer";
 import CookieConsent from "./components/common/CookieConsent";
@@ -255,6 +254,10 @@ const App: React.FC = () => {
               }
             />
             <Route
+              path="/completed"
+              element={<CompletedContainer readonlyMode={true} />}
+            />
+            <Route
               path="/brands/:brandId/history"
               element={
                 <AuthGuard>
@@ -266,7 +269,6 @@ const App: React.FC = () => {
               path="/brands/:brandId/color-schema"
               element={<ColorSchemaPresenter />}
             />
-            <Route path="/download" element={<ReadOnlyDownloadContainer />} />
             <Route
               path="/terms"
               element={<MarkdownPage filePath="/terms-of-use.md" />}
