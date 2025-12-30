@@ -111,7 +111,9 @@ Date: ${new Date().toLocaleDateString()}
 This package contains all your brand assets.
 
 Contents:
-${assets.map((asset) => `- ${asset.type.replace(/_/g, " ")}`).join("\n")}
+${assets
+  .map((asset: { type: string }) => `- ${asset.type.replace(/_/g, " ")}`)
+  .join("\n")}
 
 Thank you for using Brandician AI!
 Visit https://brandician.ai for more information.

@@ -489,7 +489,7 @@ const HistoryContainer: React.FC = () => {
           ) {
             text += "PERSONAS:\n\n";
             Object.entries(data.data.personas).forEach(
-              ([key, persona]: [string, any]) => {
+              ([_, persona]: [string, any]) => {
                 text += `${persona.name}\n${persona.description}\n\n`;
               }
             );

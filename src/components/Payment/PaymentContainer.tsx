@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
-import { useAuthStore } from "../../store/auth";
 import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
@@ -20,9 +19,7 @@ const PaymentContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { currentBrand, selectBrand, progressBrandStatus, isLoading } =
-    useBrandStore();
-  const { user } = useAuthStore();
+  const { currentBrand, selectBrand, isLoading } = useBrandStore();
 
   // Payment state
   const [paymentAmount, setPaymentAmount] = useState<string>("");

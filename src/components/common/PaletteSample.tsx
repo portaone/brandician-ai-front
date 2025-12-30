@@ -25,7 +25,6 @@ const PaletteSample: React.FC<PaletteSampleProps> = ({ content, brandId }) => {
   const primary = colors["main-color"] || "#2c3e50";
   const supporting = colors["supporting-color"] || "#e5d7cd";
   const accent = colors["accent-color"] || "#f76c6c";
-  const text = colors["body-text-color"] || "#444";
   const background = colors["background-color"] || "#F4F2F2";
 
   const handleOpenColorSchema = () => {

@@ -1,16 +1,12 @@
 import { ArrowRight, Loader } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-<<<<<<< HEAD
 import { scrollToTop } from "../../lib/utils";
-=======
-import { Loader, ArrowRight } from "lucide-react";
-import ReactMarkdown from "react-markdown";
->>>>>>> bug-fixes
 import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import ReactMarkdown from "react-markdown";
 
 const BrandSummary: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();

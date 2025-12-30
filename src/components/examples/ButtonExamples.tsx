@@ -1,6 +1,5 @@
-import { ArrowRight, Download, Plus, Settings, Trash2 } from "lucide-react';
-import React from 'react';
-import Button from '../common/Button";
+import { Plus, ArrowRight, Download, Settings, Trash2 } from "lucide-react";
+import Button from "../common/Button";
 
 const ButtonExamples: React.FC = () => {
   return (

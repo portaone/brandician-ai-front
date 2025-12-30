@@ -5,9 +5,8 @@ import { useAuthStore } from "../../store/auth";
 
 const TopMenu: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();

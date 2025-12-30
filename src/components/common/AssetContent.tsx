@@ -23,7 +23,7 @@ const AssetContent: React.FC<AssetContentProps> = ({ asset }) => {
   // Custom renderer for color codes
   const colorCodeRegex = /#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})/g;
   function renderWithColorSwatches(text: string) {
-    return text.split(colorCodeRegex).map((part, i, arr) => {
+    return text.split(colorCodeRegex).map((part, i) => {
       if (i % 2 === 1) {
         const color = `#${part}`;
         return (

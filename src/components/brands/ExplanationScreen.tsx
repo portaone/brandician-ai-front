@@ -10,13 +10,8 @@ import GetHelpButton from "../common/GetHelpButton";
 const ExplanationScreen: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const {
-    updateBrandStatus,
-    progressBrandStatus,
-    currentBrand,
-    isLoading,
-    selectBrand,
-  } = useBrandStore();
+  const { progressBrandStatus, currentBrand, isLoading, selectBrand } =
+    useBrandStore();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);

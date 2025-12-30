@@ -19,7 +19,6 @@ const QuestionnaireContainer: React.FC = () => {
     answers,
     selectBrand,
     submitAnswer,
-    updateBrandStatus,
     progressBrandStatus,
     isLoading,
     error,
@@ -37,7 +36,7 @@ const QuestionnaireContainer: React.FC = () => {
 
     const answersMap: Record<string, any> = {};
     answers.forEach((answer) => {
-      answersMap[answer.question] = answer;
+      answersMap[answer.question as string] = answer;
     });
     return answersMap;
   }, [answers]);

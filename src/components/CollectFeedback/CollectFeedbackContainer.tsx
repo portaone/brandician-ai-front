@@ -18,7 +18,7 @@ import HistoryButton from "../common/HistoryButton";
 const CollectFeedbackContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { updateBrandStatus, progressBrandStatus } = useBrandStore();
+  const { progressBrandStatus } = useBrandStore();
 
   const [surveyStatus, setSurveyStatus] = useState<SurveyStatus | null>(null);
   const [surveyUrl, setSurveyUrl] = useState<string>("");

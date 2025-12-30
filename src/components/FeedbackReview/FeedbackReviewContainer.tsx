@@ -25,19 +25,10 @@ const cleanupCache = () => {
 // Cleanup cache every 5 minutes
 setInterval(cleanupCache, 5 * 60 * 1000);
 
-function fixChangeTags(text: string): string {
-  // Replace <change id=1 t=mod> with <change id="1" t="mod">
-  return text.replace(/<change ([^>]+)>/g, (match, attrs) => {
-    // Add quotes to all attribute values
-    const fixedAttrs = attrs.replace(/(\\w+)=([^"'][^\\s>]*)/g, '$1="$2"');
-    return `<change ${fixedAttrs}>`;
-  });
-}
-
 const FeedbackReviewContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { selectBrand, currentBrand, progressBrandStatus } = useBrandStore();
+  const { selectBrand, progressBrandStatus } = useBrandStore();
 
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -146,6 +137,7 @@ const FeedbackReviewContainer: React.FC = () => {
           feedbackCache.set(cacheKey, {
             loading: false,
             data: currentCache.data,
+            timestamp: 0,
           });
         }
       }
@@ -215,7 +207,11 @@ const FeedbackReviewContainer: React.FC = () => {
       hasLoadedRef.current = true;
 
       // Cache the new result
-      feedbackCache.set(cacheKey, { loading: false, data: feedbackData });
+      feedbackCache.set(cacheKey, {
+        loading: false,
+        data: feedbackData,
+        timestamp: 0,
+      });
     } catch (error: any) {
       console.error("❌ Failed to re-run feedback analysis:", error);
 
