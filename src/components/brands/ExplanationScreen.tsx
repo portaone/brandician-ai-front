@@ -24,6 +24,7 @@ const ExplanationScreen: React.FC = () => {
   const [inputMethod, setInputMethod] = useState<"file" | "text" | null>(null);
   const [pastedText, setPastedText] = useState<string>("");
   const [isProcessingText, setIsProcessingText] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (brandId && (!currentBrand || currentBrand.id !== brandId)) {
@@ -42,31 +43,63 @@ const ExplanationScreen: React.FC = () => {
     }
   };
 
+  const validateAndSetFile = (file: File): boolean => {
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "text/plain",
+      "text/markdown",
+    ];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    if (!allowedTypes.includes(file.type)) {
+      setUploadError("Please upload a PDF, Word document, or text file");
+      return false;
+    }
+
+    if (file.size > maxSize) {
+      setUploadError("File size must be less than 10MB");
+      return false;
+    }
+
+    setSelectedFile(file);
+    setUploadError(null);
+    return true;
+  };
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file type and size
-      const allowedTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "text/plain",
-        "text/markdown",
-      ];
-      const maxSize = 10 * 1024 * 1024; // 10MB
+      validateAndSetFile(file);
+    }
+  };
 
-      if (!allowedTypes.includes(file.type)) {
-        setUploadError("Please upload a PDF, Word document, or text file");
-        return;
-      }
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
 
-      if (file.size > maxSize) {
-        setUploadError("File size must be less than 10MB");
-        return;
-      }
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
 
-      setSelectedFile(file);
-      setUploadError(null);
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      validateAndSetFile(file);
     }
   };
 
@@ -322,7 +355,17 @@ const ExplanationScreen: React.FC = () => {
                   </div>
 
                   {!selectedFile && (
-                    <div className="flex flex-col items-center py-8">
+                    <div
+                      onDragEnter={handleDragEnter}
+                      onDragLeave={handleDragLeave}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                      className={`flex flex-col items-center py-8 border-2 border-dashed rounded-lg transition-colors ${
+                        isDragging
+                          ? "border-primary-500 bg-primary-50"
+                          : "border-gray-300 hover:border-gray-400"
+                      }`}
+                    >
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -331,15 +374,18 @@ const ExplanationScreen: React.FC = () => {
                         className="hidden"
                         id="document-upload"
                       />
+                      <Upload className={`h-10 w-10 mb-3 ${isDragging ? "text-primary-500" : "text-gray-400"}`} />
                       <label
                         htmlFor="document-upload"
                         className="cursor-pointer inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                       >
-                        <Upload className="mr-2 h-5 w-5" />
                         Choose Document
                       </label>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Maximum file size: 10MB
+                      <p className="text-sm text-gray-500 mt-3">
+                        or drag and drop your file here
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        PDF, Word, or text files up to 10MB
                       </p>
                     </div>
                   )}
@@ -354,7 +400,9 @@ const ExplanationScreen: React.FC = () => {
                               {selectedFile.name}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                              {selectedFile.size < 1024 * 1024
+                                ? `${(selectedFile.size / 1024).toFixed(1)} KB`
+                                : `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`}
                             </p>
                           </div>
                         </div>
