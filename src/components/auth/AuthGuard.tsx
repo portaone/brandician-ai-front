@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/auth';
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../store/auth";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -13,7 +13,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      navigate('/login');
+      navigate("/login");
     }
   }, [user, isLoading, navigate]);
 

@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useRef } from "react";
+import { AlertCircle, Loader } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Loader, AlertCircle } from "lucide-react";
 import { brands } from "../../lib/api";
+import { scrollToTop } from "../../lib/utils";
 import { AdjustObject } from "../../types";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
-import { scrollToTop } from "../../lib/utils";
 
 // Global cache to prevent duplicate API calls across component instances
 const adjustmentCache = new Map<

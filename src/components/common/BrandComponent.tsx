@@ -1,5 +1,5 @@
-import React from 'react';
-import './BrandComponent.css';
+import React from "react";
+import "./BrandComponent.css";
 
 // Define the color palette interface
 export interface BrandColors {
@@ -22,20 +22,20 @@ export interface BrandColors {
 
 // Default color scheme (fallback)
 const defaultColors: BrandColors = {
-  primary: '#3B82F6',
-  secondary: '#64748B',
-  accent: '#F59E0B',
-  background: '#FFFFFF',
-  surface: '#F8FAFC',
+  primary: "#3B82F6",
+  secondary: "#64748B",
+  accent: "#F59E0B",
+  background: "#FFFFFF",
+  surface: "#F8FAFC",
   text: {
-    primary: '#1F2937',
-    secondary: '#6B7280',
-    muted: '#9CA3AF',
+    primary: "#1F2937",
+    secondary: "#6B7280",
+    muted: "#9CA3AF",
   },
-  border: '#E5E7EB',
+  border: "#E5E7EB",
   hover: {
-    primary: '#2563EB',
-    secondary: '#475569',
+    primary: "#2563EB",
+    secondary: "#475569",
   },
 };
 
@@ -50,9 +50,9 @@ interface BrandComponentProps {
 
 const BrandComponent: React.FC<BrandComponentProps> = ({
   colors = {},
-  className = '',
-  title = 'Default Title',
-  description = 'Default description',
+  className = "",
+  title = "Default Title",
+  description = "Default description",
   ...props
 }) => {
   // Merge provided colors with defaults
@@ -71,24 +71,21 @@ const BrandComponent: React.FC<BrandComponentProps> = ({
 
   // Create CSS custom properties for dynamic styling
   const cssVariables = {
-    '--brand-primary': brandColors.primary,
-    '--brand-secondary': brandColors.secondary,
-    '--brand-accent': brandColors.accent,
-    '--brand-background': brandColors.background,
-    '--brand-surface': brandColors.surface,
-    '--brand-text-primary': brandColors.text.primary,
-    '--brand-text-secondary': brandColors.text.secondary,
-    '--brand-text-muted': brandColors.text.muted,
-    '--brand-border': brandColors.border,
-    '--brand-hover-primary': brandColors.hover.primary,
-    '--brand-hover-secondary': brandColors.hover.secondary,
+    "--brand-primary": brandColors.primary,
+    "--brand-secondary": brandColors.secondary,
+    "--brand-accent": brandColors.accent,
+    "--brand-background": brandColors.background,
+    "--brand-surface": brandColors.surface,
+    "--brand-text-primary": brandColors.text.primary,
+    "--brand-text-secondary": brandColors.text.secondary,
+    "--brand-text-muted": brandColors.text.muted,
+    "--brand-border": brandColors.border,
+    "--brand-hover-primary": brandColors.hover.primary,
+    "--brand-hover-secondary": brandColors.hover.secondary,
   } as React.CSSProperties;
 
   return (
-    <div 
-      className={`brand-component ${className}`}
-      style={cssVariables}
-    >
+    <div className={`brand-component ${className}`} style={cssVariables}>
       {/* Replace this with your actual Figma design structure */}
       <div className="brand-card">
         <div className="brand-header">
@@ -98,12 +95,8 @@ const BrandComponent: React.FC<BrandComponentProps> = ({
           <p className="brand-description">{description}</p>
         </div>
         <div className="brand-actions">
-          <button className="brand-button-primary">
-            Primary Action
-          </button>
-          <button className="brand-button-secondary">
-            Secondary Action
-          </button>
+          <button className="brand-button-primary">Primary Action</button>
+          <button className="brand-button-secondary">Secondary Action</button>
         </div>
       </div>
     </div>

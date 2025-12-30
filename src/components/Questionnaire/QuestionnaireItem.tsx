@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useRef } from "react";
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
+  Copy,
+  Loader,
   Mic,
   MicOff,
-  Loader,
-  Wand2,
-  Copy,
   RefreshCw,
-  AlertCircle,
+  Wand2,
 } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { brands } from "../../lib/api";
 import Button from "../common/Button";
 

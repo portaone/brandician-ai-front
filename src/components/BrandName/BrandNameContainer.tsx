@@ -1,10 +1,10 @@
+import { ArrowRight, Check, Loader, Plus, RefreshCw, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Loader, ArrowRight, RefreshCw, Check, Plus, X } from "lucide-react";
-import { useBrandStore } from "../../store/brand";
+import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
-import BrandAssets from "../BrandAssets/BrandAssets";
 import { navigateAfterProgress } from "../../lib/navigation";
+import { useBrandStore } from "../../store/brand";
+import BrandAssets from "../BrandAssets/BrandAssets";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";

@@ -66,7 +66,7 @@ interface BrandState {
   updateBrandName: (brandId: string, brandName: string) => Promise<void>;
 }
 
-export const useBrandStore = create<BrandState>((set, get) => ({
+export const useBrandStore = create<BrandState>((set) => ({
   brands: [],
   currentBrand: null,
   questions: [],

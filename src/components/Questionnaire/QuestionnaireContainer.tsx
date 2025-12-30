@@ -1,14 +1,13 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowRight, Brain } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { navigateAfterProgress } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
+import { Answer, Question } from "../../types";
+import Button from "../common/Button";
 import QuestionnaireHeader from "./QuestionnaireHeader";
 import QuestionnaireItem from "./QuestionnaireItem";
 import QuestionnaireSummary from "./QuestionnaireSummary";
-import { Brain, ArrowRight } from "lucide-react";
-import { brands } from "../../lib/api";
-import { navigateAfterProgress } from "../../lib/navigation";
-import Button from "../common/Button";
-import { Answer, Question } from "../../types";
 
 const QuestionnaireContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();

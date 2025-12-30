@@ -1,6 +1,6 @@
+import { ArrowLeft } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
 import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
 

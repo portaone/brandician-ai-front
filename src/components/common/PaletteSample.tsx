@@ -1,6 +1,6 @@
 import React from "react";
-import { useBrandStore } from "../../store/brand";
 import { useParams } from "react-router-dom";
+import { useBrandStore } from "../../store/brand";
 
 interface PaletteSampleProps {
   content: string;

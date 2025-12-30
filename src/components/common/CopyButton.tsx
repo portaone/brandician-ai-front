@@ -1,5 +1,5 @@
+import { Check, Copy } from "lucide-react";
 import React, { useState } from "react";
-import { Copy, Check } from "lucide-react";
 
 interface CopyButtonProps {
   text: string;

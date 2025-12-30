@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Loader } from 'lucide-react';
+import { Loader } from "lucide-react";
+import React, { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const PaymentSuccessHandler: React.FC = () => {
   const navigate = useNavigate();
@@ -9,7 +9,10 @@ const PaymentSuccessHandler: React.FC = () => {
   useEffect(() => {
     // Extract brandId from URL parameters
     // PayPal includes custom parameters in the return URL
-    const brandId = searchParams.get('brand_id') || searchParams.get('custom') || searchParams.get('item_number');
+    const brandId =
+      searchParams.get("brand_id") ||
+      searchParams.get("custom") ||
+      searchParams.get("item_number");
 
     if (brandId) {
       // Navigate to payment success verification page (not directly to completed)
@@ -18,8 +21,8 @@ const PaymentSuccessHandler: React.FC = () => {
       navigate(targetUrl);
     } else {
       // If no brandId found, redirect to brands list
-      console.error('No brandId found in payment success callback');
-      navigate('/brands');
+      console.error("No brandId found in payment success callback");
+      navigate("/brands");
     }
   }, [navigate, searchParams]);
 

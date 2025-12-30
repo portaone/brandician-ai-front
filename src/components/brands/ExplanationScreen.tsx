@@ -1,12 +1,11 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowRight, Upload, FileText, X, FileEdit, Copy } from "lucide-react";
-import { useBrandStore } from "../../store/brand";
-import { navigateAfterProgress } from "../../lib/navigation";
+import { ArrowRight, Copy, FileEdit, FileText, Upload, X } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../../lib/api";
+import { navigateAfterProgress } from "../../lib/navigation";
+import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
-import HistoryButton from "../common/HistoryButton";
 
 const ExplanationScreen: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();

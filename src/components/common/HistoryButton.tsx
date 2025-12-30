@@ -1,18 +1,18 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { History } from 'lucide-react';
-import Button from './Button';
+import { History } from "lucide-react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import Button from "./Button";
 
 interface HistoryButtonProps {
   brandId: string;
-  variant?: 'primary' | 'secondary' | 'outline';
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  variant?: "primary" | "secondary" | "outline";
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
 const HistoryButton: React.FC<HistoryButtonProps> = ({
   brandId,
-  variant = 'outline',
-  size = 'md'
+  variant = "outline",
+  size = "md",
 }) => {
   const navigate = useNavigate();
 

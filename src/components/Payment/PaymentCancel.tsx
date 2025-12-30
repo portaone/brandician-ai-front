@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { XCircle, ArrowLeft, CreditCard } from 'lucide-react';
-import { useBrandStore } from '../../store/brand';
+import { ArrowLeft, CreditCard, XCircle } from "lucide-react";
+import React, { useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useBrandStore } from "../../store/brand";
 
 const PaymentCancel: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -23,7 +23,10 @@ const PaymentCancel: React.FC = () => {
 
   const handleContactSupport = () => {
     // In a real app, this would open a support chat or redirect to support page
-    window.open('mailto:support@brandician.ai?subject=Payment Assistance', '_blank');
+    window.open(
+      "mailto:support@brandician.ai?subject=Payment Assistance",
+      "_blank"
+    );
   };
 
   return (
@@ -37,11 +40,13 @@ const PaymentCancel: React.FC = () => {
           <p className="text-gray-600 mb-6">
             Your payment was cancelled and no charges were made to your account.
           </p>
-          
+
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
             <p className="text-sm text-orange-800">
-              <strong>Having trouble with PayPal?</strong><br />
-              Consider trying a different payment method such as credit card or Google Pay.
+              <strong>Having trouble with PayPal?</strong>
+              <br />
+              Consider trying a different payment method such as credit card or
+              Google Pay.
             </p>
           </div>
 
@@ -53,7 +58,7 @@ const PaymentCancel: React.FC = () => {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Try Different Payment Method
             </button>
-            
+
             <button
               onClick={handleContactSupport}
               className="w-full inline-flex items-center justify-center px-4 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
@@ -62,10 +67,11 @@ const PaymentCancel: React.FC = () => {
               Contact Support
             </button>
           </div>
-          
+
           {currentBrand && (
             <p className="text-xs text-gray-500 mt-4">
-              Your brand "{currentBrand.name}" is saved and ready for payment when you're ready.
+              Your brand "{currentBrand.name}" is saved and ready for payment
+              when you're ready.
             </p>
           )}
         </div>

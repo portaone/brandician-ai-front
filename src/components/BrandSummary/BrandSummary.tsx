@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import { ArrowRight, Loader } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Loader, ArrowRight } from "lucide-react";
+import { scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
-import { scrollToTop } from "../../lib/utils";
 
 const BrandSummary: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();

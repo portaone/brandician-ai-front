@@ -1,6 +1,6 @@
+import { AnimatePresence, motion } from "framer-motion";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
 import { useAuthStore } from "../../store/auth";
 
 const TopMenu: React.FC = () => {

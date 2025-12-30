@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useAuthStore } from "../store/auth";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
+import { useAuthStore } from "../store/auth";
 import Button from "./common/Button";
 
 const Profile: React.FC = () => {

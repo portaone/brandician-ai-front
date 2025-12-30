@@ -1,22 +1,22 @@
+import axios, { AxiosInstance } from "axios";
+import {
+  CheckCircle,
+  Download,
+  Linkedin,
+  Lock,
+  Palette,
+  Share2,
+  Star,
+  Twitter,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import {
-  Download,
-  CheckCircle,
-  Lock,
-  Star,
-  Share2,
-  Twitter,
-  Linkedin,
-  Palette,
-} from "lucide-react";
-import { useBrandStore } from "../../store/brand";
 import { API_URL, brands } from "../../lib/api";
+import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
+import DownloadAllButton from "../common/DownloadAllButton";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
-import DownloadAllButton from "../common/DownloadAllButton";
-import axios, { AxiosInstance } from "axios";
 import ShareLinkModal from "../common/ShareLinkModal";
 
 const CompletedContainer: React.FC<{ readonlyMode?: boolean }> = ({

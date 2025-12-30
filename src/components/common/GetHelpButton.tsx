@@ -1,35 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import { LifeBuoy, X, CheckCircle, AlertCircle } from 'lucide-react';
-import Button from './Button';
-import { auth } from '../../lib/api';
-import { useAuthStore } from '../../store/auth';
-import { useParams } from 'react-router-dom';
+import { AlertCircle, CheckCircle, LifeBuoy, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { auth } from "../../lib/api";
+import { useAuthStore } from "../../store/auth";
+import Button from "./Button";
 
 interface GetHelpButtonProps {
-  variant?: 'primary' | 'secondary' | 'outline';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "primary" | "secondary" | "outline";
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
 // Session storage keys for form persistence
 // Name is cached per-user per-session (same key across all pages for the same user)
 // Issue details are cached per-page (different key for each page)
-const getStorageKey = (key: string, userId?: string, perPage: boolean = true) => {
+const getStorageKey = (
+  key: string,
+  userId?: string,
+  perPage: boolean = true
+) => {
   if (perPage) {
     return `getHelp_${userId}_${window.location.pathname}_${key}`;
   }
   return `getHelp_${userId}_${key}`;
 };
 
-const getPersistedValue = (key: string, userId?: string, perPage: boolean = true): string => {
+const getPersistedValue = (
+  key: string,
+  userId?: string,
+  perPage: boolean = true
+): string => {
   try {
-    return sessionStorage.getItem(getStorageKey(key, userId, perPage)) || '';
+    return sessionStorage.getItem(getStorageKey(key, userId, perPage)) || "";
   } catch {
-    return '';
+    return "";
   }
 };
 
-const setPersistedValue = (key: string, value: string, userId?: string, perPage: boolean = true): void => {
+const setPersistedValue = (
+  key: string,
+  value: string,
+  userId?: string,
+  perPage: boolean = true
+): void => {
   try {
     sessionStorage.setItem(getStorageKey(key, userId, perPage), value);
   } catch {
@@ -40,16 +53,16 @@ const setPersistedValue = (key: string, value: string, userId?: string, perPage:
 const clearPersistedValues = (userId?: string): void => {
   try {
     // Clear only the page-specific issue details, not the session-wide name
-    sessionStorage.removeItem(getStorageKey('issueDetails', userId, true));
+    sessionStorage.removeItem(getStorageKey("issueDetails", userId, true));
   } catch {
     // Ignore storage errors
   }
 };
 
 const GetHelpButton: React.FC<GetHelpButtonProps> = ({
-  variant = 'secondary',
-  size = 'lg',
-  className = ''
+  variant = "secondary",
+  size = "lg",
+  className = "",
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useAuthStore();
@@ -59,20 +72,22 @@ const GetHelpButton: React.FC<GetHelpButtonProps> = ({
 
   // Name is cached per-user per-session (across all pages) but initialized from user profile if not cached
   const [name, setName] = useState(() => {
-    const cachedName = getPersistedValue('name', userId, false);
-    return cachedName || user?.name || '';
+    const cachedName = getPersistedValue("name", userId, false);
+    return cachedName || user?.name || "";
   });
   // Issue details are cached per-page per-user using sessionStorage
-  const [issueDetails, setIssueDetails] = useState(getPersistedValue('issueDetails', userId, true));
+  const [issueDetails, setIssueDetails] = useState(
+    getPersistedValue("issueDetails", userId, true)
+  );
   const [isSending, setIsSending] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
-  const [resultType, setResultType] = useState<'success' | 'error'>('success');
-  const [resultMessage, setResultMessage] = useState('');
+  const [resultType, setResultType] = useState<"success" | "error">("success");
+  const [resultMessage, setResultMessage] = useState("");
 
   // Update name when user changes - always reset to user's profile name for new user
   useEffect(() => {
     if (user?.name) {
-      const cachedName = getPersistedValue('name', userId, false);
+      const cachedName = getPersistedValue("name", userId, false);
       // If no cached name for this user, use profile name
       if (!cachedName) {
         setName(user.name);
@@ -86,14 +101,14 @@ const GetHelpButton: React.FC<GetHelpButtonProps> = ({
   // Persist name to sessionStorage (session-wide for this user) whenever it changes
   useEffect(() => {
     if (userId) {
-      setPersistedValue('name', name, userId, false);
+      setPersistedValue("name", name, userId, false);
     }
   }, [name, userId]);
 
   // Persist issue details to sessionStorage (per-page per-user) whenever it changes
   useEffect(() => {
     if (userId) {
-      setPersistedValue('issueDetails', issueDetails, userId, true);
+      setPersistedValue("issueDetails", issueDetails, userId, true);
     }
   }, [issueDetails, userId]);
 
@@ -108,8 +123,8 @@ const GetHelpButton: React.FC<GetHelpButtonProps> = ({
 
   const handleSend = async () => {
     if (!name.trim() || !issueDetails.trim()) {
-      setResultType('error');
-      setResultMessage('Please fill in all fields');
+      setResultType("error");
+      setResultMessage("Please fill in all fields");
       setShowResultModal(true);
       return;
     }
@@ -121,24 +136,28 @@ const GetHelpButton: React.FC<GetHelpButtonProps> = ({
         name: name.trim(),
         message: issueDetails.trim(),
         brand_id: brandId,
-        url: window.location.href
+        url: window.location.href,
       });
 
       // Show success message
-      setResultType('success');
-      setResultMessage(response.message || 'Your help request has been sent successfully!');
+      setResultType("success");
+      setResultMessage(
+        response.message || "Your help request has been sent successfully!"
+      );
       setShowResultModal(true);
 
       // Clear form after successful send
-      setName(user?.name || '');
-      setIssueDetails('');
+      setName(user?.name || "");
+      setIssueDetails("");
       clearPersistedValues(userId);
 
       setIsModalOpen(false);
     } catch (error: any) {
-      console.error('Failed to send help request:', error);
-      const errorMessage = error.response?.data?.detail || 'Failed to send help request. Please try again.';
-      setResultType('error');
+      console.error("Failed to send help request:", error);
+      const errorMessage =
+        error.response?.data?.detail ||
+        "Failed to send help request. Please try again.";
+      setResultType("error");
       setResultMessage(errorMessage);
       setShowResultModal(true);
     } finally {
@@ -257,7 +276,7 @@ const GetHelpButton: React.FC<GetHelpButtonProps> = ({
           >
             {/* Content */}
             <div className="p-8 text-center">
-              {resultType === 'success' ? (
+              {resultType === "success" ? (
                 <div className="mb-4">
                   <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
                 </div>
@@ -267,15 +286,15 @@ const GetHelpButton: React.FC<GetHelpButtonProps> = ({
                 </div>
               )}
 
-              <h2 className={`text-2xl font-semibold mb-3 ${
-                resultType === 'success' ? 'text-green-700' : 'text-red-700'
-              }`}>
-                {resultType === 'success' ? 'Success!' : 'Error'}
+              <h2
+                className={`text-2xl font-semibold mb-3 ${
+                  resultType === "success" ? "text-green-700" : "text-red-700"
+                }`}
+              >
+                {resultType === "success" ? "Success!" : "Error"}
               </h2>
 
-              <p className="text-neutral-600 mb-6">
-                {resultMessage}
-              </p>
+              <p className="text-neutral-600 mb-6">{resultMessage}</p>
 
               <Button
                 onClick={() => setShowResultModal(false)}

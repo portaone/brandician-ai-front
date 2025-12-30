@@ -1,9 +1,9 @@
+import axios, { AxiosInstance } from "axios";
+import { Loader } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { useBrandStore } from "../../store/brand";
 import { API_URL, brands } from "../../lib/api";
-import { Loader } from "lucide-react";
-import axios, { AxiosInstance } from "axios";
+import { useBrandStore } from "../../store/brand";
 
 interface BrandColors {
   primary: string;

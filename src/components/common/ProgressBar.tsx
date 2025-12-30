@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
+import React from "react";
 
 interface ProgressBarProps {
   progress: number;
@@ -8,7 +8,7 @@ interface ProgressBarProps {
 const ProgressBar: React.FC<ProgressBarProps> = ({ progress }) => {
   return (
     <div className="h-2 bg-neutral-200 rounded-full overflow-hidden">
-      <motion.div 
+      <motion.div
         className="h-full bg-primary-500"
         initial={{ width: 0 }}
         animate={{ width: `${progress}%` }}

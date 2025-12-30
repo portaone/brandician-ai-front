@@ -1,9 +1,9 @@
+import { ArrowRight, Edit2 } from "lucide-react";
 import React, { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Edit2, ArrowRight } from "lucide-react";
-import { Question, Answer } from "../../types";
-import Button from "../common/Button";
 import { scrollToTop } from "../../lib/utils";
+import { Answer, Question } from "../../types";
+import Button from "../common/Button";
 
 interface QuestionnaireSummaryProps {
   questions: Question[];

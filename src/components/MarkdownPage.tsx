@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { Loader, AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 interface MarkdownPageProps {
   filePath: string;
@@ -8,7 +8,7 @@ interface MarkdownPageProps {
 }
 
 const MarkdownPage: React.FC<MarkdownPageProps> = ({ filePath, className }) => {
-  const [content, setContent] = useState<string>('');
+  const [content, setContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +17,7 @@ const MarkdownPage: React.FC<MarkdownPageProps> = ({ filePath, className }) => {
     setError(null);
     fetch(filePath)
       .then((res) => {
-        if (!res.ok) throw new Error('Failed to load content');
+        if (!res.ok) throw new Error("Failed to load content");
         return res.text();
       })
       .then((text) => {
@@ -25,7 +25,7 @@ const MarkdownPage: React.FC<MarkdownPageProps> = ({ filePath, className }) => {
         setIsLoading(false);
       })
       .catch((err) => {
-        setError(err.message || 'Failed to load content');
+        setError(err.message || "Failed to load content");
         setIsLoading(false);
       });
   }, [filePath]);
@@ -49,10 +49,10 @@ const MarkdownPage: React.FC<MarkdownPageProps> = ({ filePath, className }) => {
   }
 
   return (
-    <div className={className || 'prose mx-auto max-w-3xl py-8'}>
+    <div className={className || "prose mx-auto max-w-3xl py-8"}>
       <ReactMarkdown>{content}</ReactMarkdown>
     </div>
   );
 };
 
-export default MarkdownPage; 
+export default MarkdownPage;

@@ -1,46 +1,50 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { auth } from '../lib/api';
-import { User } from '../types';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { auth } from "../lib/api";
+import { User } from "../types";
 
 // Helper function to get user-friendly error messages
 const getErrorMessage = (error: any): string => {
   // Check for network/connection errors
-  if (error.code === 'ECONNREFUSED' || error.code === 'ERR_CONNECTION_REFUSED' || 
-      error.message?.includes('ERR_CONNECTION_REFUSED') || 
-      error.message?.includes('Network Error') ||
-      !error.response) {
-    return 'Unable to connect to the server. Please check your internet connection or try again later.';
+  if (
+    error.code === "ECONNREFUSED" ||
+    error.code === "ERR_CONNECTION_REFUSED" ||
+    error.message?.includes("ERR_CONNECTION_REFUSED") ||
+    error.message?.includes("Network Error") ||
+    !error.response
+  ) {
+    return "Unable to connect to the server. Please check your internet connection or try again later.";
   }
-  
+
   // Check for server errors (5xx)
   if (error.response?.status >= 500) {
-    return 'The server is experiencing issues. Please try again later.';
+    return "The server is experiencing issues. Please try again later.";
   }
-  
+
   // Check for client errors (4xx)
   if (error.response?.status >= 400 && error.response?.status < 500) {
-    const serverMessage = error.response?.data?.message || error.response?.data?.detail;
+    const serverMessage =
+      error.response?.data?.message || error.response?.data?.detail;
     if (serverMessage) {
       return serverMessage;
     }
-    
+
     switch (error.response?.status) {
       case 400:
-        return 'Invalid request. Please check your input and try again.';
+        return "Invalid request. Please check your input and try again.";
       case 401:
-        return 'Invalid credentials. Please check your email and try again.';
+        return "Invalid credentials. Please check your email and try again.";
       case 403:
-        return 'Access denied. Please contact support if this persists.';
+        return "Access denied. Please contact support if this persists.";
       case 404:
-        return 'Service not found. Please try again later.';
+        return "Service not found. Please try again later.";
       default:
-        return 'An error occurred. Please try again.';
+        return "An error occurred. Please try again.";
     }
   }
-  
+
   // Default fallback
-  return 'An unexpected error occurred. Please try again.';
+  return "An unexpected error occurred. Please try again.";
 };
 
 interface AuthState {
@@ -63,7 +67,7 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       error: null,
       otpId: null,
-      
+
       register: async (email: string, name: string) => {
         set({ isLoading: true, error: null });
         try {
@@ -76,7 +80,7 @@ export const useAuthStore = create<AuthState>()(
           throw error;
         }
       },
-      
+
       verifyOTP: async (otpId: string, otp: string) => {
         set({ isLoading: true, error: null });
         try {
@@ -89,7 +93,7 @@ export const useAuthStore = create<AuthState>()(
           throw error;
         }
       },
-      
+
       login: async (email: string) => {
         set({ isLoading: true, error: null });
         try {
@@ -102,17 +106,17 @@ export const useAuthStore = create<AuthState>()(
           throw error;
         }
       },
-      
+
       logout: () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
         set({ user: null, otpId: null, error: null });
       },
-      
+
       loadUser: async () => {
-        const token = localStorage.getItem('access_token');
+        const token = localStorage.getItem("access_token");
         if (!token) return;
-        
+
         set({ isLoading: true });
         try {
           const user = await auth.getCurrentUser();
@@ -121,13 +125,13 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: false, user: null });
         }
       },
-      
+
       clearError: () => {
         set({ error: null });
       },
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
       partialize: (state) => ({ user: state.user }),
     }
   )

@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-import { Download } from "lucide-react";
-import { brands } from "../../lib/api";
-import JSZip from "jszip";
-import { saveAs } from "file-saver";
-import Button from "./Button";
 import { AxiosInstance } from "axios";
+import { saveAs } from "file-saver";
+import JSZip from "jszip";
+import { Download } from "lucide-react";
+import React, { useState } from "react";
+import { brands } from "../../lib/api";
+import Button from "./Button";
 
 interface DownloadAllButtonProps {
   brandId: string;

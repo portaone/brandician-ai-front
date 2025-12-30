@@ -1,5 +1,5 @@
-import React, { Component, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import React, { Component, ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -22,7 +22,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error Boundary caught an error:', error, errorInfo);
+    console.error("Error Boundary caught an error:", error, errorInfo);
   }
 
   handleRetry = () => {
@@ -41,15 +41,16 @@ class ErrorBoundary extends Component<Props, State> {
             <div className="flex justify-center mb-4">
               <AlertTriangle className="h-12 w-12 text-red-500" />
             </div>
-            
+
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Something went wrong
             </h2>
-            
+
             <p className="text-gray-600 mb-6">
-              We encountered an unexpected error. This has been logged and our team will investigate.
+              We encountered an unexpected error. This has been logged and our
+              team will investigate.
             </p>
-            
+
             <div className="space-y-3">
               <button
                 onClick={this.handleRetry}
@@ -58,16 +59,16 @@ class ErrorBoundary extends Component<Props, State> {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Try Again
               </button>
-              
+
               <button
-                onClick={() => window.location.href = '/brands'}
+                onClick={() => (window.location.href = "/brands")}
                 className="block px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
               >
                 Return to Brands
               </button>
             </div>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {process.env.NODE_ENV === "development" && this.state.error && (
               <details className="mt-6 text-left bg-gray-100 rounded p-3">
                 <summary className="cursor-pointer text-sm font-medium">
                   Error Details (Development Only)

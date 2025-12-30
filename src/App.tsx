@@ -6,7 +6,7 @@ import {
   Navigate,
   useParams,
 } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { useAuthStore } from "./store/auth";
 import TopMenu from "./components/common/TopMenu";
 import ErrorBoundary from "./components/common/ErrorBoundary";

@@ -1,8 +1,8 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
-import BrandComponent from '../common/BrandComponent';
-import { useBrandColors, extractBrandColors } from '../../hooks/useBrandColors';
-import { useBrandStore } from '../../store/brand';
+import React from "react";
+import { useParams } from "react-router-dom";
+import { extractBrandColors, useBrandColors } from "../../hooks/useBrandColors";
+import { useBrandStore } from "../../store/brand";
+import BrandComponent from "../common/BrandComponent";
 
 const BrandComponentExample: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -10,7 +10,7 @@ const BrandComponentExample: React.FC = () => {
 
   // Extract colors from current brand data
   const brandColors = extractBrandColors(currentBrand);
-  
+
   // Use the hook to get final colors
   const colors = useBrandColors({
     brandName: currentBrand?.name,
@@ -24,7 +24,7 @@ const BrandComponentExample: React.FC = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-8">
           Brand Component Showcase
         </h1>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Default colors */}
           <BrandComponent
@@ -42,20 +42,20 @@ const BrandComponentExample: React.FC = () => {
           {/* Custom colors */}
           <BrandComponent
             colors={{
-              primary: '#FF6B6B',
-              secondary: '#4ECDC4',
-              accent: '#FFE66D',
-              background: '#FFFFFF',
-              surface: '#F7F9FC',
+              primary: "#FF6B6B",
+              secondary: "#4ECDC4",
+              accent: "#FFE66D",
+              background: "#FFFFFF",
+              surface: "#F7F9FC",
               text: {
-                primary: '#2C3E50',
-                secondary: '#34495E',
-                muted: '#7F8C8D',
+                primary: "#2C3E50",
+                secondary: "#34495E",
+                muted: "#7F8C8D",
               },
-              border: '#BDC3C7',
+              border: "#BDC3C7",
               hover: {
-                primary: '#E74C3C',
-                secondary: '#16A085',
+                primary: "#E74C3C",
+                secondary: "#16A085",
               },
             }}
             title="Custom Colors"
@@ -69,7 +69,7 @@ const BrandComponentExample: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             Component Variants
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <BrandComponent
               colors={colors}
@@ -77,7 +77,7 @@ const BrandComponentExample: React.FC = () => {
               description="A more compact version of the component."
               className="compact"
             />
-            
+
             <BrandComponent
               colors={colors}
               title="Large Variant"

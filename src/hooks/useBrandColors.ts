@@ -139,7 +139,7 @@ export const useBrandColors = ({
 export const generateBrandColorsFromPrimary = (primaryColor: string): BrandColors => {
   // This is a simplified version - you might want to use a color manipulation library
   // like 'color2k' or 'chroma-js' for more sophisticated color generation
-  
+
   return {
     primary: primaryColor,
     secondary: '#64748B', // You could derive this from primary

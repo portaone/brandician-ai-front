@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Loader, ArrowRight, X, Edit2, RefreshCw } from "lucide-react";
+import { ArrowRight, Edit2, Loader, RefreshCw, X } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
 import { JTBD, JTBDImportance, JTBD_IMPORTANCE_LABELS } from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
-import { scrollToTop } from "../../lib/utils";
 
 type Step = "rating" | "editing" | "drivers";
 

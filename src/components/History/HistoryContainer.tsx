@@ -1,17 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronUp, Loader, Share2 } from "lucide-react";
-import { useBrandStore } from "../../store/brand";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
-import Button from "../common/Button";
-import GetHelpButton from "../common/GetHelpButton";
-import { JTBDDisplay } from "../common/BrandAttributeDisplay";
-import AssetContent from "../common/AssetContent";
-import DownloadAllButton from "../common/DownloadAllButton";
-import ShareLinkModal from "../common/ShareLinkModal";
-import CopyButton from "../common/CopyButton";
 import { getRouteForStatus } from "../../lib/navigation";
+import { useBrandStore } from "../../store/brand";
 import { BrandAsset, BrandAssetSummary } from "../../types";
+import AssetContent from "../common/AssetContent";
+import { JTBDDisplay } from "../common/BrandAttributeDisplay";
+import CopyButton from "../common/CopyButton";
+import DownloadAllButton from "../common/DownloadAllButton";
+import GetHelpButton from "../common/GetHelpButton";
+import ShareLinkModal from "../common/ShareLinkModal";
 
 interface HistoryStep {
   number: number;

@@ -1,28 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Heart, MessageSquare, Eye, EyeOff, Loader, ArrowRight } from 'lucide-react';
-import { useBrandStore } from '../../store/brand';
-import { useAuthStore } from '../../store/auth';
-import { navigateAfterProgress } from '../../lib/navigation';
-import { brands } from '../../lib/api';
+import {
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Heart,
+  Loader,
+  MessageSquare,
+  Star,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { brands } from "../../lib/api";
+import { navigateAfterProgress } from "../../lib/navigation";
+import { useAuthStore } from "../../store/auth";
+import { useBrandStore } from "../../store/brand";
 
 const TestimonialContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { currentBrand, selectBrand, progressBrandStatus, isLoading } = useBrandStore();
+  const { currentBrand, selectBrand, progressBrandStatus, isLoading } =
+    useBrandStore();
   const { user } = useAuthStore();
-  
+
   // Review state
   const [rating, setRating] = useState<number>(0);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
-  const [testimonial, setTestimonial] = useState<string>('');
+  const [testimonial, setTestimonial] = useState<string>("");
   const [showName, setShowName] = useState<boolean>(false);
-  
+
   // Feedback state
-  const [feedback, setFeedback] = useState<string>('');
-  
+  const [feedback, setFeedback] = useState<string>("");
+
   // Form validation
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -32,54 +41,57 @@ const TestimonialContainer: React.FC = () => {
   }, [brandId, currentBrand, selectBrand]);
 
   const maskUserName = (name: string): string => {
-    if (!name) return 'A*** F***';
-    
+    if (!name) return "A*** F***";
+
     const words = name.trim().split(/\s+/);
-    return words.map(word => {
-      if (word.length === 0) return '';
-      if (word.length === 1) return word;
-      return word[0] + '*'.repeat(Math.max(word.length - 1, 3));
-    }).join(' ');
+    return words
+      .map((word) => {
+        if (word.length === 0) return "";
+        if (word.length === 1) return word;
+        return word[0] + "*".repeat(Math.max(word.length - 1, 3));
+      })
+      .join(" ");
   };
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
-    
+    const newErrors: { [key: string]: string } = {};
+
     if (rating === 0) {
-      newErrors.rating = 'Please provide a star rating';
+      newErrors.rating = "Please provide a star rating";
     }
-    
+
     if (!testimonial.trim()) {
-      newErrors.testimonial = 'Please write a brief review';
+      newErrors.testimonial = "Please write a brief review";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
     if (!brandId || !validateForm()) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // Submit feedback to the backend
       await brands.updateFeedback(brandId, {
         rating,
         testimonial,
         suggestion: feedback,
-        author: showName ? user?.name : undefined
+        author: showName ? user?.name : undefined,
       });
-      
+
       // Progress to payment status
       const statusUpdate = await progressBrandStatus(brandId);
       if (statusUpdate) {
         navigateAfterProgress(navigate, brandId, statusUpdate);
       }
-      
     } catch (error) {
-      console.error('Testimonial submission failed:', error);
-      setErrors({ submit: 'Failed to submit your testimonial. Please try again.' });
+      console.error("Testimonial submission failed:", error);
+      setErrors({
+        submit: "Failed to submit your testimonial. Please try again.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -87,12 +99,14 @@ const TestimonialContainer: React.FC = () => {
 
   const handleStarClick = (starValue: number) => {
     setRating(starValue);
-    setErrors({ ...errors, rating: '' });
+    setErrors({ ...errors, rating: "" });
   };
 
-  const handleTestimonialChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleTestimonialChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
     setTestimonial(e.target.value);
-    setErrors({ ...errors, testimonial: '' });
+    setErrors({ ...errors, testimonial: "" });
   };
 
   if (isLoading || !currentBrand) {
@@ -117,7 +131,7 @@ const TestimonialContainer: React.FC = () => {
                 Share Your Experience
               </h1>
               <p className="text-lg text-neutral-600 mb-6">
-                Your brand <strong>{currentBrand.name}</strong> is almost ready! 
+                Your brand <strong>{currentBrand.name}</strong> is almost ready!
                 We'd love to hear about your experience with Brandician AI.
               </p>
             </div>
@@ -128,7 +142,7 @@ const TestimonialContainer: React.FC = () => {
                 <h2 className="text-xl font-semibold text-neutral-800 mb-4">
                   How was your experience?
                 </h2>
-                
+
                 {/* Star Rating */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -147,14 +161,14 @@ const TestimonialContainer: React.FC = () => {
                         <Star
                           className={`h-8 w-8 transition-colors ${
                             star <= (hoveredRating || rating)
-                              ? 'text-yellow-400 fill-current'
-                              : 'text-gray-300'
+                              ? "text-yellow-400 fill-current"
+                              : "text-gray-300"
                           }`}
                         />
                       </button>
                     ))}
                     <span className="ml-2 text-sm text-gray-600">
-                      {rating > 0 && `${rating} star${rating !== 1 ? 's' : ''}`}
+                      {rating > 0 && `${rating} star${rating !== 1 ? "s" : ""}`}
                     </span>
                   </div>
                   {errors.rating && (
@@ -164,7 +178,10 @@ const TestimonialContainer: React.FC = () => {
 
                 {/* Testimonial */}
                 <div className="mb-4">
-                  <label htmlFor="testimonial" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="testimonial"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Write a brief review (publicly shareable)
                   </label>
                   <textarea
@@ -173,12 +190,14 @@ const TestimonialContainer: React.FC = () => {
                     value={testimonial}
                     onChange={handleTestimonialChange}
                     className={`w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                      errors.testimonial ? 'border-red-300' : 'border-gray-300'
+                      errors.testimonial ? "border-red-300" : "border-gray-300"
                     }`}
                     placeholder="Tell other entrepreneurs about your experience with Brandician AI..."
                   />
                   {errors.testimonial && (
-                    <p className="mt-1 text-sm text-red-600">{errors.testimonial}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.testimonial}
+                    </p>
                   )}
                 </div>
 
@@ -192,8 +211,13 @@ const TestimonialContainer: React.FC = () => {
                       className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
                     <span className="text-sm text-gray-700 flex items-center">
-                      {showName ? <Eye className="h-4 w-4 mr-1" /> : <EyeOff className="h-4 w-4 mr-1" />}
-                      Show my name as {maskUserName(user?.name || '')} in testimonials
+                      {showName ? (
+                        <Eye className="h-4 w-4 mr-1" />
+                      ) : (
+                        <EyeOff className="h-4 w-4 mr-1" />
+                      )}
+                      Show my name as {maskUserName(user?.name || "")} in
+                      testimonials
                     </span>
                   </label>
                 </div>
@@ -206,7 +230,10 @@ const TestimonialContainer: React.FC = () => {
                   Help Us Improve
                 </h2>
                 <div className="mb-6">
-                  <label htmlFor="feedback" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="feedback"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Comments or suggestions for the Brandician team (optional)
                   </label>
                   <textarea
@@ -246,7 +273,7 @@ const TestimonialContainer: React.FC = () => {
                     </>
                   )}
                 </button>
-                
+
                 <p className="text-xs text-gray-500 text-center mt-2">
                   Your feedback helps us improve Brandician AI for everyone
                 </p>

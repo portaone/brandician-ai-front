@@ -1,5 +1,3 @@
-import { BrandStatus } from '../lib/navigation';
-
 export interface User {
   id: string;
   email: string;
@@ -38,12 +36,19 @@ export interface Question {
   id: string;
   text: string;
   hint: string;
+  type: string;
+  question: string;
+  description: string;
+  required: boolean;
+  options?: string[];
 }
 
 export interface Answer {
-  id: string;
-  question: string;
-  answer: string;
+  id?: string;
+  question?: string;
+  answer?: string;
+  value?: string | string[];
+  questionId?: string;
 }
 
 export interface BrandAssetSummary {
@@ -64,9 +69,15 @@ export interface BrandAsset {
   created_at?: string | null;
 }
 
-export type BrandAssetDisplayType = 'text' | 'markdown' | 'html' | 'image';
+export type BrandAssetDisplayType = "text" | "markdown" | "html" | "image";
 
-export type BrandAssetType = 'logo' | 'tagline' | 'visual_style' | 'text_writer_prompt' | 'brand_book' | 'ext_system_asset';
+export type BrandAssetType =
+  | "logo"
+  | "tagline"
+  | "visual_style"
+  | "text_writer_prompt"
+  | "brand_book"
+  | "ext_system_asset";
 
 export interface JTBD {
   id: string;
@@ -81,24 +92,28 @@ export interface JTBDList {
   drivers?: string;
 }
 
-export type JTBDImportance = 
-  | 'not_applicable'
-  | 'not_important'
-  | 'rarely_important'
-  | 'somewhat_important'
-  | 'important'
-  | 'very_important';
+export type JTBDImportance =
+  | "not_applicable"
+  | "not_important"
+  | "rarely_important"
+  | "somewhat_important"
+  | "important"
+  | "very_important";
 
 export const JTBD_IMPORTANCE_LABELS: Record<JTBDImportance, string> = {
-  not_applicable: 'Not applicable for my business',
-  not_important: 'Not important',
-  rarely_important: 'Rarely important',
-  somewhat_important: 'Somewhat important',
-  important: 'Important',
-  very_important: 'Very important',
+  not_applicable: "Not applicable for my business",
+  not_important: "Not important",
+  rarely_important: "Rarely important",
+  somewhat_important: "Somewhat important",
+  important: "Important",
+  very_important: "Very important",
 };
 
-export type SurveyQuestionType = 'text' | 'single_choice' | 'multiple_choice' | 'rating';
+export type SurveyQuestionType =
+  | "text"
+  | "single_choice"
+  | "multiple_choice"
+  | "rating";
 
 export interface SurveyQuestion {
   id?: string;

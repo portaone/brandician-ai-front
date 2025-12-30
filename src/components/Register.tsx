@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { Brain, ArrowLeft, ArrowRight, CheckCircle, Mail, User } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
+import { ArrowLeft, ArrowRight, Brain, CheckCircle, Mail } from "lucide-react";
+import React, { useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 export interface RegisterFormData {
   email: string;
@@ -17,30 +17,30 @@ interface RegisterProps {
 
 const Register: React.FC<RegisterProps> = ({ onRegister }) => {
   const [searchParams] = useSearchParams();
-  const selectedPlan = searchParams.get('plan') || '';
+  const selectedPlan = searchParams.get("plan") || "";
 
   const [formData, setFormData] = useState<RegisterFormData>({
-    email: '',
-    password: '',
-    name: '',
-    companyName: '',
-    plan: selectedPlan
+    email: "",
+    password: "",
+    name: "",
+    companyName: "",
+    plan: selectedPlan,
   });
-  
+
   const [step, setStep] = useState(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [authMethod, setAuthMethod] = useState<'email' | 'google'>('email');
+  const [authMethod, setAuthMethod] = useState<"email" | "google">("email");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    
+    setFormData((prev) => ({ ...prev, [name]: value }));
+
     // Clear error when user types
     if (errors[name]) {
-      setErrors(prev => {
+      setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[name];
         return newErrors;
@@ -50,26 +50,26 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
 
   const validateStep1 = () => {
     const newErrors: Record<string, string> = {};
-    
-    if (authMethod === 'email') {
+
+    if (authMethod === "email") {
       if (!formData.email.trim()) {
-        newErrors.email = 'Email is required';
+        newErrors.email = "Email is required";
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = 'Please enter a valid email address';
+        newErrors.email = "Please enter a valid email address";
       }
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   const validateStep2 = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = "Name is required";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -94,38 +94,42 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
     try {
       // In a real app, we would send the data to the server here
       // For now, we'll just simulate a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       onRegister(formData);
       // Navigate to success page
-      navigate('/registration-success');
+      navigate("/registration-success");
     } catch (error) {
-      console.error('Registration error:', error);
-      setErrors({ submit: 'An error occurred during registration. Please try again.' });
+      console.error("Registration error:", error);
+      setErrors({
+        submit: "An error occurred during registration. Please try again.",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    setAuthMethod('google');
+    setAuthMethod("google");
     setIsSubmitting(true);
-    
+
     try {
       // In a real app, we would trigger Google OAuth here
       // For now, we'll just simulate a delay and move to step 2
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // Normally we'd get this from Google's response
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        email: 'google-user@example.com'
+        email: "google-user@example.com",
       }));
-      
+
       setStep(2);
     } catch (error) {
-      console.error('Google sign-in error:', error);
-      setErrors({ submit: 'An error occurred with Google sign-in. Please try again.' });
+      console.error("Google sign-in error:", error);
+      setErrors({
+        submit: "An error occurred with Google sign-in. Please try again.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -136,49 +140,88 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
       <div className="container mx-auto px-4">
         <div className="max-w-md mx-auto">
           <div className="mb-8 flex items-center justify-between">
-            <Link to="/" className="flex items-center text-primary-600 hover:text-primary-700 transition-colors">
+            <Link
+              to="/"
+              className="flex items-center text-primary-600 hover:text-primary-700 transition-colors"
+            >
               <ArrowLeft className="h-5 w-5 mr-1" />
               <span>Back to Home</span>
             </Link>
             <div className="flex items-center">
               <Brain className="text-primary-600 h-6 w-6 mr-2" />
-              <span className="text-xl font-display font-bold text-neutral-800">Brandician.AI</span>
+              <span className="text-xl font-display font-bold text-neutral-800">
+                Brandician.AI
+              </span>
             </div>
           </div>
 
-          <motion.div 
+          <motion.div
             className="bg-white rounded-lg shadow-lg p-8"
             initial="hidden"
             animate="visible"
             variants={{
               hidden: { opacity: 0, y: 20 },
-              visible: { opacity: 1, y: 0 }
+              visible: { opacity: 1, y: 0 },
             }}
             transition={{ duration: 0.6 }}
           >
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
-                <div className={`flex items-center ${step === 1 ? 'text-primary-600' : 'text-neutral-400'}`}>
-                  <div className={`h-8 w-8 rounded-full flex items-center justify-center border-2 ${step === 1 ? 'border-primary-600 bg-primary-50' : 'border-neutral-300'}`}>1</div>
+                <div
+                  className={`flex items-center ${
+                    step === 1 ? "text-primary-600" : "text-neutral-400"
+                  }`}
+                >
+                  <div
+                    className={`h-8 w-8 rounded-full flex items-center justify-center border-2 ${
+                      step === 1
+                        ? "border-primary-600 bg-primary-50"
+                        : "border-neutral-300"
+                    }`}
+                  >
+                    1
+                  </div>
                   <span className="ml-2 font-medium">Account</span>
                 </div>
-                <div className={`h-0.5 flex-grow mx-2 ${step >= 2 ? 'bg-primary-400' : 'bg-neutral-200'}`}></div>
-                <div className={`flex items-center ${step === 2 ? 'text-primary-600' : 'text-neutral-400'}`}>
-                  <div className={`h-8 w-8 rounded-full flex items-center justify-center border-2 ${step === 2 ? 'border-primary-600 bg-primary-50' : 'border-neutral-300'}`}>2</div>
+                <div
+                  className={`h-0.5 flex-grow mx-2 ${
+                    step >= 2 ? "bg-primary-400" : "bg-neutral-200"
+                  }`}
+                ></div>
+                <div
+                  className={`flex items-center ${
+                    step === 2 ? "text-primary-600" : "text-neutral-400"
+                  }`}
+                >
+                  <div
+                    className={`h-8 w-8 rounded-full flex items-center justify-center border-2 ${
+                      step === 2
+                        ? "border-primary-600 bg-primary-50"
+                        : "border-neutral-300"
+                    }`}
+                  >
+                    2
+                  </div>
                   <span className="ml-2 font-medium">Profile</span>
                 </div>
               </div>
               <h2 className="text-2xl font-display font-bold text-neutral-800">
-                {step === 1 ? 'Create your account' : 'Complete your profile'}
+                {step === 1 ? "Create your account" : "Complete your profile"}
               </h2>
               <p className="text-neutral-600">
-                {step === 1 
-                  ? 'Start your branding journey with a free account' 
-                  : 'Tell us more about yourself and your business'}
+                {step === 1
+                  ? "Start your branding journey with a free account"
+                  : "Tell us more about yourself and your business"}
               </p>
             </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); handleNext(); }} className="space-y-5">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleNext();
+              }}
+              className="space-y-5"
+            >
               {step === 1 && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -187,15 +230,17 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                   transition={{ duration: 0.3 }}
                 >
                   <div className="mb-6">
-                    <p className="text-neutral-700 mb-4">Choose how you'd like to sign up:</p>
+                    <p className="text-neutral-700 mb-4">
+                      Choose how you'd like to sign up:
+                    </p>
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         type="button"
-                        onClick={() => setAuthMethod('email')}
+                        onClick={() => setAuthMethod("email")}
                         className={`flex items-center justify-center px-4 py-3 border ${
-                          authMethod === 'email' 
-                            ? 'border-primary-400 bg-primary-50 text-primary-700' 
-                            : 'border-neutral-300 hover:bg-neutral-50 text-neutral-700'
+                          authMethod === "email"
+                            ? "border-primary-400 bg-primary-50 text-primary-700"
+                            : "border-neutral-300 hover:bg-neutral-50 text-neutral-700"
                         } rounded-md focus:outline-none transition-colors`}
                       >
                         <Mail className="h-5 w-5 mr-2" />
@@ -205,9 +250,9 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                         type="button"
                         onClick={handleGoogleSignIn}
                         className={`flex items-center justify-center px-4 py-3 border ${
-                          authMethod === 'google' 
-                            ? 'border-primary-400 bg-primary-50 text-primary-700' 
-                            : 'border-neutral-300 hover:bg-neutral-50 text-neutral-700'
+                          authMethod === "google"
+                            ? "border-primary-400 bg-primary-50 text-primary-700"
+                            : "border-neutral-300 hover:bg-neutral-50 text-neutral-700"
                         } rounded-md focus:outline-none transition-colors`}
                         disabled={isSubmitting}
                       >
@@ -235,9 +280,12 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                     </div>
                   </div>
 
-                  {authMethod === 'email' && (
+                  {authMethod === "email" && (
                     <div className="mb-4">
-                      <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-1">
+                      <label
+                        htmlFor="email"
+                        className="block text-sm font-medium text-neutral-700 mb-1"
+                      >
                         Email address
                       </label>
                       <input
@@ -246,10 +294,16 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        className={`w-full p-3 border ${errors.email ? 'border-red-500' : 'border-neutral-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500`}
+                        className={`w-full p-3 border ${
+                          errors.email ? "border-red-500" : "border-neutral-300"
+                        } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500`}
                         placeholder="you@example.com"
                       />
-                      {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+                      {errors.email && (
+                        <p className="mt-1 text-sm text-red-500">
+                          {errors.email}
+                        </p>
+                      )}
                       <p className="mt-2 text-sm text-neutral-500">
                         We'll send a one-time password to this email address.
                       </p>
@@ -266,7 +320,10 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                   transition={{ duration: 0.3 }}
                 >
                   <div className="mb-4">
-                    <label htmlFor="name" className="block text-sm font-medium text-neutral-700 mb-1">
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-neutral-700 mb-1"
+                    >
                       Your Name
                     </label>
                     <input
@@ -275,14 +332,21 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className={`w-full p-3 border ${errors.name ? 'border-red-500' : 'border-neutral-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500`}
+                      className={`w-full p-3 border ${
+                        errors.name ? "border-red-500" : "border-neutral-300"
+                      } rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500`}
                       placeholder="First and last name"
                     />
-                    {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
+                    {errors.name && (
+                      <p className="mt-1 text-sm text-red-500">{errors.name}</p>
+                    )}
                   </div>
-                  
+
                   <div className="mb-4">
-                    <label htmlFor="companyName" className="block text-sm font-medium text-neutral-700 mb-1">
+                    <label
+                      htmlFor="companyName"
+                      className="block text-sm font-medium text-neutral-700 mb-1"
+                    >
                       Company/Project Name (Optional)
                     </label>
                     <input
@@ -295,16 +359,20 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                       placeholder="Your business or project name"
                     />
                   </div>
-                  
+
                   {selectedPlan && (
                     <div className="bg-primary-50 p-4 rounded-md mb-4">
                       <div className="flex items-center">
                         <CheckCircle className="text-primary-600 h-5 w-5 mr-2" />
                         <div>
                           <p className="font-medium text-neutral-800">
-                            {selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)} Plan Selected
+                            {selectedPlan.charAt(0).toUpperCase() +
+                              selectedPlan.slice(1)}{" "}
+                            Plan Selected
                           </p>
-                          <p className="text-sm text-neutral-600">You can change this later</p>
+                          <p className="text-sm text-neutral-600">
+                            You can change this later
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -341,7 +409,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                   {isSubmitting ? (
                     <span className="inline-block animate-spin mr-2">⟳</span>
                   ) : null}
-                  {step === 2 ? 'Create Account' : 'Next'}
+                  {step === 2 ? "Create Account" : "Next"}
                   {step === 1 && <ArrowRight className="h-5 w-5 ml-1" />}
                 </button>
               </div>
@@ -349,8 +417,11 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
           </motion.div>
 
           <div className="mt-6 text-center text-neutral-500 text-sm">
-            Already have an account?{' '}
-            <Link to="/login" className="text-primary-600 hover:text-primary-700">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="text-primary-600 hover:text-primary-700"
+            >
               Sign In
             </Link>
           </div>

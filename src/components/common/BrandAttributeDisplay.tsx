@@ -1,5 +1,5 @@
-import React from 'react';
-import ReactMarkdown from 'react-markdown';
+import React from "react";
+import ReactMarkdown from "react-markdown";
 
 interface BrandAttributeDisplayProps {
   title: string;
@@ -12,7 +12,7 @@ export const BrandAttributeDisplay: React.FC<BrandAttributeDisplayProps> = ({
   title,
   content,
   isLoading = false,
-  className = ''
+  className = "",
 }) => {
   if (isLoading) {
     return (
@@ -46,7 +46,7 @@ interface JTBDDisplayProps {
 export const JTBDDisplay: React.FC<JTBDDisplayProps> = ({
   jtbd,
   isLoading = false,
-  className = ''
+  className = "",
 }) => {
   if (isLoading) {
     return (
@@ -68,18 +68,22 @@ export const JTBDDisplay: React.FC<JTBDDisplayProps> = ({
         <div>
           <h4 className="font-semibold text-gray-800 mb-2">Personas:</h4>
           <div className="space-y-2">
-            {Object.entries(jtbd.personas).map(([key, persona]: [string, any]) => (
-              <div key={key} className="bg-gray-50 p-3 rounded">
-                <div className="font-medium text-gray-700 mb-1">{persona.name}</div>
-                <div className="prose prose-sm max-w-none text-gray-600">
-                  <ReactMarkdown>{persona.description}</ReactMarkdown>
+            {Object.entries(jtbd.personas).map(
+              ([key, persona]: [string, any]) => (
+                <div key={key} className="bg-gray-50 p-3 rounded">
+                  <div className="font-medium text-gray-700 mb-1">
+                    {persona.name}
+                  </div>
+                  <div className="prose prose-sm max-w-none text-gray-600">
+                    <ReactMarkdown>{persona.description}</ReactMarkdown>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            )}
           </div>
         </div>
       )}
-      
+
       {/* Drivers */}
       {jtbd.drivers && (
         <div>
@@ -87,8 +91,8 @@ export const JTBDDisplay: React.FC<JTBDDisplayProps> = ({
           <div className="bg-gray-50 p-3 rounded">
             <div className="prose prose-sm max-w-none text-gray-700">
               <ReactMarkdown>
-                {typeof jtbd.drivers === 'string'
-                  ? jtbd.drivers.replace(/##\s+/g, '\n\n## ').trim()
+                {typeof jtbd.drivers === "string"
+                  ? jtbd.drivers.replace(/##\s+/g, "\n\n## ").trim()
                   : jtbd.drivers}
               </ReactMarkdown>
             </div>
@@ -108,7 +112,7 @@ interface SurveyQuestionsDisplayProps {
 export const SurveyQuestionsDisplay: React.FC<SurveyQuestionsDisplayProps> = ({
   questions,
   isLoading = false,
-  className = ''
+  className = "",
 }) => {
   if (isLoading) {
     return (
@@ -139,11 +143,16 @@ export const SurveyQuestionsDisplay: React.FC<SurveyQuestionsDisplayProps> = ({
               </div>
               {question.options && question.options.length > 0 && (
                 <div className="mt-2 space-y-1">
-                  {question.options.map((option: string, optionIndex: number) => (
-                    <div key={optionIndex} className="text-xs text-gray-600 pl-4">
-                      • {option}
-                    </div>
-                  ))}
+                  {question.options.map(
+                    (option: string, optionIndex: number) => (
+                      <div
+                        key={optionIndex}
+                        className="text-xs text-gray-600 pl-4"
+                      >
+                        • {option}
+                      </div>
+                    )
+                  )}
                 </div>
               )}
             </div>

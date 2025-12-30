@@ -1,15 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import { BrandStatus } from "./navigation";
-import {
-  JTBDList,
-  Survey,
-  SurveyQuestion,
-  SubmissionLink,
-  SurveyStatus,
-  Feedback,
-  AdjustObject,
-} from "../types";
-import { BRAND_STATUS_CREATE_SURVEY } from "./navigation";
+import { JTBDList, Survey, SubmissionLink, AdjustObject } from "../types";
 import { config } from "../config";
 
 // Extend axios config to include our metadata

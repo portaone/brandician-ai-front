@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import SummaryAdjustmentContainer from './SummaryAdjustmentContainer';
-import JTBDAdjustmentContainer from './JTBDAdjustmentContainer';
-import ArchetypeAdjustmentContainer from './ArchetypeAdjustmentContainer';
-import { brands } from '../../lib/api';
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { brands } from "../../lib/api";
+import ArchetypeAdjustmentContainer from "./ArchetypeAdjustmentContainer";
+import JTBDAdjustmentContainer from "./JTBDAdjustmentContainer";
+import SummaryAdjustmentContainer from "./SummaryAdjustmentContainer";
 import {
   BrandStatus,
   BRAND_STATUS_FEEDBACK_REVIEW_SUMMARY,
   BRAND_STATUS_FEEDBACK_REVIEW_JTBD,
   BRAND_STATUS_FEEDBACK_REVIEW_ARCHETYPE,
-  BRAND_STATUS_PICK_NAME
-} from '../../lib/navigation';
+  BRAND_STATUS_PICK_NAME,
+} from "../../lib/navigation";
 
 // Define the review steps
 export type ReviewStep = {
@@ -26,21 +26,21 @@ export type ReviewStep = {
 // Define the sequence of review steps
 const REVIEW_STEPS: ReviewStep[] = [
   {
-    id: 'summary',
+    id: "summary",
     component: SummaryAdjustmentContainer,
-    title: 'Review Brand Summary',
+    title: "Review Brand Summary",
     status: BRAND_STATUS_FEEDBACK_REVIEW_SUMMARY,
   },
   {
-    id: 'jtbd',
+    id: "jtbd",
     component: JTBDAdjustmentContainer,
-    title: 'Review Jobs-to-be-Done',
+    title: "Review Jobs-to-be-Done",
     status: BRAND_STATUS_FEEDBACK_REVIEW_JTBD,
   },
   {
-    id: 'archetype',
+    id: "archetype",
     component: ArchetypeAdjustmentContainer,
-    title: 'Review Brand Archetype',
+    title: "Review Brand Archetype",
     status: BRAND_STATUS_FEEDBACK_REVIEW_ARCHETYPE,
   },
   // Add more steps here as needed
@@ -62,9 +62,12 @@ const FeedbackReviewFlowContainer: React.FC = () => {
       try {
         const brand = await brands.get(brandId);
         setCurrentBrand(brand);
-        console.log('[DEBUG] useEffect: brand.current_status =', brand.current_status);
+        console.log(
+          "[DEBUG] useEffect: brand.current_status =",
+          brand.current_status
+        );
       } catch (e) {
-        setError('Failed to load brand info.');
+        setError("Failed to load brand info.");
       } finally {
         setIsLoading(false);
       }
@@ -85,55 +88,90 @@ const FeedbackReviewFlowContainer: React.FC = () => {
     if (!currentBrand || !brandId || isLoading || shouldRedirect) return;
 
     const getStepFromPath = () => {
-      if (location.pathname.endsWith('/summary')) return 'summary';
-      if (location.pathname.endsWith('/jtbd')) return 'jtbd';
-      if (location.pathname.endsWith('/archetype')) return 'archetype';
-      if (location.pathname.endsWith('/feedback-review')) return null; // Old generic path
+      if (location.pathname.endsWith("/summary")) return "summary";
+      if (location.pathname.endsWith("/jtbd")) return "jtbd";
+      if (location.pathname.endsWith("/archetype")) return "archetype";
+      if (location.pathname.endsWith("/feedback-review")) return null; // Old generic path
       return null;
     };
 
     const currentStepId = getStepFromPath();
-    const expectedStep = REVIEW_STEPS.find(step => step.status === currentBrand.current_status);
+    const expectedStep = REVIEW_STEPS.find(
+      (step) => step.status === currentBrand.current_status
+    );
 
-    console.log('[DEBUG] Status check - Current path step:', currentStepId, 'Expected step:', expectedStep?.id, 'Brand status:', currentBrand.current_status);
+    console.log(
+      "[DEBUG] Status check - Current path step:",
+      currentStepId,
+      "Expected step:",
+      expectedStep?.id,
+      "Brand status:",
+      currentBrand.current_status
+    );
 
     if (expectedStep && currentStepId !== expectedStep.id) {
       const correctPath = `/brands/${brandId}/feedback-review/${expectedStep.id}`;
-      console.log('[DEBUG] Setting redirect to correct step:', correctPath);
+      console.log("[DEBUG] Setting redirect to correct step:", correctPath);
       setShouldRedirect(correctPath);
     } else if (!expectedStep) {
-      console.log('[DEBUG] Not in review flow, redirecting to brand home');
+      console.log("[DEBUG] Not in review flow, redirecting to brand home");
       setShouldRedirect(`/brands/${brandId}`);
     }
-  }, [currentBrand?.current_status, location.pathname, brandId, isLoading, shouldRedirect]);
+  }, [
+    currentBrand?.current_status,
+    location.pathname,
+    brandId,
+    isLoading,
+    shouldRedirect,
+  ]);
 
   const handleStepComplete = async () => {
     if (!brandId || !currentBrand) {
-      console.log('[DEBUG] handleStepComplete: Missing brandId or currentBrand');
+      console.log(
+        "[DEBUG] handleStepComplete: Missing brandId or currentBrand"
+      );
       return;
     }
 
-    console.log('[DEBUG] FeedbackReviewFlow: handleStepComplete called, current status =', currentBrand.current_status);
+    console.log(
+      "[DEBUG] FeedbackReviewFlow: handleStepComplete called, current status =",
+      currentBrand.current_status
+    );
 
     try {
       // Always progress to the next status via backend
-      console.log('[DEBUG] FeedbackReviewFlow: Calling progressStatus...');
+      console.log("[DEBUG] FeedbackReviewFlow: Calling progressStatus...");
       const progressResp = await brands.progressStatus(brandId);
-      console.log('[DEBUG] FeedbackReviewFlow: progress response', progressResp);
+      console.log(
+        "[DEBUG] FeedbackReviewFlow: progress response",
+        progressResp
+      );
 
       // Re-fetch brand to get the latest status from backend
-      console.log('[DEBUG] FeedbackReviewFlow: Fetching updated brand...');
+      console.log("[DEBUG] FeedbackReviewFlow: Fetching updated brand...");
       const updatedBrand = await brands.get(brandId);
-      console.log('[DEBUG] FeedbackReviewFlow: brand after progress', updatedBrand);
+      console.log(
+        "[DEBUG] FeedbackReviewFlow: brand after progress",
+        updatedBrand
+      );
       setCurrentBrand(updatedBrand);
 
       // Check if we're still in the feedback review flow
-      const isStillInReviewFlow = REVIEW_STEPS.some(step => step.status === updatedBrand.current_status);
-      console.log('[DEBUG] FeedbackReviewFlow: Still in review flow?', isStillInReviewFlow, 'New status:', updatedBrand.current_status);
+      const isStillInReviewFlow = REVIEW_STEPS.some(
+        (step) => step.status === updatedBrand.current_status
+      );
+      console.log(
+        "[DEBUG] FeedbackReviewFlow: Still in review flow?",
+        isStillInReviewFlow,
+        "New status:",
+        updatedBrand.current_status
+      );
 
       if (!isStillInReviewFlow) {
         // We've completed all review steps, navigate to the next phase
-        console.log('[DEBUG] FeedbackReviewFlow: Exiting review flow, navigating to next phase');
+        console.log(
+          "[DEBUG] FeedbackReviewFlow: Exiting review flow, navigating to next phase"
+        );
         if (updatedBrand.current_status === BRAND_STATUS_PICK_NAME) {
           navigate(`/brands/${brandId}/pick-name`);
         } else {
@@ -143,8 +181,8 @@ const FeedbackReviewFlowContainer: React.FC = () => {
       }
       // If still in review flow, the component will re-render with the new status
     } catch (e) {
-      setError('Failed to progress brand status.');
-      console.error('[DEBUG] FeedbackReviewFlow: error progressing status', e);
+      setError("Failed to progress brand status.");
+      console.error("[DEBUG] FeedbackReviewFlow: error progressing status", e);
     }
   };
 
@@ -153,32 +191,48 @@ const FeedbackReviewFlowContainer: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   if (!currentBrand) {
-    return <div className="min-h-screen flex items-center justify-center">Brand not found</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Brand not found
+      </div>
+    );
   }
 
   // Don't render if we have a pending redirect
   if (shouldRedirect) {
-    return <div className="min-h-screen flex items-center justify-center">Redirecting...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Redirecting...
+      </div>
+    );
   }
 
   // Determine which step component to show based on URL path
   const getStepFromPath = () => {
-    if (location.pathname.endsWith('/summary')) return 'summary';
-    if (location.pathname.endsWith('/jtbd')) return 'jtbd';
-    if (location.pathname.endsWith('/archetype')) return 'archetype';
+    if (location.pathname.endsWith("/summary")) return "summary";
+    if (location.pathname.endsWith("/jtbd")) return "jtbd";
+    if (location.pathname.endsWith("/archetype")) return "archetype";
     return null;
   };
 
   const currentStepId = getStepFromPath();
-  const currentStep = REVIEW_STEPS.find(step => step.id === currentStepId);
+  const currentStep = REVIEW_STEPS.find((step) => step.id === currentStepId);
 
   // If no valid step found, show loading while redirect happens
   if (!currentStep) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   const StepComponent = currentStep.component;

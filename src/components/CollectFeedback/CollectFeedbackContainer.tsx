@@ -1,10 +1,11 @@
+import { ChevronDown, ChevronUp, Copy, Loader, RefreshCw } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Copy, Loader, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
-import { useBrandStore } from "../../store/brand";
-import { SurveyStatus, Brand, SurveyQuestion } from "../../types";
 import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
+import { scrollToTop } from "../../lib/utils";
+import { useBrandStore } from "../../store/brand";
+import { SurveyQuestion, SurveyStatus } from "../../types";
 import {
   BrandAttributeDisplay,
   JTBDDisplay,
@@ -13,7 +14,6 @@ import {
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
-import { scrollToTop } from "../../lib/utils";
 
 const CollectFeedbackContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
