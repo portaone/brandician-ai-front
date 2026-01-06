@@ -115,7 +115,7 @@ const PaletteSample: React.FC<PaletteSampleProps> = ({ content, brandId }) => {
               fontWeight: 400,
             }}
           >
-            {currentBrand?.name || "Brand"}
+            {currentBrand?.brand_name || "Brand"}
           </div>
 
           {/* Title */}

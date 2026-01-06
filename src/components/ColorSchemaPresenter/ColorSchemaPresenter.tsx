@@ -271,7 +271,7 @@ const ColorSchemaPresenter: React.FC = () => {
               color: "#231F20",
             }}
           >
-            {currentBrand?.name || "Brand Name"}
+            {currentBrand?.brand_name || "Brand Name"}
           </div>
 
           {/* Navigation */}
@@ -519,7 +519,7 @@ const ColorSchemaPresenter: React.FC = () => {
             color: "#231F20",
           }}
         >
-          {(currentBrand?.name || "BRAND NAME").toUpperCase()} — BRAND SCHEME
+          {(currentBrand?.brand_name || "BRAND NAME").toUpperCase()} — BRAND SCHEME
         </div>
       </div>
     </div>

@@ -231,7 +231,7 @@ const HistoryContainer: React.FC = () => {
       dataLoader: async () => {
         if (!brandId) return null;
         // TODO: Load name selection data and domain registration info
-        return { type: "name_selection", brandName: currentBrand?.name };
+        return { type: "name_selection", brandName: currentBrand?.brand_name };
       },
     },
     {
