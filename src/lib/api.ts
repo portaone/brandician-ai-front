@@ -841,4 +841,12 @@ export const brands = {
   },
 };
 
+export const backendConfig = {
+  getConfig: async (): Promise<{ dev_mode: boolean; stripe: boolean }> => {
+    // Note: /config endpoint is on health router which has no API prefix
+    const response = await api.get("/config");
+    return response.data;
+  },
+};
+
 export default api;

@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronUp, Loader, Share2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { brands } from "../../lib/api";
+import { brands, backendConfig } from "../../lib/api";
 import { getRouteForStatus } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
 import { BrandAsset, BrandAssetSummary } from "../../types";
@@ -54,12 +54,28 @@ const HistoryContainer: React.FC = () => {
   // State for share modal
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
+  // Dev mode state
+  const [devMode, setDevMode] = useState(false);
+
   useEffect(() => {
     // Always reload brand data when entering history page to ensure we have the latest status
     if (brandId) {
       selectBrand(brandId);
     }
   }, [brandId, selectBrand]);
+
+  // Fetch dev mode config
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const configData = await backendConfig.getConfig();
+        setDevMode(configData.dev_mode);
+      } catch (error) {
+        console.error("Failed to fetch config:", error);
+      }
+    };
+    fetchConfig();
+  }, []);
 
   // Map brand status to current step number (the step being worked on)
   const getCurrentStepNumber = (status: string): number => {
@@ -75,9 +91,9 @@ const HistoryContainer: React.FC = () => {
       feedback_review_archetype: 8,
       pick_name: 9,
       create_assets: 10,
-      testimonial: 11, // Step 10 completed, no more visible steps
-      payment: 11, // Step 10 completed, no more visible steps
-      completed: 11, // Step 10 completed, no more visible steps
+      testimonial: 11,
+      payment: devMode ? 12 : 11, // Show as step 12 in dev mode
+      completed: devMode ? 13 : 11, // After payment in dev mode
     };
     return statusMap[status] || 0;
   };
@@ -95,6 +111,8 @@ const HistoryContainer: React.FC = () => {
       8: "feedback_review_archetype",
       9: "pick_name",
       10: "create_assets",
+      11: "testimonial",
+      12: "payment",
     };
     return stepStatusMap[stepNumber] || "questionnaire";
   };
@@ -112,6 +130,8 @@ const HistoryContainer: React.FC = () => {
       8: "/feedback-review/archetype",
       9: "/pick-name",
       10: "/create-assets",
+      11: "/testimonial",
+      12: "/payment",
     };
     return routeMap[stepNumber] || "/questionnaire";
   };
@@ -245,7 +265,36 @@ const HistoryContainer: React.FC = () => {
         return { type: "assets", data: response };
       },
     },
+    {
+      number: 11,
+      name: "Testimonial",
+      description: "User feedback and testimonial",
+      status: "completed",
+      dataLoader: async () => {
+        if (!brandId) return null;
+        return { type: "testimonial", data: currentBrand?.feedback };
+      },
+    },
+    // Payment step - only shown in dev mode (filtered below)
+    {
+      number: 12,
+      name: "Payment",
+      description: "Payment processing (Dev Mode)",
+      status: "completed",
+      dataLoader: async () => {
+        if (!brandId) return null;
+        return {
+          type: "payment",
+          data: {
+            payment_complete: currentBrand?.payment_complete,
+          },
+        };
+      },
+    },
   ];
+
+  // Filter steps based on dev mode - hide payment step in production
+  const visibleSteps = devMode ? steps : steps.filter((s) => s.number !== 12);
 
   const toggleStep = async (stepNumber: number) => {
     const isCurrentlyExpanded = expandedSteps[stepNumber];
@@ -260,7 +309,7 @@ const HistoryContainer: React.FC = () => {
     if (!isCurrentlyExpanded && !stepData[stepNumber]) {
       setLoadingSteps((prev) => ({ ...prev, [stepNumber]: true }));
       try {
-        const step = steps.find((s) => s.number === stepNumber);
+        const step = visibleSteps.find((s) => s.number === stepNumber);
         if (step) {
           const data = await step.dataLoader();
           setStepData((prev) => ({ ...prev, [stepNumber]: data }));
@@ -907,6 +956,31 @@ const HistoryContainer: React.FC = () => {
           </div>
         );
 
+      case "payment":
+        return (
+          <div className="p-4 space-y-3">
+            <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-4">
+              <p className="text-amber-800 text-sm font-medium">
+                Dev Mode Only - This step is hidden in production
+              </p>
+            </div>
+            <h4 className="font-semibold text-gray-900 mb-2">Payment Status:</h4>
+            <div className="bg-gray-50 p-4 rounded">
+              {data.data?.payment_complete !== null &&
+              data.data?.payment_complete !== undefined ? (
+                <div>
+                  <p className="text-sm text-gray-600">Amount Paid:</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    ${data.data.payment_complete}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-500">No payment recorded</p>
+              )}
+            </div>
+          </div>
+        );
+
       default:
         return (
           <div className="p-4 bg-gray-50 rounded">
@@ -951,7 +1025,7 @@ const HistoryContainer: React.FC = () => {
 
           {/* Steps List */}
           <div className="space-y-4">
-            {steps.map((step) => {
+            {visibleSteps.map((step) => {
               const isCompleted = step.number < currentStepNumber;
               const isActive = step.number === currentStepNumber;
 

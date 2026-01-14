@@ -1,7 +1,7 @@
 import { AlertCircle, Copy, CreditCard, Loader } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { brands } from "../../lib/api";
+import { backendConfig, brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
@@ -65,7 +65,7 @@ const PaymentContainer: React.FC = () => {
     const error = searchParams.get("error");
     if (error === "payment_cancelled") {
       setPaymentError(
-        "Your PayPal payment was cancelled. Please try a different payment method or try again."
+        "Your payment was cancelled. Please try a different payment method or try again."
       );
     }
   }, [searchParams]);
@@ -73,10 +73,19 @@ const PaymentContainer: React.FC = () => {
   // Load available payment methods
   useEffect(() => {
     const loadPaymentMethods = async () => {
+      // First fetch config to check if Stripe is enabled
+      let isStripeEnabled = true;
+      try {
+        const config = await backendConfig.getConfig();
+        isStripeEnabled = config.stripe;
+      } catch (configError) {
+        console.error("Failed to fetch config:", configError);
+      }
+
       try {
         const response = await brands.getPaymentMethods();
 
-        const paymentMethods: PaymentMethod[] = [
+        const allPaymentMethods: PaymentMethod[] = [
           {
             id: "credit_card",
             name: "Credit Card",
@@ -105,24 +114,38 @@ const PaymentContainer: React.FC = () => {
           },
         ];
 
+        // Filter out credit_card if Stripe is not enabled
+        const paymentMethods = isStripeEnabled
+          ? allPaymentMethods
+          : allPaymentMethods.filter((m) => m.id !== "credit_card");
+
         setAvailablePaymentMethods(paymentMethods);
 
-        // Set default to first enabled method
+        // Set default to first enabled method (PayPal will be first if Stripe disabled)
         const firstEnabled = paymentMethods.find((method) => method.enabled);
         if (firstEnabled) {
           setSelectedPaymentMethod(firstEnabled.id);
         }
       } catch (error) {
         console.error("Failed to load payment methods:", error);
-        // Fallback to default methods
+        // Fallback to PayPal if Stripe not enabled, otherwise credit card
         setAvailablePaymentMethods([
           {
-            id: "credit_card",
-            name: "Credit Card",
-            icon: <CreditCard className="h-5 w-5" />,
+            id: isStripeEnabled ? "credit_card" : "paypal",
+            name: isStripeEnabled ? "Credit Card" : "PayPal",
+            icon: isStripeEnabled ? (
+              <CreditCard className="h-5 w-5" />
+            ) : (
+              <div className="h-5 w-5 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">
+                P
+              </div>
+            ),
             enabled: true,
           },
         ]);
+        if (!isStripeEnabled) {
+          setSelectedPaymentMethod("paypal");
+        }
       } finally {
         setIsLoadingMethods(false);
       }

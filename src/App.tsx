@@ -28,8 +28,6 @@ import TestimonialContainer from "./components/Testimonial/TestimonialContainer"
 import PaymentContainer from "./components/Payment/PaymentContainer";
 import PaymentSuccess from "./components/Payment/PaymentSuccess";
 import PaymentCancel from "./components/Payment/PaymentCancel";
-import PaymentCancelHandler from "./components/Payment/PaymentCancelHandler";
-import PaymentSuccessHandler from "./components/Payment/PaymentSuccessHandler";
 import CompletedContainer from "./components/Completed/CompletedContainer";
 import HistoryContainer from "./components/History/HistoryContainer";
 import ColorSchemaPresenter from "./components/ColorSchemaPresenter/ColorSchemaPresenter";
@@ -214,7 +212,7 @@ const App: React.FC = () => {
               }
             />
             <Route
-              path="/brands/:brandId/payment/success"
+              path="/brands/:brandId/payment/:processor/success"
               element={
                 <AuthGuard>
                   <PaymentSuccess />
@@ -222,26 +220,10 @@ const App: React.FC = () => {
               }
             />
             <Route
-              path="/brands/:brandId/payment/cancel"
+              path="/brands/:brandId/payment/:processor/cancel"
               element={
                 <AuthGuard>
                   <PaymentCancel />
-                </AuthGuard>
-              }
-            />
-            <Route
-              path="/payment/paypal/cancel"
-              element={
-                <AuthGuard>
-                  <PaymentCancelHandler />
-                </AuthGuard>
-              }
-            />
-            <Route
-              path="/payment/paypal/success"
-              element={
-                <AuthGuard>
-                  <PaymentSuccessHandler />
                 </AuthGuard>
               }
             />

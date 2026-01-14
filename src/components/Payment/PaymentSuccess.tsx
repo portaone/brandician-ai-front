@@ -1,15 +1,16 @@
-import { AlertTriangle, CheckCircle, Clock, Loader } from "lucide-react";
+import { AlertTriangle, CheckCircle, Loader } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
 
-const MAX_RETRY_ATTEMPTS = 10;
-const RETRY_DELAY_MS = 3000; // 3 seconds between retries
+const MAX_RETRY_ATTEMPTS = 20;
+const RETRY_DELAY_MS = 10000; // 10 seconds between retries (200 seconds total)
 
 const PaymentSuccess: React.FC = () => {
-  const { brandId } = useParams<{ brandId: string }>();
+  // processor is part of the URL path (stripe/paypal) but not currently used in this component
+  const { brandId } = useParams<{ brandId: string; processor: string }>();
   const navigate = useNavigate();
   const { currentBrand, selectBrand } = useBrandStore();
 
@@ -18,29 +19,51 @@ const PaymentSuccess: React.FC = () => {
     "success" | "failed" | "pending" | "processing"
   >("pending");
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
 
   // Use ref to track if verification is already running to prevent duplicate runs
   const isRunningRef = useRef(false);
   const retryCountRef = useRef(0);
+  // Track cancellation via ref so we can reset it properly
+  const isCancelledRef = useRef(false);
+  // Store timeout ID in ref for cleanup
+  const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
+  // Store functions in refs to prevent effect re-runs
+  const selectBrandRef = useRef(selectBrand);
+  const navigateRef = useRef(navigate);
+  selectBrandRef.current = selectBrand;
+  navigateRef.current = navigate;
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    let isCancelled = false;
-
     const verifyPayment = async (): Promise<boolean> => {
       if (!brandId) return false;
 
       try {
-        await selectBrand(brandId);
+        await selectBrandRef.current(brandId);
         const updatedBrand = await brands.completePaymentFlow(brandId);
 
-        if (!isCancelled) {
-          setPaymentStatus("success");
-          setTimeout(() => {
-            navigateAfterProgress(navigate, brandId, updatedBrand);
-          }, 2000);
+        console.log("Payment flow completed, brand data:", updatedBrand);
+        console.log("Brand current_status:", updatedBrand?.current_status);
+        console.log("Brand payment_complete:", updatedBrand?.payment_complete);
+
+        // Verify payment_complete is set (webhook has been processed)
+        if (updatedBrand?.payment_complete === null || updatedBrand?.payment_complete === undefined) {
+          console.log("payment_complete not set yet, retrying...");
+          return false; // Retry - webhook hasn't been processed yet
         }
+
+        // Update state to show success UI (check cancellation first)
+        if (!isCancelledRef.current) {
+          setPaymentStatus("success");
+          setIsVerifying(false);
+        }
+
+        // Navigate after delay to show success message - use window.setTimeout
+        // to avoid React cleanup issues
+        window.setTimeout(() => {
+          console.log("Navigating to completed page");
+          navigateAfterProgress(navigateRef.current, brandId, updatedBrand);
+        }, 2500);
+
         return true;
       } catch (err: any) {
         console.error(
@@ -52,8 +75,8 @@ const PaymentSuccess: React.FC = () => {
           return false; // Can retry
         }
 
-        // Final failure
-        if (!isCancelled) {
+        // Final failure - only update state if not cancelled
+        if (!isCancelledRef.current) {
           setPaymentStatus("failed");
           if (err.response?.status === 403) {
             setError(
@@ -75,37 +98,63 @@ const PaymentSuccess: React.FC = () => {
     };
 
     const attemptVerification = async () => {
-      if (!brandId || isCancelled || isRunningRef.current) return;
+      console.log(`attemptVerification called: brandId=${brandId}, isCancelled=${isCancelledRef.current}, isRunning=${isRunningRef.current}, retryCount=${retryCountRef.current}`);
+
+      if (!brandId || isCancelledRef.current || isRunningRef.current) {
+        console.log("Skipping attempt - conditions not met");
+        return;
+      }
 
       isRunningRef.current = true;
       const isDone = await verifyPayment();
       isRunningRef.current = false;
 
-      if (isCancelled) return;
+      console.log(`verifyPayment returned: isDone=${isDone}, retryCount=${retryCountRef.current}, max=${MAX_RETRY_ATTEMPTS}, isCancelled=${isCancelledRef.current}`);
 
-      if (!isDone && retryCountRef.current < MAX_RETRY_ATTEMPTS) {
-        setPaymentStatus("processing");
-        retryCountRef.current += 1;
-        setRetryCount(retryCountRef.current);
-        timeoutId = setTimeout(attemptVerification, RETRY_DELAY_MS);
-      } else if (!isDone) {
+      // Don't schedule retry if cancelled (component unmounted)
+      if (!isDone && !isCancelledRef.current && retryCountRef.current < MAX_RETRY_ATTEMPTS) {
+        if (!isCancelledRef.current) {
+          setPaymentStatus("processing");
+          retryCountRef.current += 1;
+        }
+        console.log(`Scheduling retry ${retryCountRef.current} in ${RETRY_DELAY_MS}ms`);
+        timeoutIdRef.current = setTimeout(attemptVerification, RETRY_DELAY_MS);
+      } else if (!isDone && !isCancelledRef.current) {
+        console.log("Max retries reached, failing");
         setPaymentStatus("failed");
         setError(
           "Payment confirmation is taking longer than expected. Please wait a few minutes and refresh this page, or contact support."
         );
         setIsVerifying(false);
-      } else {
-        setIsVerifying(false);
+      } else if (isDone) {
+        console.log("Verification complete");
+        if (!isCancelledRef.current) {
+          setIsVerifying(false);
+        }
       }
     };
+
+    // Reset cancellation flag when effect runs (important for React Strict Mode)
+    isCancelledRef.current = false;
+
+    // If already running, don't start another - the existing one will continue
+    if (isRunningRef.current) {
+      console.log("Verification already running, skipping duplicate start");
+      return;
+    }
 
     attemptVerification();
 
     return () => {
-      isCancelled = true;
-      if (timeoutId) clearTimeout(timeoutId);
+      console.log("Cleanup called - setting isCancelled to true");
+      isCancelledRef.current = true;
+      if (timeoutIdRef.current) {
+        clearTimeout(timeoutIdRef.current);
+        timeoutIdRef.current = null;
+      }
     };
-  }, [brandId, selectBrand, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brandId]);
 
   const handleReturnToPayment = () => {
     if (brandId) {
@@ -122,27 +171,13 @@ const PaymentSuccess: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          {paymentStatus === "processing" ? (
-            <Clock className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-          ) : (
-            <Loader className="animate-spin h-12 w-12 text-primary-600 mx-auto mb-4" />
-          )}
+          <Loader className="animate-spin h-12 w-12 text-primary-600 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            {paymentStatus === "processing"
-              ? "Waiting for Payment Confirmation"
-              : "Verifying Payment"}
+            Verifying Payment
           </h2>
           <p className="text-gray-600">
-            {paymentStatus === "processing"
-              ? "Your payment is being processed. This may take a few moments..."
-              : "Please wait while we confirm your payment..."}
+            Please wait while we confirm your payment...
           </p>
-          {retryCount > 0 && (
-            <p className="text-sm text-gray-500 mt-4">
-              Checking payment status... (attempt {retryCount}/
-              {MAX_RETRY_ATTEMPTS})
-            </p>
-          )}
         </div>
       </div>
     );

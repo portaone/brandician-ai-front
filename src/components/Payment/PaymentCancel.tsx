@@ -4,9 +4,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useBrandStore } from "../../store/brand";
 
 const PaymentCancel: React.FC = () => {
-  const { brandId } = useParams<{ brandId: string }>();
+  const { brandId, processor } = useParams<{ brandId: string; processor: string }>();
   const navigate = useNavigate();
   const { currentBrand, selectBrand } = useBrandStore();
+
+  // Get display name for processor
+  const processorDisplayName = processor === "stripe" ? "Stripe" : processor === "paypal" ? "PayPal" : "payment";
 
   useEffect(() => {
     if (brandId && (!currentBrand || currentBrand.id !== brandId)) {
@@ -43,10 +46,9 @@ const PaymentCancel: React.FC = () => {
 
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
             <p className="text-sm text-orange-800">
-              <strong>Having trouble with PayPal?</strong>
+              <strong>Having trouble with {processorDisplayName}?</strong>
               <br />
-              Consider trying a different payment method such as credit card or
-              Google Pay.
+              Consider trying a different payment method.
             </p>
           </div>
 
