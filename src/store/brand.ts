@@ -64,6 +64,10 @@ interface BrandState {
   updateArchetype: (brandId: string, archetype: string) => Promise<void>;
   deleteBrand: (brandId: string) => Promise<void>;
   updateBrandName: (brandId: string, brandName: string) => Promise<void>;
+  updateBrandProjectName: (
+    brandId: string,
+    projectName: string
+  ) => Promise<void>;
 }
 
 export const useBrandStore = create<BrandState>((set) => ({
@@ -414,6 +418,25 @@ export const useBrandStore = create<BrandState>((set) => ({
       const errorMessage = getErrorMessage(
         error,
         "Failed to update brand name"
+      );
+      set({ isLoading: false, error: errorMessage });
+      throw new Error(errorMessage);
+    }
+  },
+  updateBrandProjectName: async (brandId: string, projectName: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await brands.patch(brandId, { name: projectName });
+      set((state) => ({
+        brands: state.brands.map((brand) =>
+          brand.id === brandId ? { ...brand, name: projectName } : brand
+        ),
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      const errorMessage = getErrorMessage(
+        error,
+        "Failed to update brand project name"
       );
       set({ isLoading: false, error: errorMessage });
       throw new Error(errorMessage);

@@ -776,7 +776,7 @@ const HistoryContainer: React.FC = () => {
       case "assets":
         return (
           <div className="p-4 space-y-3">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center flex-wrap gap-2 justify-between mb-2">
               <h4 className="font-semibold text-gray-900">Brand Assets:</h4>
               {brandId && (
                 <div className="flex items-center gap-3">
@@ -1040,7 +1040,7 @@ const HistoryContainer: React.FC = () => {
                   <button
                     onClick={() => isCompleted && toggleStep(step.number)}
                     disabled={!isCompleted && !isActive}
-                    className={`w-full flex items-center justify-between p-6 transition-colors ${
+                    className={`w-full flex flex-wrap gap-2 items-center justify-between p-2 sm:p-6 transition-colors ${
                       isCompleted
                         ? "hover:bg-gray-50 cursor-pointer"
                         : isActive
@@ -1048,7 +1048,7 @@ const HistoryContainer: React.FC = () => {
                         : "cursor-not-allowed"
                     }`}
                   >
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-4 flex-wrap">
                       <div className="flex flex-col items-center gap-2 w-24">
                         <div
                           className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold ${

@@ -197,7 +197,6 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
           console.log("🎤 Processing completed:", status.text);
           setAnswer(status.text);
           setHasBeenEdited(true);
-          requestAiEnhancement(status.text);
           setIsProcessing(false);
         } else if (status.status === "failed") {
           console.error("🔴 Processing failed:", status.error);
