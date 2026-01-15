@@ -41,35 +41,11 @@ const Footer: React.FC = () => (
         </div>
 
         <div className="lg:ml-[140px] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6 lg:gap-0">
-          <div className="">
-            <div className="mb-6 lg:mb-0">
-              <h4 className="text-[14px] md:text-[16px] lg:text-[18px] font-['Source_Sans_Pro'] font-medium text-[#BFACB8] uppercase tracking-[1.5px] lg:tracking-[2px] leading-[18px] pt-[10px] pb-[8px]">
-                Contact
-              </h4>
-              <ul className="">
-                <li>
-                  <a
-                    href="mailto:info@brandician.eu"
-                    className="flex items-center text-[#FD615E] hover:text-white transition-colors duration-300 group"
-                  >
-                    <svg
-                      className="h-[16px] w-[16px] fill-[#7f5971] group-hover:fill-white"
-                      viewBox="0 0 512 512"
-                    >
-                      <path d="M464 64H48C21.49 64 0 85.49 0 112v288c0 26.51 21.49 48 48 48h416c26.51 0 48-21.49 48-48V112c0-26.51-21.49-48-48-48zm0 48v40.805c-22.422 18.259-58.168 46.651-134.587 106.49-16.841 13.247-50.201 45.072-73.413 44.701-23.208.375-56.579-31.459-73.413-44.701C106.18 199.465 70.425 171.067 48 152.805V112h416zM48 400V214.398c22.914 18.251 55.409 43.862 104.938 82.646 21.857 17.205 60.134 55.186 103.062 54.955 42.717.231 80.509-37.199 103.053-54.947 49.528-38.783 82.032-64.401 104.947-82.653V400H48z" />
-                    </svg>
-                    <span className="text-base font-['Open_Sans'] text-[14px] md:text-[16px] leading-[1.75em] pl-[8px]">
-                      info@brandician.eu
-                    </span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-
+          <div>
             <h4 className="text-[14px] md:text-[16px] lg:text-[18px] font-['Source_Sans_Pro'] font-medium text-[#BFACB8] uppercase tracking-[1.5px] lg:tracking-[2px] leading-[18px] pt-[10px] pb-[8px]">
               About
             </h4>
-            <ul className="">
+            <ul>
               <li>
                 <a
                   href="https://www.brandician.eu"

@@ -24,7 +24,7 @@ const TopMenu: React.FC = () => {
           >
             <img
               className="w-[160px] md:w-[210px] h-auto"
-              src="https://www.brandician.eu/wp-content/uploads/2021/03/Brandician-logo-1.png"
+              src="brandician-logo.png"
               alt="Brandician"
             />
           </a>
@@ -39,17 +39,14 @@ const TopMenu: React.FC = () => {
             >
               ABOUT
             </a>
-            <a href="mailto:info@brandician.eu" className="nav-menu-item">
-              CONTACT
-            </a>
             {/* Authentication links */}
             {user ? (
               <>
                 <Link to="/brands" className="nav-menu-item">
-                  MY BRANDS
+                  Dashboard
                 </Link>
                 <Link to="/profile" className="nav-menu-item">
-                  MY PROFILE
+                  Account
                 </Link>
               </>
             ) : (
@@ -119,12 +116,6 @@ const TopMenu: React.FC = () => {
                     About
                   </a>
                 </div>
-                <a
-                  href="mailto:info@brandician.eu"
-                  className="block px-3 py-2 text-[14px] font-['Source_Sans_Pro'] font-semibold uppercase tracking-[2px] text-gray-700 hover:text-[#FD615E] transition-colors"
-                >
-                  CONTACT
-                </a>
                 {/* Authentication links */}
                 {user ? (
                   <>
@@ -133,14 +124,14 @@ const TopMenu: React.FC = () => {
                       onClick={() => setIsMobileMenuOpen(false)}
                       className="block px-3 py-2 text-[14px] font-['Source_Sans_Pro'] font-semibold uppercase tracking-[2px] text-gray-700 hover:text-[#FD615E] transition-colors"
                     >
-                      MY BRANDS
+                      Dashboard
                     </Link>
                     <Link
                       to="/profile"
                       onClick={() => setIsMobileMenuOpen(false)}
                       className="block px-3 py-2 text-[14px] font-['Source_Sans_Pro'] font-semibold uppercase tracking-[2px] text-gray-700 hover:text-[#FD615E] transition-colors"
                     >
-                      MY PROFILE
+                      Account
                     </Link>
                   </>
                 ) : (
