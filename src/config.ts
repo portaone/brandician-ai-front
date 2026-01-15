@@ -4,7 +4,7 @@
 interface EnvConfig {
   VITE_API_URL?: string;
   VITE_DEBUG?: string;
-  VITE_CLARITY_ID?: string;
+  VITE_GTM_ID?: string;
 }
 
 declare global {
@@ -23,7 +23,7 @@ class ConfigService {
       // Fallback to build-time environment variables
       VITE_API_URL: import.meta.env.VITE_API_URL,
       VITE_DEBUG: import.meta.env.VITE_DEBUG,
-      VITE_CLARITY_ID: import.meta.env.VITE_CLARITY_ID,
+      VITE_GTM_ID: import.meta.env.VITE_GTM_ID,
     };
 
     // Log configuration source
@@ -45,8 +45,8 @@ class ConfigService {
     return this.config.VITE_DEBUG === "true";
   }
 
-  get clarityId(): string {
-    return this.config.VITE_CLARITY_ID ?? "";
+  get gtmId(): string {
+    return this.config.VITE_GTM_ID ?? "";
   }
 }
 
