@@ -293,8 +293,8 @@ const HistoryContainer: React.FC = () => {
     },
   ];
 
-  // Filter steps based on dev mode - hide payment step in production
-  const visibleSteps = devMode ? steps : steps.filter((s) => s.number !== 12);
+  // Filter steps based on dev mode - hide testimonial and payment steps in production
+  const visibleSteps = devMode ? steps : steps.filter((s) => s.number !== 11 && s.number !== 12);
 
   const toggleStep = async (stepNumber: number) => {
     const isCurrentlyExpanded = expandedSteps[stepNumber];

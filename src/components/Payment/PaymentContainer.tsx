@@ -2,6 +2,7 @@ import { AlertCircle, Copy, CreditCard, Loader } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { backendConfig, brands } from "../../lib/api";
+import { useGooglePay } from "../../hooks/useGooglePay";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
@@ -30,6 +31,23 @@ const PaymentContainer: React.FC = () => {
     PaymentMethod[]
   >([]);
   const [isLoadingMethods, setIsLoadingMethods] = useState(true);
+
+  // Config state for Google Pay
+  const [stripePublishableKey, setStripePublishableKey] = useState<string | null>(null);
+  const [googlePayMerchantId, setGooglePayMerchantId] = useState<string | null>(null);
+  const [googlePayEnvironment, setGooglePayEnvironment] = useState<"TEST" | "PRODUCTION">("PRODUCTION");
+
+  // Initialize Google Pay hook
+  const {
+    isAvailable: isGooglePayAvailable,
+    isLoading: isGooglePayLoading,
+    requestPayment: requestGooglePayPayment,
+  } = useGooglePay({
+    stripePublishableKey,
+    merchantId: googlePayMerchantId,
+    merchantName: "Brandician.AI",
+    environment: googlePayEnvironment,
+  });
 
   // Form validation and error handling
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -73,11 +91,14 @@ const PaymentContainer: React.FC = () => {
   // Load available payment methods
   useEffect(() => {
     const loadPaymentMethods = async () => {
-      // First fetch config to check if Stripe is enabled
+      // First fetch config to check if Stripe is enabled and get keys
       let isStripeEnabled = true;
       try {
         const config = await backendConfig.getConfig();
         isStripeEnabled = config.stripe;
+        setStripePublishableKey(config.stripe_publishable_key);
+        setGooglePayMerchantId(config.google_pay_merchant_id);
+        setGooglePayEnvironment(config.google_pay_environment);
       } catch (configError) {
         console.error("Failed to fetch config:", configError);
       }
@@ -154,6 +175,19 @@ const PaymentContainer: React.FC = () => {
     loadPaymentMethods();
   }, []);
 
+  // Update Google Pay availability when the hook finishes checking
+  useEffect(() => {
+    if (!isGooglePayLoading) {
+      setAvailablePaymentMethods((prev) =>
+        prev.map((method) =>
+          method.id === "google_pay"
+            ? { ...method, enabled: isGooglePayAvailable }
+            : method
+        )
+      );
+    }
+  }, [isGooglePayAvailable, isGooglePayLoading]);
+
   useEffect(() => {
     if (amountInputRef.current) {
       amountInputRef.current.focus();
@@ -186,7 +220,30 @@ const PaymentContainer: React.FC = () => {
         navigateAfterProgress(navigate, brandId, updatedBrand);
         return;
       }
-      // Create payment session with the backend including payment method
+
+      // Handle Google Pay separately using Google Pay JS API
+      if (selectedPaymentMethod === "google_pay") {
+        const amount = parseFloat(paymentAmount);
+        const token = await requestGooglePayPayment(amount);
+
+        if (!token) {
+          // User cancelled Google Pay
+          setIsProcessingPayment(false);
+          return;
+        }
+
+        // Process the Google Pay token on backend
+        const updatedBrand = await brands.processGooglePay(
+          brandId,
+          token,
+          amount,
+          "USD"
+        );
+        navigateAfterProgress(navigate, brandId, updatedBrand);
+        return;
+      }
+
+      // Create payment session with the backend for other payment methods
       const paymentSession = await brands.createPaymentSession(
         brandId,
         parseFloat(paymentAmount),
@@ -202,9 +259,11 @@ const PaymentContainer: React.FC = () => {
       // Direct redirect - no popup blockers, cleaner UX
       // PayPal will redirect back to success/cancel URLs configured in backend
       window.location.href = paymentSession.checkout_url;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment submission failed:", error);
-      setErrors({ payment: "Failed to process payment. Please try again." });
+      const errorMessage = error?.response?.data?.detail || "Failed to process payment. Please try again.";
+      setErrors({ payment: errorMessage });
+      setPaymentError(errorMessage);
       setIsProcessingPayment(false);
     }
   };

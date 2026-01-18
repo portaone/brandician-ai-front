@@ -797,6 +797,21 @@ export const brands = {
     return response.data;
   },
 
+  processGooglePay: async (
+    brandId: string,
+    token: string,
+    amount: number,
+    currency: string = "USD"
+  ) => {
+    const response = await api.post(apiPath("/payments/google-pay"), {
+      brand_id: brandId,
+      token,
+      amount,
+      currency,
+    });
+    return response.data;
+  },
+
   listBrandPayments: async (brandId: string) => {
     const key = createRequestKey("GET", apiPath(`/brands/${brandId}/payments`));
     return deduplicate(key, async () => {
@@ -842,7 +857,13 @@ export const brands = {
 };
 
 export const backendConfig = {
-  getConfig: async (): Promise<{ dev_mode: boolean; stripe: boolean }> => {
+  getConfig: async (): Promise<{
+    dev_mode: boolean;
+    stripe: boolean;
+    stripe_publishable_key: string | null;
+    google_pay_merchant_id: string | null;
+    google_pay_environment: "TEST" | "PRODUCTION";
+  }> => {
     // Note: /config endpoint is on health router which has no API prefix
     const response = await api.get("/config");
     return response.data;
