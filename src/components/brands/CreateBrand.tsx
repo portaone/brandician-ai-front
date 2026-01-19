@@ -3,12 +3,15 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
+import { useAutoFocus } from "../../hooks/useAutoFocus";
 
 const CreateBrand: React.FC = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const { createBrand, isLoading, error } = useBrandStore();
   const navigate = useNavigate();
+
+  useAutoFocus();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

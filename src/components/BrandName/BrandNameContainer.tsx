@@ -9,6 +9,7 @@ import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import BrandicianLoader from "../common/BrandicianLoader";
+import { useAutoFocus } from "../../hooks/useAutoFocus";
 
 interface BrandNameSuggestion {
   name: string;
@@ -39,6 +40,8 @@ const BrandNameContainer: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showAssets, setShowAssets] = useState(false);
   const [currentDraft, setCurrentDraft] = useState<BrandName | null>(null);
+
+  useAutoFocus([isShowingCustomInput]);
 
   useEffect(() => {
     const loadBrand = async () => {

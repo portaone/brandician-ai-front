@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuthStore } from "../store/auth";
 import Button from "./common/Button";
+import { useAutoFocus } from "../hooks/useAutoFocus";
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
@@ -13,6 +14,8 @@ const Profile: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useAutoFocus([isEditing]);
 
   useEffect(() => {
     if (!user) {

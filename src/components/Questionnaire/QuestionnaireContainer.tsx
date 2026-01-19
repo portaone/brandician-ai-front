@@ -9,6 +9,7 @@ import QuestionnaireHeader from "./QuestionnaireHeader";
 import QuestionnaireItem from "./QuestionnaireItem";
 import QuestionnaireSummary from "./QuestionnaireSummary";
 import BrandicianLoader from "../common/BrandicianLoader";
+import { useAutoFocus } from "../../hooks/useAutoFocus";
 
 const QuestionnaireContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -115,6 +116,18 @@ const QuestionnaireContainer: React.FC = () => {
       }
     }
   }, [questions, answers, currentQuestionIndex, searchParams, typedAnswers]);
+
+  useAutoFocus([
+    questions,
+    answers,
+    currentQuestionIndex,
+    searchParams,
+    typedAnswers,
+    brandId,
+    selectBrand,
+    loadQuestions,
+    loadAnswers,
+  ]);
 
   if (isLoading) {
     return (

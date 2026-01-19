@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/auth";
 import BrandicianLoader from "../common/BrandicianLoader";
+import { useAutoFocus } from "../../hooks/useAutoFocus";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -17,6 +18,8 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
       navigate("/login");
     }
   }, [user, isLoading, navigate]);
+
+  useAutoFocus([user, isLoading, navigate]);
 
   if (isLoading) {
     return (

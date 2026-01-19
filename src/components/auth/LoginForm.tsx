@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/auth";
 import Button from "../common/Button";
+import { useAutoFocus } from "../../hooks/useAutoFocus";
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -10,6 +11,8 @@ const LoginForm: React.FC = () => {
   const [otpId, setOtpId] = useState<string | null>(null);
   const { login, verifyOTP, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
+
+  useAutoFocus([otpId]);
 
   // Clear error when component mounts or when user starts typing
   useEffect(() => {

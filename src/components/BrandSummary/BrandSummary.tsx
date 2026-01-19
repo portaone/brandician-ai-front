@@ -8,6 +8,7 @@ import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import ReactMarkdown from "react-markdown";
 import BrandicianLoader from "../common/BrandicianLoader";
+import { useAutoFocus } from "../../hooks/useAutoFocus";
 
 const BrandSummary: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -89,6 +90,8 @@ const BrandSummary: React.FC = () => {
   const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setSummary(e.target.value);
   };
+
+  useAutoFocus([isEditing]);
 
   const handleProceed = async () => {
     if (!brandId || !summary || !summary.trim()) return;

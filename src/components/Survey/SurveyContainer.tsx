@@ -20,6 +20,7 @@ import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import BrandicianLoader from "../common/BrandicianLoader";
+import { useAutoFocus } from "../../hooks/useAutoFocus";
 
 const SurveyContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -134,6 +135,8 @@ const SurveyContainer: React.FC = () => {
       loadSurveyStatus();
     }
   }, [showSuccess, brandId]);
+
+  useAutoFocus([editingQuestion]);
 
   useEffect(() => {
     const scrolledFromTop = window.scrollY;

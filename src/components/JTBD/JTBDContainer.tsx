@@ -9,6 +9,7 @@ import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import ReactMarkdown from "react-markdown";
 import BrandicianLoader from "../common/BrandicianLoader";
+import { useAutoFocus } from "../../hooks/useAutoFocus";
 
 type Step = "rating" | "editing" | "drivers";
 
@@ -26,6 +27,8 @@ const JTBDContainer: React.FC = () => {
   const [isEditingDrivers, setIsEditingDrivers] = useState(false);
   const isRegeneratingRef = useRef<boolean>(false);
   const hasInitialized = useRef(false);
+
+  useAutoFocus([editingPersona, isEditingDrivers]);
 
   useEffect(() => {
     const loadData = async () => {
