@@ -24,7 +24,7 @@ const TopMenu: React.FC = () => {
           >
             <img
               className="w-[160px] md:w-[210px] h-auto"
-              src="brandician-logo.png"
+              src="/brandician-logo.png"
               alt="Brandician"
             />
           </a>

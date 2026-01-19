@@ -19,6 +19,7 @@ import { Survey, SurveyQuestion, SurveyStatus } from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import BrandicianLoader from "../common/BrandicianLoader";
 
 const SurveyContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -372,8 +373,8 @@ const SurveyContainer: React.FC = () => {
 
   if (isBrandLoading || (isLoadingSurvey && !surveyError)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader className="animate-spin h-6 w-6 text-primary-600" />
+      <div className="loader-container">
+        <BrandicianLoader />
       </div>
     );
   }

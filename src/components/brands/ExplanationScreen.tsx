@@ -1,4 +1,12 @@
-import { ArrowRight, Copy, FileEdit, FileText, Upload, X } from "lucide-react";
+import {
+  ArrowRight,
+  Copy,
+  FileEdit,
+  FileText,
+  Upload,
+  X,
+  Loader,
+} from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../lib/api";
@@ -6,6 +14,7 @@ import { navigateAfterProgress } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
+import BrandicianLoader from "../common/BrandicianLoader";
 
 const ExplanationScreen: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -192,8 +201,8 @@ const ExplanationScreen: React.FC = () => {
 
   if (isLoading || !currentBrand) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin text-primary-600 text-2xl">⟳</div>
+      <div className="loader-container">
+        <BrandicianLoader />
       </div>
     );
   }
@@ -369,7 +378,11 @@ const ExplanationScreen: React.FC = () => {
                         className="hidden"
                         id="document-upload"
                       />
-                      <Upload className={`h-10 w-10 mb-3 ${isDragging ? "text-primary-500" : "text-gray-400"}`} />
+                      <Upload
+                        className={`h-10 w-10 mb-3 ${
+                          isDragging ? "text-primary-500" : "text-gray-400"
+                        }`}
+                      />
                       <label
                         htmlFor="document-upload"
                         className="cursor-pointer inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
@@ -397,7 +410,9 @@ const ExplanationScreen: React.FC = () => {
                             <p className="text-xs text-gray-500">
                               {selectedFile.size < 1024 * 1024
                                 ? `${(selectedFile.size / 1024).toFixed(1)} KB`
-                                : `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB`}
+                                : `${(selectedFile.size / 1024 / 1024).toFixed(
+                                    2
+                                  )} MB`}
                             </p>
                           </div>
                         </div>

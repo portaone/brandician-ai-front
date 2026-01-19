@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import { Loader } from "lucide-react";
+import BrandicianLoader from "../common/BrandicianLoader";
 import React, { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { API_URL, brands } from "../../lib/api";
@@ -198,8 +198,8 @@ const ColorSchemaPresenter: React.FC = () => {
 
   if (isLoadingStatus) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader className="animate-spin h-6 w-6 text-primary-600" />
+      <div className="loader-container">
+        <BrandicianLoader />
       </div>
     );
   }
@@ -519,7 +519,8 @@ const ColorSchemaPresenter: React.FC = () => {
             color: "#231F20",
           }}
         >
-          {(currentBrand?.brand_name || "BRAND NAME").toUpperCase()} — BRAND SCHEME
+          {(currentBrand?.brand_name || "BRAND NAME").toUpperCase()} — BRAND
+          SCHEME
         </div>
       </div>
     </div>

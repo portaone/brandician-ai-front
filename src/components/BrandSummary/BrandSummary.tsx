@@ -7,6 +7,7 @@ import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import ReactMarkdown from "react-markdown";
+import BrandicianLoader from "../common/BrandicianLoader";
 
 const BrandSummary: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -118,9 +119,9 @@ const BrandSummary: React.FC = () => {
 
   if (isLoading || isGenerating) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="loader-container flex-col">
+        <BrandicianLoader />
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-lg text-gray-600">
             {isGenerating ? "Generating brand summary..." : "Loading..."}
           </p>

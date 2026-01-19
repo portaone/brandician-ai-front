@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Copy, Loader, RefreshCw } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, RefreshCw, Loader } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";

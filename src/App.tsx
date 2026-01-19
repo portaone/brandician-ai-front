@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
   useParams,
+  useLocation,
 } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useAuthStore } from "./store/auth";
@@ -37,6 +38,7 @@ import CookieConsent from "./components/common/CookieConsent";
 import BrandAssets from "./components/BrandAssets/BrandAssets";
 import Profile from "./components/Profile";
 import "./index.css";
+import { RouterActions } from "./components/common/RouterActions";
 
 function BrandAssetsWrapper() {
   const { brandId } = useParams();
@@ -54,6 +56,7 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <Router>
+        <RouterActions />
         <TopMenu />
         <AnimatePresence mode="wait">
           <Routes>

@@ -408,3 +408,18 @@
 * {
   white-space: inherit;
 }
+
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #fff;
+  inset: 0;
+  position: absolute;
+  z-index: 100;
+  top: 90px;
+}
+
+.loader-container > * {
+  transform: translateY(-90px);
+}

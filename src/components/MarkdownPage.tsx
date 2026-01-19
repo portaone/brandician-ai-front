@@ -1,6 +1,7 @@
-import { AlertCircle, Loader } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import BrandicianLoader from "./common/BrandicianLoader";
 
 interface MarkdownPageProps {
   filePath: string;
@@ -32,8 +33,8 @@ const MarkdownPage: React.FC<MarkdownPageProps> = ({ filePath, className }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader className="animate-spin h-8 w-8 text-primary-600 mb-4" />
+      <div className="loader-container">
+        <BrandicianLoader />
         <span className="text-gray-600 ml-2">Loading...</span>
       </div>
     );

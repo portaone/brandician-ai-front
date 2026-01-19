@@ -3,9 +3,9 @@ import {
   Eye,
   EyeOff,
   Heart,
-  Loader,
   MessageSquare,
   Star,
+  Loader,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -13,6 +13,7 @@ import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { useAuthStore } from "../../store/auth";
 import { useBrandStore } from "../../store/brand";
+import BrandicianLoader from "../common/BrandicianLoader";
 
 const TestimonialContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -111,9 +112,9 @@ const TestimonialContainer: React.FC = () => {
 
   if (isLoading || !currentBrand) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="loader-container">
         <div className="flex items-center">
-          <Loader className="animate-spin h-6 w-6 text-primary-600 mr-2" />
+          <BrandicianLoader />
           <span>Loading...</span>
         </div>
       </div>

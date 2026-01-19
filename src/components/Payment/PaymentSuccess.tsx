@@ -1,9 +1,10 @@
-import { AlertTriangle, CheckCircle, Loader } from "lucide-react";
+import { AlertTriangle, CheckCircle } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
+import BrandicianLoader from "../common/BrandicianLoader";
 
 const MAX_RETRY_ATTEMPTS = 20;
 const RETRY_DELAY_MS = 10000; // 10 seconds between retries (200 seconds total)
@@ -46,7 +47,10 @@ const PaymentSuccess: React.FC = () => {
         console.log("Brand payment_complete:", updatedBrand?.payment_complete);
 
         // Verify payment_complete is set (webhook has been processed)
-        if (updatedBrand?.payment_complete === null || updatedBrand?.payment_complete === undefined) {
+        if (
+          updatedBrand?.payment_complete === null ||
+          updatedBrand?.payment_complete === undefined
+        ) {
           console.log("payment_complete not set yet, retrying...");
           return false; // Retry - webhook hasn't been processed yet
         }
@@ -98,7 +102,9 @@ const PaymentSuccess: React.FC = () => {
     };
 
     const attemptVerification = async () => {
-      console.log(`attemptVerification called: brandId=${brandId}, isCancelled=${isCancelledRef.current}, isRunning=${isRunningRef.current}, retryCount=${retryCountRef.current}`);
+      console.log(
+        `attemptVerification called: brandId=${brandId}, isCancelled=${isCancelledRef.current}, isRunning=${isRunningRef.current}, retryCount=${retryCountRef.current}`
+      );
 
       if (!brandId || isCancelledRef.current || isRunningRef.current) {
         console.log("Skipping attempt - conditions not met");
@@ -109,15 +115,23 @@ const PaymentSuccess: React.FC = () => {
       const isDone = await verifyPayment();
       isRunningRef.current = false;
 
-      console.log(`verifyPayment returned: isDone=${isDone}, retryCount=${retryCountRef.current}, max=${MAX_RETRY_ATTEMPTS}, isCancelled=${isCancelledRef.current}`);
+      console.log(
+        `verifyPayment returned: isDone=${isDone}, retryCount=${retryCountRef.current}, max=${MAX_RETRY_ATTEMPTS}, isCancelled=${isCancelledRef.current}`
+      );
 
       // Don't schedule retry if cancelled (component unmounted)
-      if (!isDone && !isCancelledRef.current && retryCountRef.current < MAX_RETRY_ATTEMPTS) {
+      if (
+        !isDone &&
+        !isCancelledRef.current &&
+        retryCountRef.current < MAX_RETRY_ATTEMPTS
+      ) {
         if (!isCancelledRef.current) {
           setPaymentStatus("processing");
           retryCountRef.current += 1;
         }
-        console.log(`Scheduling retry ${retryCountRef.current} in ${RETRY_DELAY_MS}ms`);
+        console.log(
+          `Scheduling retry ${retryCountRef.current} in ${RETRY_DELAY_MS}ms`
+        );
         timeoutIdRef.current = setTimeout(attemptVerification, RETRY_DELAY_MS);
       } else if (!isDone && !isCancelledRef.current) {
         console.log("Max retries reached, failing");
@@ -169,9 +183,9 @@ const PaymentSuccess: React.FC = () => {
 
   if (isVerifying || paymentStatus === "processing") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
+      <div className="loader-container">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <Loader className="animate-spin h-12 w-12 text-primary-600 mx-auto mb-4" />
+          <BrandicianLoader />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
             Verifying Payment
           </h2>

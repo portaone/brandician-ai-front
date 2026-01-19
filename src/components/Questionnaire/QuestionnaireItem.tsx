@@ -3,9 +3,9 @@ import {
   ArrowLeft,
   ArrowRight,
   Copy,
-  Loader,
   Mic,
   MicOff,
+  Loader,
   RefreshCw,
   Wand2,
 } from "lucide-react";

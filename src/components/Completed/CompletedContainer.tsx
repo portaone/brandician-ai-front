@@ -18,6 +18,7 @@ import DownloadAllButton from "../common/DownloadAllButton";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import ShareLinkModal from "../common/ShareLinkModal";
+import BrandicianLoader from "../common/BrandicianLoader";
 
 const CompletedContainer: React.FC<{ readonlyMode?: boolean }> = ({
   readonlyMode,
@@ -165,8 +166,8 @@ const CompletedContainer: React.FC<{ readonlyMode?: boolean }> = ({
 
   if (isLoading || !currentBrand) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin text-primary-600 text-2xl">⟳</div>
+      <div className="loader-container">
+        <BrandicianLoader />
       </div>
     );
   }

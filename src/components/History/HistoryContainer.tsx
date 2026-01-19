@@ -11,6 +11,7 @@ import CopyButton from "../common/CopyButton";
 import DownloadAllButton from "../common/DownloadAllButton";
 import GetHelpButton from "../common/GetHelpButton";
 import ShareLinkModal from "../common/ShareLinkModal";
+import BrandicianLoader from "../common/BrandicianLoader";
 
 interface HistoryStep {
   number: number;
@@ -294,7 +295,9 @@ const HistoryContainer: React.FC = () => {
   ];
 
   // Filter steps based on dev mode - hide testimonial and payment steps in production
-  const visibleSteps = devMode ? steps : steps.filter((s) => s.number !== 11 && s.number !== 12);
+  const visibleSteps = devMode
+    ? steps
+    : steps.filter((s) => s.number !== 11 && s.number !== 12);
 
   const toggleStep = async (stepNumber: number) => {
     const isCurrentlyExpanded = expandedSteps[stepNumber];
@@ -964,7 +967,9 @@ const HistoryContainer: React.FC = () => {
                 Dev Mode Only - This step is hidden in production
               </p>
             </div>
-            <h4 className="font-semibold text-gray-900 mb-2">Payment Status:</h4>
+            <h4 className="font-semibold text-gray-900 mb-2">
+              Payment Status:
+            </h4>
             <div className="bg-gray-50 p-4 rounded">
               {data.data?.payment_complete !== null &&
               data.data?.payment_complete !== undefined ? (
@@ -994,8 +999,8 @@ const HistoryContainer: React.FC = () => {
 
   if (brandLoading || !currentBrand) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin text-primary-600 text-2xl">⟳</div>
+      <div className="loader-container">
+        <BrandicianLoader />
       </div>
     );
   }

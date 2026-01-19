@@ -15,6 +15,7 @@ import { useAuthStore } from "../../store/auth";
 import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
 import { Brand } from "../../types";
+import BrandicianLoader from "../common/BrandicianLoader";
 
 const BrandList: React.FC = () => {
   const {
@@ -161,8 +162,8 @@ const BrandList: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <div className="animate-spin text-primary-600 text-2xl">⟳</div>
+      <div className="loader-container">
+        <BrandicianLoader />
       </div>
     );
   }

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Brain, CheckCircle, Mail } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import BrandicianLoader from "./common/BrandicianLoader";
 
 export interface RegisterFormData {
   email: string;

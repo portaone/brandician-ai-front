@@ -13,6 +13,7 @@ import AssetContent from "../common/AssetContent";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import BrandicianLoader from "../common/BrandicianLoader";
 
 interface BrandAssetsProps {
   brandId: string;
@@ -315,8 +316,8 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-                <div className="mb-6">
-                  <div className="animate-spin h-12 w-12 border-4 border-primary-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <div className="mb-6 flex flex-col justify-center items-center gap-2">
+                  <BrandicianLoader />
                   <h2 className="text-2xl font-bold text-neutral-800 mb-2">
                     Creating Your Brand Assets
                   </h2>

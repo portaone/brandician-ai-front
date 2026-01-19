@@ -1,4 +1,4 @@
-import { Loader } from "lucide-react";
+import BrandicianLoader from "../common/BrandicianLoader";
 import React, { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -27,9 +27,9 @@ const PaymentSuccessHandler: React.FC = () => {
   }, [navigate, searchParams]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="loader-container">
       <div className="flex items-center">
-        <Loader className="animate-spin h-6 w-6 text-primary-600 mr-2" />
+        <BrandicianLoader />
         <span>Processing payment confirmation...</span>
       </div>
     </div>

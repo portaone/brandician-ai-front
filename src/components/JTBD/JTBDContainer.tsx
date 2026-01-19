@@ -8,6 +8,7 @@ import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import ReactMarkdown from "react-markdown";
+import BrandicianLoader from "../common/BrandicianLoader";
 
 type Step = "rating" | "editing" | "drivers";
 
@@ -184,8 +185,8 @@ const JTBDContainer: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader className="animate-spin h-6 w-6 text-primary-600" />
+      <div className="loader-container">
+        <BrandicianLoader />
       </div>
     );
   }

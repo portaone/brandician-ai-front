@@ -1,4 +1,4 @@
-import { AlertCircle, Loader } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
@@ -6,6 +6,7 @@ import { scrollToTop } from "../../lib/utils";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import ReactMarkdown from "react-markdown";
+import BrandicianLoader from "../common/BrandicianLoader";
 
 interface ArchetypeAdjustment {
   old_archetype: string;
@@ -239,9 +240,9 @@ const ArchetypeAdjustmentContainer: React.FC<
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
-        <div className="flex flex-col items-center px-2">
-          <Loader className="animate-spin h-8 w-8 text-primary-600 mb-4" />
+      <div className="loader-container">
+        <div className="flex flex-col items-center px-2 gap-2">
+          <BrandicianLoader />
           <p className="text-gray-600">
             Analyzing feedback for adjusting brand archetype...
           </p>

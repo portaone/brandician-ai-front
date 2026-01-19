@@ -1,4 +1,4 @@
-import { AlertCircle, Copy, CreditCard, Loader } from "lucide-react";
+import { AlertCircle, Copy, CreditCard } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { backendConfig, brands } from "../../lib/api";
@@ -8,6 +8,7 @@ import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import BrandicianLoader from "../common/BrandicianLoader";
 
 interface PaymentMethod {
   id: string;
@@ -33,9 +34,15 @@ const PaymentContainer: React.FC = () => {
   const [isLoadingMethods, setIsLoadingMethods] = useState(true);
 
   // Config state for Google Pay
-  const [stripePublishableKey, setStripePublishableKey] = useState<string | null>(null);
-  const [googlePayMerchantId, setGooglePayMerchantId] = useState<string | null>(null);
-  const [googlePayEnvironment, setGooglePayEnvironment] = useState<"TEST" | "PRODUCTION">("PRODUCTION");
+  const [stripePublishableKey, setStripePublishableKey] = useState<
+    string | null
+  >(null);
+  const [googlePayMerchantId, setGooglePayMerchantId] = useState<string | null>(
+    null
+  );
+  const [googlePayEnvironment, setGooglePayEnvironment] = useState<
+    "TEST" | "PRODUCTION"
+  >("PRODUCTION");
 
   // Initialize Google Pay hook
   const {
@@ -261,7 +268,9 @@ const PaymentContainer: React.FC = () => {
       window.location.href = paymentSession.checkout_url;
     } catch (error: any) {
       console.error("Payment submission failed:", error);
-      const errorMessage = error?.response?.data?.detail || "Failed to process payment. Please try again.";
+      const errorMessage =
+        error?.response?.data?.detail ||
+        "Failed to process payment. Please try again.";
       setErrors({ payment: errorMessage });
       setPaymentError(errorMessage);
       setIsProcessingPayment(false);
@@ -285,9 +294,9 @@ const PaymentContainer: React.FC = () => {
 
   if (isLoading || !currentBrand) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex items-center">
-          <Loader className="animate-spin h-6 w-6 text-primary-600 mr-2" />
+      <div className="loader-container">
+        <div className="flex items-center justify-center flex-col">
+          <BrandicianLoader />
           <span>Loading...</span>
         </div>
       </div>
@@ -341,7 +350,7 @@ const PaymentContainer: React.FC = () => {
                 </h2>
                 {isLoadingMethods ? (
                   <div className="flex items-center justify-center py-4">
-                    <Loader className="animate-spin h-5 w-5 text-primary-600 mr-2" />
+                    <BrandicianLoader />
                     <span className="text-gray-600">
                       Loading payment methods...
                     </span>

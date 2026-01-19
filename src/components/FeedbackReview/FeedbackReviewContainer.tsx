@@ -1,9 +1,10 @@
-import { AlertCircle, ArrowRight, Loader, RefreshCw } from "lucide-react";
+import { AlertCircle, ArrowRight, RefreshCw, Loader } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { useBrandStore } from "../../store/brand";
 import { Feedback } from "../../types";
+import BrandicianLoader from "../common/BrandicianLoader";
 
 // Global cache to prevent duplicate API calls across component instances
 const feedbackCache = new Map<
@@ -234,9 +235,9 @@ const FeedbackReviewContainer: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
+      <div className="loader-container">
         <div className="flex flex-col items-center">
-          <Loader className="animate-spin h-8 w-8 text-primary-600 mb-4" />
+          <BrandicianLoader />
           <p className="text-gray-600">Analyzing survey feedback...</p>
         </div>
       </div>

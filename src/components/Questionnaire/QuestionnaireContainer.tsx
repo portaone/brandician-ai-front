@@ -8,6 +8,7 @@ import Button from "../common/Button";
 import QuestionnaireHeader from "./QuestionnaireHeader";
 import QuestionnaireItem from "./QuestionnaireItem";
 import QuestionnaireSummary from "./QuestionnaireSummary";
+import BrandicianLoader from "../common/BrandicianLoader";
 
 const QuestionnaireContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -117,8 +118,8 @@ const QuestionnaireContainer: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin text-primary-600 text-2xl">⟳</div>
+      <div className="loader-container">
+        <BrandicianLoader />
       </div>
     );
   }
