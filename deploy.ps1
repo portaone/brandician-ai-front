@@ -180,6 +180,10 @@ if ($cloneSource) {
     gcloud run services replace $tempYaml --region $region
 
     if ($LASTEXITCODE -eq 0) {
+        # Grant public access (IAM policy is not copied by services replace)
+        Write-Host "Granting public access to the service..." -ForegroundColor Cyan
+        gcloud run services add-iam-policy-binding $cloudRunServiceName --region $region --member="allUsers" --role="roles/run.invoker" 2>&1 | Out-Null
+
         Write-Host ""
         Write-Host "========================================" -ForegroundColor Green
         Write-Host "  Clone completed successfully!" -ForegroundColor Green
