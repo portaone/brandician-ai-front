@@ -2,20 +2,21 @@ import { CookieBanner } from "@schlomoh/react-cookieconsent";
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { gtag, ICookiesConsent, initGTM } from "../../gtag";
-import { getCookies } from "../../lib/utils";
+import { getConsentCookies, reWriteConsentCookies } from "../../lib/utils";
+import { initClarity } from "../../lib/clarity";
+import { useAuthStore } from "../../store/auth";
 
 function initCookies(): void {
-  const cookies: Record<string, any> = getCookies();
+  let consentCookies: Record<string, string> = getConsentCookies();
 
-  const consentCookies: ICookiesConsent = mapCookiesToGtagArgs(
-    JSON.parse(cookies?.selection || "{}")
-  );
+  const gtagArgs: ICookiesConsent = mapCookiesToGtagArgs(consentCookies);
 
-  gtag("consent", "update", consentCookies);
+  gtag("consent", "update", gtagArgs);
+  window.dataLayer.push({ event: "gtm.init_consent" });
 }
 
 function mapCookiesToGtagArgs(
-  cookies: Record<string, string>
+  cookies: Record<string, string>,
 ): ICookiesConsent {
   return {
     analytics_storage: cookies?.Analytics ? "granted" : "denied",
@@ -26,6 +27,8 @@ function mapCookiesToGtagArgs(
 }
 
 const CookieConsent: React.FC = () => {
+  const { user } = useAuthStore();
+
   useEffect(() => {
     initGTM("consent", "default", {
       ad_storage: "denied",
@@ -33,19 +36,20 @@ const CookieConsent: React.FC = () => {
       ad_user_data: "denied",
       ad_personalization: "denied",
     });
+    initCookies();
+    initClarity(getConsentCookies(), user);
   }, []);
 
   useEffect(() => {
     setTimeout(() => {
       const cookieButtonContainer: HTMLElement | null = document.querySelector(
-        ".cookie-consent-info"
+        ".cookie-consent-info",
       )?.nextElementSibling as HTMLElement | null;
 
       if (cookieButtonContainer) {
         cookieButtonContainer.style.flexWrap = "wrap";
       }
     }, 1000);
-    initCookies();
   }, []);
   const info: JSX.Element = (
     <span className="mr-2 mb-2 md:mb-0 cookie-consent-info">
@@ -62,8 +66,15 @@ const CookieConsent: React.FC = () => {
   );
 
   const handleAccept = (cookies: any) => {
+    reWriteConsentCookies(cookies);
     gtag("consent", "update", mapCookiesToGtagArgs(cookies));
     window.dataLayer.push({ event: "gtm.init_consent" });
+    initClarity(cookies, user);
+  };
+
+  const handleDecline = () => {
+    const declinedCookies = getConsentCookies();
+    reWriteConsentCookies(declinedCookies);
   };
 
   return (
@@ -76,6 +87,7 @@ const CookieConsent: React.FC = () => {
       accentColor="#FD615E"
       containerStyle={{ accentColor: "#FD615E" }}
       onAccept={handleAccept}
+      onDecline={handleDecline}
     />
   );
 };

@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { auth } from "../lib/api";
 import { User } from "../types";
+import { initClarity } from "../lib/clarity";
+import { getConsentCookies } from "../lib/utils";
 
 // Helper function to get user-friendly error messages
 const getErrorMessage = (error: any): string => {
@@ -87,6 +89,8 @@ export const useAuthStore = create<AuthState>()(
           await auth.verifyOTP(otpId, otp);
           const user = await auth.getCurrentUser();
           set({ user, isLoading: false, otpId: null });
+          // Initialize Clarity on successful login
+          initClarity(getConsentCookies(), user);
         } catch (error) {
           const errorMessage = getErrorMessage(error);
           set({ isLoading: false, error: errorMessage });
