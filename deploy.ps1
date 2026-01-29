@@ -229,7 +229,7 @@ $deployArgs = @(
     "--cpu", "1",
     "--memory", "512Mi",
     "--concurrency", "80",
-    "--timeout", "30",
+    "--timeout", "300",
     "--service-account", $service_account,
     "--allow-unauthenticated"
 )
