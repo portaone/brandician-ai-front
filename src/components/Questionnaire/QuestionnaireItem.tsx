@@ -193,19 +193,33 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
         );
         console.log("🎤 Processing status:", status.status);
 
-        if (status.status === "completed" && status.text) {
-          console.log("🎤 Processing completed:", status.text);
-          setAnswer(status.text);
-          setHasBeenEdited(true);
+        if (status.status === "completed") {
+          if (status.text) {
+            console.log("🎤 Processing completed:", status.text);
+            setAnswer(status.text);
+            setHasBeenEdited(true);
+          } else {
+            console.error("🔴 Processing completed but no text returned");
+            setRecordingError(
+              "Audio was processed but no text was extracted. Please try again or type your answer."
+            );
+          }
           setIsProcessing(false);
         } else if (status.status === "failed") {
           console.error("🔴 Processing failed:", status.error);
           setRecordingError(
-            "Failed to process audio. Please try again or type your answer."
+            status.error || "Failed to process audio. Please try again or type your answer."
           );
           setIsProcessing(false);
         } else if (status.status === "processing") {
           setTimeout(checkStatus, 2000);
+        } else {
+          // Unknown status - stop processing to avoid infinite loop
+          console.error("🔴 Unknown processing status:", status.status);
+          setRecordingError(
+            "Unexpected error during audio processing. Please try again or type your answer."
+          );
+          setIsProcessing(false);
         }
       };
 
