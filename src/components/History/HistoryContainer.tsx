@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp, Loader, Share2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands, backendConfig } from "../../lib/api";
 import { getRouteForStatus } from "../../lib/navigation";
@@ -739,8 +740,8 @@ const HistoryContainer: React.FC = () => {
               <h4 className="font-semibold text-gray-900">Brand Summary:</h4>
               <CopyButton text={summaryText} />
             </div>
-            <div className="bg-gray-50 p-4 rounded">
-              <p className="text-gray-700 whitespace-pre-wrap">{summaryText}</p>
+            <div className="bg-gray-50 p-4 rounded prose prose-sm max-w-none text-gray-700">
+              <ReactMarkdown>{summaryText}</ReactMarkdown>
             </div>
           </div>
         );
@@ -754,10 +755,8 @@ const HistoryContainer: React.FC = () => {
               <h4 className="font-semibold text-gray-900">Brand Archetype:</h4>
               <CopyButton text={archetypeText} />
             </div>
-            <div className="bg-gray-50 p-4 rounded">
-              <p className="text-gray-700 whitespace-pre-wrap">
-                {archetypeText}
-              </p>
+            <div className="bg-gray-50 p-4 rounded prose prose-sm max-w-none text-gray-700">
+              <ReactMarkdown>{archetypeText}</ReactMarkdown>
             </div>
           </div>
         );
