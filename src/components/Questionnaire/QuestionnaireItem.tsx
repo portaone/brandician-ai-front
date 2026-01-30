@@ -201,7 +201,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
           } else {
             console.error("🔴 Processing completed but no text returned");
             setRecordingError(
-              "Audio was processed but no text was extracted. Please try again or type your answer."
+              "Could not transcribe your audio into text. Please try again or type your answer."
             );
           }
           setIsProcessing(false);
