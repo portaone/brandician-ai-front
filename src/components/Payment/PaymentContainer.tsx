@@ -73,8 +73,9 @@ const PaymentContainer: React.FC = () => {
     "I have just created a branding for my new business idea using Brandician.AI and it was awesome! AI-powered tool analyzes your business idea, suggests the brand archetype, generates brand assets, etc. Visit https://brandician.ai/ to create a brand for your idea!";
   const atLeastOneShared = Object.values(sharedNetworks).some(Boolean);
   const isZeroAmount = paymentAmount !== "" && parseFloat(paymentAmount) === 0;
+  // Allow proceeding with zero amount - social sharing is optional, not required
   const canProceed =
-    paymentAmount !== "" && (!isZeroAmount || atLeastOneShared);
+    paymentAmount !== "" && !isNaN(parseFloat(paymentAmount)) && parseFloat(paymentAmount) >= 0;
 
   // Ref for amount input
   const amountInputRef = useRef<HTMLInputElement>(null);
@@ -440,7 +441,7 @@ const PaymentContainer: React.FC = () => {
                     <input
                       id="payment"
                       type="number"
-                      min="1"
+                      min="0"
                       step="0.01"
                       value={paymentAmount}
                       onChange={handlePaymentAmountChange}
