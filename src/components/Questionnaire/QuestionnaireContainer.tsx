@@ -43,6 +43,10 @@ const QuestionnaireContainer: React.FC = () => {
     return answersMap;
   }, [answers]);
 
+  const isAllQuestionsAnswered = useMemo(() => {
+    return answers.length === questions.length;
+  }, [answers, questions]);
+
   useEffect(() => {
     console.log("🔄 Loading brand data for brandId:", brandId);
     if (brandId) {
@@ -94,7 +98,7 @@ const QuestionnaireContainer: React.FC = () => {
       }
 
       const firstUnansweredIndex = questions.findIndex(
-        (q) => !(q.id in typedAnswers)
+        (q) => !(q.id in typedAnswers),
       );
       console.log("🎯 First unanswered question index:", firstUnansweredIndex);
 
@@ -110,7 +114,7 @@ const QuestionnaireContainer: React.FC = () => {
         // Found first unanswered question
         console.log(
           "📝 Setting current question index to:",
-          firstUnansweredIndex
+          firstUnansweredIndex,
         );
         setCurrentQuestionIndex(firstUnansweredIndex);
       }
@@ -162,14 +166,14 @@ const QuestionnaireContainer: React.FC = () => {
           brandId,
           questions[currentQuestionIndex].id,
           answer,
-          questions[currentQuestionIndex].text
+          questions[currentQuestionIndex].text,
         );
       } catch (error: any) {
         console.error("Failed to submit answer:", error);
         setSubmitError(
           error?.response?.data?.message ||
             error?.message ||
-            "Failed to submit answer. Please try again."
+            "Failed to submit answer. Please try again.",
         );
         return;
       }
@@ -264,7 +268,7 @@ const QuestionnaireContainer: React.FC = () => {
           brandId,
           currentQuestion.id,
           answerToSave,
-          currentQuestion.text
+          currentQuestion.text,
         );
       }
     }
@@ -407,6 +411,8 @@ const QuestionnaireContainer: React.FC = () => {
                   answerId={currentQuestion.id}
                   submitError={submitError}
                   onRetrySubmit={handleRetrySubmit}
+                  onShowSummary={() => setShowSummary(true)}
+                  isAllQuestionsAnswered={isAllQuestionsAnswered}
                 />
               ) : null}
             </>
@@ -420,7 +426,7 @@ const QuestionnaireContainer: React.FC = () => {
 function findUnansweredQuestionIndex(
   currentQuestionIndex: number,
   action: "previous" | "next",
-  { questions, answers }: { questions: Question[]; answers: Answer[] }
+  { questions, answers }: { questions: Question[]; answers: Answer[] },
 ): number | null {
   const filteredQuestions: Question[] =
     action === "next"
@@ -428,7 +434,7 @@ function findUnansweredQuestionIndex(
       : questions.slice(0, currentQuestionIndex).reverse();
 
   const unansweredQuestionIndex: string | undefined = filteredQuestions.find(
-    (q: Question) => !answers.some((a) => a.id === q.id)
+    (q: Question) => !answers.some((a) => a.id === q.id),
   )?.id;
 
   return unansweredQuestionIndex ? Number(unansweredQuestionIndex) - 1 : null;

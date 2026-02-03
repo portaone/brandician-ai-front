@@ -26,6 +26,8 @@ interface QuestionnaireItemProps {
   answerId?: string;
   submitError?: string | null;
   onRetrySubmit?: () => void;
+  onShowSummary: () => void;
+  isAllQuestionsAnswered: boolean;
 }
 
 const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
@@ -41,6 +43,8 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   answerId,
   submitError,
   onRetrySubmit,
+  onShowSummary,
+  isAllQuestionsAnswered,
 }) => {
   const [answer, setAnswer] = useState(currentAnswer || "");
   const [aiEnhancedAnswer, setAiEnhancedAnswer] = useState("");
@@ -52,10 +56,10 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   const [recordingError, setRecordingError] = useState<string | null>(null);
   const [hasBeenEdited, setHasBeenEdited] = useState(false);
   const [augmentationError, setAugmentationError] = useState<string | null>(
-    null
+    null,
   );
   const [augmentationWarning, setAugmentationWarning] = useState<string | null>(
-    null
+    null,
   );
   const [noEnhancementNeeded, setNoEnhancementNeeded] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string>("");
@@ -67,7 +71,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   const enhancementTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const MAX_RECORDING_DURATION_MS = 180000; // 3 minutes
   const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null
+    null,
   );
 
   // Update answer when currentAnswer changes (e.g., when navigating)
@@ -146,7 +150,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     } catch (error) {
       console.error("🔴 Failed to start recording:", error);
       setRecordingError(
-        "Failed to access microphone. Please ensure you have granted microphone permissions."
+        "Failed to access microphone. Please ensure you have granted microphone permissions.",
       );
     }
   };
@@ -180,7 +184,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
       const { id: processingId } = await brands.processAudio(
         brandId,
         answerId,
-        file
+        file,
       );
       console.log("🎤 Got processing ID:", processingId);
 
@@ -189,7 +193,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
         const status = await brands.getAudioProcessingStatus(
           brandId,
           answerId,
-          processingId
+          processingId,
         );
         console.log("🎤 Processing status:", status.status);
 
@@ -201,14 +205,15 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
           } else {
             console.error("🔴 Processing completed but no text returned");
             setRecordingError(
-              "Could not transcribe your audio into text. Please try again or type your answer."
+              "Could not transcribe your audio into text. Please try again or type your answer.",
             );
           }
           setIsProcessing(false);
         } else if (status.status === "failed") {
           console.error("🔴 Processing failed:", status.error);
           setRecordingError(
-            status.error || "Failed to process audio. Please try again or type your answer."
+            status.error ||
+              "Failed to process audio. Please try again or type your answer.",
           );
           setIsProcessing(false);
         } else if (status.status === "processing") {
@@ -217,7 +222,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
           // Unknown status - stop processing to avoid infinite loop
           console.error("🔴 Unknown processing status:", status.status);
           setRecordingError(
-            "Unexpected error during audio processing. Please try again or type your answer."
+            "Unexpected error during audio processing. Please try again or type your answer.",
           );
           setIsProcessing(false);
         }
@@ -227,7 +232,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     } catch (error) {
       console.error("🔴 Failed to process audio:", error);
       setRecordingError(
-        "Failed to process audio. Please try again or type your answer."
+        "Failed to process audio. Please try again or type your answer.",
       );
       setIsProcessing(false);
     }
@@ -276,7 +281,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
           const enhancedAnswer = await brands.augmentAnswer(
             brandId,
             answerId,
-            text
+            text,
           );
           console.log("🎯 Full API response:", enhancedAnswer);
           console.log("🎯 Response type:", typeof enhancedAnswer);
@@ -288,11 +293,11 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
           ) {
             console.log(
               "⚠️ Cannot augment answer:",
-              enhancedAnswer.explanation
+              enhancedAnswer.explanation,
             );
             setAugmentationError(null);
             setAugmentationWarning(
-              enhancedAnswer.explanation || "Cannot enhance this answer"
+              enhancedAnswer.explanation || "Cannot enhance this answer",
             );
             setAiEnhancedAnswer("");
           } else if (
@@ -302,10 +307,10 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
           ) {
             console.log(
               "❌ Invalid/Meaningless answer detected:",
-              enhancedAnswer.explanation
+              enhancedAnswer.explanation,
             );
             setAugmentationError(
-              enhancedAnswer.explanation || "Invalid answer"
+              enhancedAnswer.explanation || "Invalid answer",
             );
             setAugmentationWarning(null);
             setAiEnhancedAnswer("");
@@ -315,17 +320,17 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
           ) {
             console.log(
               "⚠️ Cannot augment answer:",
-              enhancedAnswer.explanation
+              enhancedAnswer.explanation,
             );
             setAugmentationError(null);
             setAugmentationWarning(
-              enhancedAnswer.explanation || "Cannot enhance this answer"
+              enhancedAnswer.explanation || "Cannot enhance this answer",
             );
             setAiEnhancedAnswer("");
           } else {
             console.log(
               "✅ Setting enhanced answer:",
-              enhancedAnswer?.answer || enhancedAnswer
+              enhancedAnswer?.answer || enhancedAnswer,
             );
             setAugmentationError(null);
             setAugmentationWarning(null);
@@ -338,7 +343,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
             setAiEnhancedAnswer(
               typeof answerText === "string"
                 ? answerText
-                : JSON.stringify(answerText)
+                : JSON.stringify(answerText),
             );
           }
         } catch (error: any) {
@@ -382,7 +387,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     } else {
       // Show error for short answers
       setAugmentationError(
-        "Please enter at least 10 characters to enhance your answer"
+        "Please enter at least 10 characters to enhance your answer",
       );
       setAiEnhancedAnswer("");
       setAugmentationWarning(null);
@@ -399,6 +404,11 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleShowSummary = () => {
+    handleSubmit();
+    onShowSummary();
   };
 
   const copyToClipboard = async () => {
@@ -636,18 +646,33 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
           Question {questionNumber} of {totalQuestions}
         </div>
 
-        <Button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitting || isProcessing || !!augmentationError}
-          size="md"
-        >
-          {isSubmitting ? (
-            <Loader className="animate-spin h-5 w-5 mr-2 inline" />
-          ) : null}
-          {isLastQuestion ? "Finish" : "Next"}
-          {!isLastQuestion && <ArrowRight className="h-5 w-5 ml-2 inline" />}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {!isLastQuestion && isAllQuestionsAnswered && (
+            <Button
+              type="button"
+              onClick={handleShowSummary}
+              disabled={isSubmitting || isProcessing || !!augmentationError}
+              size="md"
+            >
+              {isSubmitting ? (
+                <Loader className="animate-spin h-5 w-5 mr-2 inline" />
+              ) : null}
+              Return to summary
+            </Button>
+          )}
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSubmitting || isProcessing || !!augmentationError}
+            size="md"
+          >
+            {isSubmitting ? (
+              <Loader className="animate-spin h-5 w-5 mr-2 inline" />
+            ) : null}
+            {isLastQuestion ? "Finish" : "Next"}
+            {!isLastQuestion && <ArrowRight className="h-5 w-5 ml-2 inline" />}
+          </Button>
+        </div>
       </div>
     </div>
   );
