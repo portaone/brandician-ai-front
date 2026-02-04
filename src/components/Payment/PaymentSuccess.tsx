@@ -57,6 +57,7 @@ const PaymentSuccess: React.FC = () => {
 
         // Update state to show success UI (check cancellation first)
         if (!isCancelledRef.current) {
+          sessionStorage.removeItem("paymentAmount");
           setPaymentStatus("success");
           setIsVerifying(false);
         }
