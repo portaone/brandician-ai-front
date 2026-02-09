@@ -8,6 +8,7 @@ export type BrandStatus =
   | "collect_feedback"
   | "feedback_review_summary"
   | "feedback_review_jtbd"
+  | "primary_persona_selection"
   | "feedback_review_archetype"
   | "pick_name"
   | "create_assets"
@@ -24,6 +25,8 @@ export const BRAND_STATUS_CREATE_SURVEY = "create_survey";
 export const BRAND_STATUS_COLLECT_FEEDBACK = "collect_feedback";
 export const BRAND_STATUS_FEEDBACK_REVIEW_SUMMARY = "feedback_review_summary";
 export const BRAND_STATUS_FEEDBACK_REVIEW_JTBD = "feedback_review_jtbd";
+export const BRAND_STATUS_PRIMARY_PERSONA_SELECTION =
+  "primary_persona_selection";
 export const BRAND_STATUS_FEEDBACK_REVIEW_ARCHETYPE =
   "feedback_review_archetype";
 export const BRAND_STATUS_PICK_NAME = "pick_name";
@@ -46,6 +49,7 @@ export const getRouteForStatus = (
     collect_feedback: `/brands/${brandId}/collect-feedback`,
     feedback_review_summary: `/brands/${brandId}/feedback-review/summary`,
     feedback_review_jtbd: `/brands/${brandId}/feedback-review/jtbd`,
+    primary_persona_selection: `/brands/${brandId}/primary-persona`,
     feedback_review_archetype: `/brands/${brandId}/feedback-review/archetype`,
     pick_name: `/brands/${brandId}/pick-name`,
     create_assets: `/brands/${brandId}/create-assets`,
