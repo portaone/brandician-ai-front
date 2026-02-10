@@ -8,6 +8,8 @@ import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import ReactMarkdown from "react-markdown";
 import BrandicianLoader from "../common/BrandicianLoader";
+import BrandNameDisplay from "../BrandName/BrandNameDisplay";
+import { useBrandStore } from "../../store/brand";
 
 // Global cache to prevent duplicate API calls across component instances
 const adjustmentCache = new Map<
@@ -44,7 +46,7 @@ type Footnote = NonNullable<AdjustObject["footnotes"]>[number];
 const reconcileSuggestionsWithEditedSummary = (
   editedText: string,
   previousChanges?: ChangeSegment[],
-  previousFootnotes?: Footnote[]
+  previousFootnotes?: Footnote[],
 ) => {
   const suggestionSegments =
     previousChanges?.filter(
@@ -54,7 +56,7 @@ const reconcileSuggestionsWithEditedSummary = (
           Boolean(segment.id) &&
           Boolean(segment.content)
         );
-      }
+      },
     ) ?? [];
 
   const occupiedRanges: Array<{ start: number; end: number }> = [];
@@ -76,7 +78,7 @@ const reconcileSuggestionsWithEditedSummary = (
 
       const overlaps = occupiedRanges.some(
         (range) =>
-          nextIndex < range.end && nextIndex + snippetLength > range.start
+          nextIndex < range.end && nextIndex + snippetLength > range.start,
       );
       if (!overlaps) {
         occupiedRanges.push({
@@ -333,6 +335,7 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
   onError,
 }) => {
   const { brandId } = useParams<{ brandId: string }>();
+  const { currentBrand } = useBrandStore();
   const [adjustment, setAdjustment] = useState<AdjustObject | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -463,7 +466,7 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
       console.log("[DEBUG] SummaryAdjustment: Updating summary...");
       await brands.updateSummary(brandId, adjustment.new_text || "");
       console.log(
-        "[DEBUG] SummaryAdjustment: Summary updated, calling onComplete..."
+        "[DEBUG] SummaryAdjustment: Summary updated, calling onComplete...",
       );
       const cacheKey = `adjustment-${brandId}`;
       adjustmentCache.delete(cacheKey);
@@ -510,7 +513,7 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
       ref.classList.add("ring-2", "ring-primary-500");
       setTimeout(
         () => ref.classList.remove("ring-2", "ring-primary-500"),
-        1200
+        1200,
       );
     }
   };
@@ -537,7 +540,7 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
         reconcileSuggestionsWithEditedSummary(
           editedSummary,
           prev.changes ?? [],
-          prev.footnotes ?? []
+          prev.footnotes ?? [],
         );
 
       const updated = {
@@ -599,6 +602,7 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between flex-wrap gap-2 items-center mb-6">
             <h1 className="text-3xl font-display font-bold text-neutral-800">
+              <BrandNameDisplay brand={currentBrand!} />
               Review Brand Summary
             </h1>
             <div className="flex flex-wrap items-center gap-3">
@@ -626,7 +630,7 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
                   <p className="text-blue-600 text-sm">
                     Last response:{" "}
                     {new Date(
-                      adjustment.survey.last_response_date
+                      adjustment.survey.last_response_date,
                     ).toLocaleDateString()}
                   </p>
                 )}

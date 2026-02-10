@@ -8,6 +8,8 @@ import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import ReactMarkdown from "react-markdown";
 import BrandicianLoader from "../common/BrandicianLoader";
+import BrandNameDisplay from "../BrandName/BrandNameDisplay";
+import { useBrandStore } from "../../store/brand";
 
 // Global cache to prevent duplicate API calls across component instances
 const adjustmentCache = new Map<
@@ -469,6 +471,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
   const [personasAdjustments, setPersonasAdjustments] = useState<
     AdjustObject[] | null
   >(null);
+  const { currentBrand } = useBrandStore();
   const [driversAdjustment, setDriversAdjustment] =
     useState<AdjustObject | null>(null);
   const [currentJTBD, setCurrentJTBD] = useState<JTBDList | null>(null);
@@ -501,7 +504,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
   // Choice change handlers
   const handlePersonaChoiceChange = (
     index: number,
-    choice: "original" | "adjusted" | "include"
+    choice: "original" | "adjusted" | "include",
   ) => {
     setPersonaChoices((prev) => ({
       ...prev,
@@ -641,7 +644,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
 
       await brands.updateJTBD(brandId, updatedJTBD);
       console.log(
-        "[DEBUG] JTBDAdjustment: JTBD updated, calling onComplete..."
+        "[DEBUG] JTBDAdjustment: JTBD updated, calling onComplete...",
       );
 
       const cacheKey = `jtbd-adjustment-${brandId}`;
@@ -688,7 +691,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
       ref.classList.add("ring-2", "ring-primary-500");
       setTimeout(
         () => ref.classList.remove("ring-2", "ring-primary-500"),
-        1200
+        1200,
       );
     }
   };
@@ -732,10 +735,10 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
 
   // Separate existing personas and new suggestions
   const existingPersonas = personasAdjustments.filter(
-    (p) => p.old_text && p.old_text.trim() !== ""
+    (p) => p.old_text && p.old_text.trim() !== "",
   );
   const newPersonas = personasAdjustments.filter(
-    (p) => !p.old_text || p.old_text.trim() === ""
+    (p) => !p.old_text || p.old_text.trim() === "",
   );
 
   // Check if all choices are made
@@ -750,6 +753,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between flex-wrap gap-2 items-center mb-6">
             <h1 className="text-3xl font-display font-bold text-neutral-800">
+              <BrandNameDisplay brand={currentBrand!} />
               Review Jobs-to-be-Done
             </h1>
             <div className="flex items-center flex-wrap gap-3">
@@ -776,7 +780,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
                 <p className="text-blue-600 text-sm">
                   Last response:{" "}
                   {new Date(
-                    personasAdjustments[0].survey.last_response_date
+                    personasAdjustments[0].survey.last_response_date,
                   ).toLocaleDateString()}
                 </p>
               )}

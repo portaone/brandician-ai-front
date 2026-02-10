@@ -10,6 +10,7 @@ import HistoryButton from "../common/HistoryButton";
 import ReactMarkdown from "react-markdown";
 import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
+import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 
 type Step = "rating" | "editing" | "drivers";
 
@@ -49,7 +50,7 @@ const JTBDContainer: React.FC = () => {
           ([id, data]) => ({
             ...data,
             id: data.id ?? id,
-          })
+          }),
         );
         setPersonas(personasArray);
       }
@@ -70,13 +71,13 @@ const JTBDContainer: React.FC = () => {
 
   const handleImportanceChange = (
     personaId: string,
-    importance: JTBDImportance
+    importance: JTBDImportance,
   ) => {
     if (importance === "not_applicable") {
       handleRemovePersona(personaId);
     } else {
       setPersonas((prev) =>
-        prev.map((p) => (p.id === personaId ? { ...p, importance } : p))
+        prev.map((p) => (p.id === personaId ? { ...p, importance } : p)),
       );
     }
   };
@@ -94,7 +95,7 @@ const JTBDContainer: React.FC = () => {
     if (!editingPersona) return;
 
     setPersonas((prev) =>
-      prev.map((p) => (p.id === editingPersona.id ? editingPersona : p))
+      prev.map((p) => (p.id === editingPersona.id ? editingPersona : p)),
     );
     setEditingPersona(null);
   };
@@ -133,7 +134,7 @@ const JTBDContainer: React.FC = () => {
 
   const canProceedFromRating = getSelectedPersonas().length >= 3;
   const canProceedFromEditing = getSelectedPersonas().every(
-    (p) => p.description && p.description.trim().length > 0
+    (p) => p.description && p.description.trim().length > 0,
   );
   const canProceedFromDrivers = drivers.trim().length > 0;
 
@@ -152,7 +153,7 @@ const JTBDContainer: React.FC = () => {
               ...acc,
               [persona.id]: persona,
             }),
-            {}
+            {},
           ),
           drivers,
         };
@@ -229,6 +230,7 @@ const JTBDContainer: React.FC = () => {
         <div className="max-w-3xl mx-auto">
           <div className="flex justify-between flex-wrap gap-3 items-center mb-6">
             <h1 className="text-3xl font-display font-bold text-neutral-800">
+              <BrandNameDisplay brand={currentBrand!} />
               Jobs To Be Done Analysis
             </h1>
             <div className="flex items-center flex-wrap gap-3">
@@ -342,7 +344,7 @@ const JTBDContainer: React.FC = () => {
                             onClick={() =>
                               handleImportanceChange(
                                 persona.id,
-                                value as JTBDImportance
+                                value as JTBDImportance,
                               )
                             }
                             className={`p-2 text-sm rounded-md transition-colors ${
@@ -353,7 +355,7 @@ const JTBDContainer: React.FC = () => {
                           >
                             {label}
                           </button>
-                        )
+                        ),
                       )}
                     </div>
                   </div>

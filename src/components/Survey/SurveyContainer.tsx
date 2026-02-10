@@ -21,6 +21,7 @@ import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
+import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 
 const SurveyContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -36,7 +37,7 @@ const SurveyContainer: React.FC = () => {
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [surveyStatus, setSurveyStatus] = useState<SurveyStatus | null>(null);
   const [editingQuestion, setEditingQuestion] = useState<SurveyQuestion | null>(
-    null
+    null,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingSurvey, setIsLoadingSurvey] = useState(false);
@@ -85,7 +86,7 @@ const SurveyContainer: React.FC = () => {
               (question: SurveyQuestion, index: number) => ({
                 ...question,
                 id: question.id || String(index + 1),
-              })
+              }),
             );
           }
 
@@ -96,7 +97,7 @@ const SurveyContainer: React.FC = () => {
           console.error("Failed to load survey data:", error);
           setSurveyError(
             error?.response?.data?.message ||
-              "Failed to load survey. Please try again."
+              "Failed to load survey. Please try again.",
           );
           setErrorType("load");
         }
@@ -155,7 +156,7 @@ const SurveyContainer: React.FC = () => {
     // Get the next sequential ID
     const maxId = Math.max(
       0,
-      ...(survey?.questions.map((q) => parseInt(q.id || "0") || 0) || [0])
+      ...(survey?.questions.map((q) => parseInt(q.id || "0") || 0) || [0]),
     );
     setEditingQuestion({
       id: String(maxId + 1),
@@ -199,7 +200,7 @@ const SurveyContainer: React.FC = () => {
       // This shouldn't happen with our new flow, but handle it gracefully
       const maxId = Math.max(
         0,
-        ...newQuestions.map((q) => parseInt(q.id || "0") || 0)
+        ...newQuestions.map((q) => parseInt(q.id || "0") || 0),
       );
       newQuestions.push({
         ...question,
@@ -274,13 +275,13 @@ const SurveyContainer: React.FC = () => {
       if (response && response.url) {
         console.log(
           "✅ Survey saved successfully, URL received:",
-          response.url
+          response.url,
         );
         setSurveyUrl(response.url);
       } else {
         console.warn(
           "⚠️ No URL found in response, using fallback. Response:",
-          response
+          response,
         );
         setSurveyUrl(`${window.location.origin}/survey/${brandId}`);
       }
@@ -292,7 +293,7 @@ const SurveyContainer: React.FC = () => {
       console.error("Failed to save survey:", error);
       setSurveyError(
         error?.response?.data?.message ||
-          "Failed to save survey. Please try again."
+          "Failed to save survey. Please try again.",
       );
       setErrorType("save");
     } finally {
@@ -353,7 +354,7 @@ const SurveyContainer: React.FC = () => {
               (question: SurveyQuestion, index: number) => ({
                 ...question,
                 id: question.id || String(index + 1),
-              })
+              }),
             );
           }
 
@@ -362,7 +363,7 @@ const SurveyContainer: React.FC = () => {
           console.error("Failed to load survey data:", error);
           setSurveyError(
             error?.response?.data?.message ||
-              "Failed to load survey. Please try again."
+              "Failed to load survey. Please try again.",
           );
           setErrorType("load");
         } finally {
@@ -432,6 +433,7 @@ const SurveyContainer: React.FC = () => {
         <div className="max-w-3xl mx-auto">
           <div className="flex justify-between sm:px-0 px-4 items-center flex-wrap gap-2 mb-6">
             <h1 className="text-3xl font-display font-bold text-neutral-800">
+              <BrandNameDisplay brand={currentBrand!} />
               Create Customer Survey
             </h1>
             <div className="flex items-center gap-3 flex-wrap">
@@ -627,7 +629,7 @@ const SurveyContainer: React.FC = () => {
                       >
                         Last response:{" "}
                         {new Date(
-                          surveyStatus.last_response_date
+                          surveyStatus.last_response_date,
                         ).toLocaleString()}
                       </p>
                     )}
@@ -684,8 +686,8 @@ const SurveyContainer: React.FC = () => {
                   {surveyStatus && hasEnoughResponses()
                     ? "Close the survey and analyze the results"
                     : surveyStatus && !hasEnoughResponses()
-                    ? `Need at least ${surveyStatus.min_responses_required} responses to proceed`
-                    : "Check survey status"}
+                      ? `Need at least ${surveyStatus.min_responses_required} responses to proceed`
+                      : "Check survey status"}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>

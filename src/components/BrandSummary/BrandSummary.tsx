@@ -9,6 +9,7 @@ import HistoryButton from "../common/HistoryButton";
 import ReactMarkdown from "react-markdown";
 import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
+import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 
 const BrandSummary: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -30,7 +31,7 @@ const BrandSummary: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [errorState, setError] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<"generation" | "save" | null>(
-    null
+    null,
   );
   const hasInitialized = useRef(false);
 
@@ -196,6 +197,7 @@ const BrandSummary: React.FC = () => {
         <div className="max-w-3xl mx-auto">
           <div className="flex justify-between items-center flex-wrap gap-2 mb-6">
             <h1 className="text-3xl font-display font-bold text-neutral-800">
+              <BrandNameDisplay brand={currentBrand!} />
               Brand Summary
             </h1>
             <div className="flex items-center gap-3">

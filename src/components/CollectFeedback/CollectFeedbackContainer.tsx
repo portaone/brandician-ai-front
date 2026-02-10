@@ -14,11 +14,12 @@ import {
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 
 const CollectFeedbackContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { progressBrandStatus } = useBrandStore();
+  const { progressBrandStatus, currentBrand } = useBrandStore();
 
   const [surveyStatus, setSurveyStatus] = useState<SurveyStatus | null>(null);
   const [surveyUrl, setSurveyUrl] = useState<string>("");
@@ -134,7 +135,7 @@ const CollectFeedbackContainer: React.FC = () => {
   };
 
   const toggleSection = (
-    section: "summary" | "archetype" | "jtbd" | "questions"
+    section: "summary" | "archetype" | "jtbd" | "questions",
   ) => {
     console.log("🔄 Toggling section:", section);
     console.log("📋 Current expanded state:", expandedSections);
@@ -187,6 +188,7 @@ const CollectFeedbackContainer: React.FC = () => {
       <div className="bg-white rounded-lg shadow-lg p-2 sm:p-8 max-w-2xl w-full">
         <div className="flex flex-wrap gap-2 justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-gray-900">
+            <BrandNameDisplay brand={currentBrand!} />
             Survey Collection
           </h2>
           <div className="flex items-center flex-wrap gap-3">

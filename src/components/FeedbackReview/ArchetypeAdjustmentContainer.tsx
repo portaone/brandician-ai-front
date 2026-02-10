@@ -7,6 +7,8 @@ import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import ReactMarkdown from "react-markdown";
 import BrandicianLoader from "../common/BrandicianLoader";
+import BrandNameDisplay from "../BrandName/BrandNameDisplay";
+import { useBrandStore } from "../../store/brand";
 
 interface ArchetypeAdjustment {
   old_archetype: string;
@@ -25,8 +27,9 @@ const ArchetypeAdjustmentContainer: React.FC<
   ArchetypeAdjustmentContainerProps
 > = ({ onComplete, onError }) => {
   const { brandId } = useParams<{ brandId: string }>();
+  const { currentBrand } = useBrandStore();
   const [adjustment, setAdjustment] = useState<ArchetypeAdjustment | null>(
-    null
+    null,
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,7 +127,7 @@ const ArchetypeAdjustmentContainer: React.FC<
       "[DEBUG] handleAccept: brandId =",
       brandId,
       "adjustment =",
-      adjustment
+      adjustment,
     );
     if (!brandId || !adjustment) {
       console.log("[DEBUG] handleAccept: missing brandId or adjustment");
@@ -133,24 +136,24 @@ const ArchetypeAdjustmentContainer: React.FC<
     if (!adjustment.new_text) {
       console.log(
         "[DEBUG] handleAccept: missing new_text in adjustment",
-        adjustment
+        adjustment,
       );
       setError(
-        "No proposed archetype found. Please try reloading or re-evaluating."
+        "No proposed archetype found. Please try reloading or re-evaluating.",
       );
       onError(
-        "No proposed archetype found. Please try reloading or re-evaluating."
+        "No proposed archetype found. Please try reloading or re-evaluating.",
       );
       return;
     }
     try {
       console.log(
         "[DEBUG] handleAccept: calling updateArchetype with",
-        adjustment.new_text
+        adjustment.new_text,
       );
       await brands.updateArchetype(brandId, adjustment.new_text);
       console.log(
-        "[DEBUG] handleAccept: updateArchetype success, calling onComplete"
+        "[DEBUG] handleAccept: updateArchetype success, calling onComplete",
       );
       onComplete();
     } catch (error: any) {
@@ -177,7 +180,7 @@ const ArchetypeAdjustmentContainer: React.FC<
       ref.classList.add("ring-2", "ring-primary-500");
       setTimeout(
         () => ref.classList.remove("ring-2", "ring-primary-500"),
-        1200
+        1200,
       );
     }
   };
@@ -281,6 +284,7 @@ const ArchetypeAdjustmentContainer: React.FC<
         <div className="max-w-6xl mx-auto">
           <div className="flex justify-between flex-wrap gap-2 items-center mb-6">
             <h1 className="text-3xl font-display font-bold text-neutral-800">
+              <BrandNameDisplay brand={currentBrand!} />
               Review Brand Archetype
             </h1>
             <div className="flex items-center flex-wrap gap-3">

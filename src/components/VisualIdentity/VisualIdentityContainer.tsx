@@ -10,6 +10,7 @@ import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import BrandicianLoader from "../common/BrandicianLoader";
+import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 
 type VisualAssetsState = {
   visualStyle: BrandAsset | null;
@@ -170,6 +171,7 @@ const VisualIdentityContainer: React.FC = () => {
           <div className="flex justify-between flex-wrap gap-2 items-center mb-6">
             <div>
               <h1 className="text-3xl font-display font-bold text-neutral-800">
+                <BrandNameDisplay brand={currentBrand!} />
                 Visual Identity Strategy
               </h1>
               <p className="text-neutral-600 mt-1 text-sm sm:text-base">
