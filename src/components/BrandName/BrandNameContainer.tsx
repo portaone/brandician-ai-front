@@ -77,7 +77,7 @@ const BrandNameContainer: React.FC = () => {
     }
   };
 
-  const handleProceedToAssets = async () => {
+  const handleProceedToVisualIdentity = async () => {
     if (!brandId || !selectedName || isSubmitting) return;
 
     setIsSubmitting(true);
@@ -120,7 +120,7 @@ const BrandNameContainer: React.FC = () => {
             rationale: opt.description,
             domains_available: opt.domains_available || [],
             score: opt.score,
-          }))
+          })),
         );
       }
       setSuggestions(suggestions);
@@ -186,7 +186,7 @@ const BrandNameContainer: React.FC = () => {
                   {/* Show available domains for current brand name if any */}
                   {Array.isArray(currentDraft.domains_available) &&
                     currentDraft.domains_available.some((domain: string) =>
-                      domain.includes(".")
+                      domain.includes("."),
                     ) && (
                       <>
                         <div className="mb-1 font-medium text-blue-700">
@@ -208,8 +208,8 @@ const BrandNameContainer: React.FC = () => {
                           onClick={() =>
                             handleGetDomains(
                               currentDraft.domains_available.filter(
-                                (domain: string) => domain.includes(".")
-                              )
+                                (domain: string) => domain.includes("."),
+                              ),
                             )
                           }
                           variant="secondary"
@@ -281,7 +281,7 @@ const BrandNameContainer: React.FC = () => {
                     {/* Show available domains as green badges if they contain a dot */}
                     {Array.isArray(suggestion.domains_available) &&
                       suggestion.domains_available.some((domain) =>
-                        domain.includes(".")
+                        domain.includes("."),
                       ) && (
                         <>
                           <div className="mt-2 mb-1 font-medium text-green-700">
@@ -304,8 +304,8 @@ const BrandNameContainer: React.FC = () => {
                               e.stopPropagation();
                               handleGetDomains(
                                 suggestion.domains_available?.filter((domain) =>
-                                  domain.includes(".")
-                                ) || []
+                                  domain.includes("."),
+                                ) || [],
                               );
                             }}
                             variant="secondary"
@@ -410,14 +410,14 @@ const BrandNameContainer: React.FC = () => {
             {/* Action Button */}
             <div className="flex justify-end">
               <Button
-                onClick={handleProceedToAssets}
+                onClick={handleProceedToVisualIdentity}
                 disabled={!selectedName || isSubmitting}
                 size="lg"
               >
                 {isSubmitting ? (
                   <Loader className="animate-spin h-5 w-5 mr-2" />
                 ) : null}
-                Create Brand Assets
+                Continue to next step
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </div>

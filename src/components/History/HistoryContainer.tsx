@@ -9,7 +9,6 @@ import { BrandAsset, BrandAssetSummary } from "../../types";
 import AssetContent from "../common/AssetContent";
 import { JTBDDisplay } from "../common/BrandAttributeDisplay";
 import CopyButton from "../common/CopyButton";
-import DownloadAllButton from "../common/DownloadAllButton";
 import GetHelpButton from "../common/GetHelpButton";
 import ShareLinkModal from "../common/ShareLinkModal";
 import BrandicianLoader from "../common/BrandicianLoader";
@@ -36,7 +35,7 @@ const HistoryContainer: React.FC = () => {
   }>({});
   const [stepData, setStepData] = useState<{ [key: number]: any }>({});
   const [loadingSteps, setLoadingSteps] = useState<{ [key: number]: boolean }>(
-    {}
+    {},
   );
   const [revertModalOpen, setRevertModalOpen] = useState(false);
   const [revertTargetStep, setRevertTargetStep] = useState<number | null>(null);
@@ -92,10 +91,12 @@ const HistoryContainer: React.FC = () => {
       feedback_review_jtbd: 7,
       feedback_review_archetype: 8,
       pick_name: 9,
-      create_assets: 10,
-      testimonial: 11,
-      payment: devMode ? 12 : 11, // Show as step 12 in dev mode
-      completed: devMode ? 13 : 11, // After payment in dev mode
+      create_visual_identity: 10,
+      create_hub: 11,
+      create_assets: 12,
+      testimonial: 13,
+      payment: devMode ? 14 : 13, // Show as step 14 in dev mode
+      completed: devMode ? 15 : 13, // After payment in dev mode
     };
     return statusMap[status] || 0;
   };
@@ -112,9 +113,11 @@ const HistoryContainer: React.FC = () => {
       7: "feedback_review_jtbd",
       8: "feedback_review_archetype",
       9: "pick_name",
-      10: "create_assets",
-      11: "testimonial",
-      12: "payment",
+      10: "create_visual_identity",
+      11: "create_hub",
+      12: "create_assets",
+      13: "testimonial",
+      14: "payment",
     };
     return stepStatusMap[stepNumber] || "questionnaire";
   };
@@ -131,9 +134,11 @@ const HistoryContainer: React.FC = () => {
       7: "/feedback-review/jtbd",
       8: "/feedback-review/archetype",
       9: "/pick-name",
-      10: "/create-assets",
-      11: "/testimonial",
-      12: "/payment",
+      10: "/create-visual-identity",
+      11: "/create-hub",
+      12: "/create-assets",
+      13: "/testimonial",
+      14: "/payment",
     };
     return routeMap[stepNumber] || "/questionnaire";
   };
@@ -258,6 +263,31 @@ const HistoryContainer: React.FC = () => {
     },
     {
       number: 10,
+      name: "Visual Identity",
+      description: "Visual Identity section",
+      status: "completed",
+      dataLoader: async () => {
+        if (!brandId) return null;
+        const response = await brands.getBrandHubTab(
+          brandId,
+          "visual_identity",
+        );
+        return { type: "visual_identity", data: response };
+      },
+    },
+    {
+      number: 11,
+      name: "Brand Hub",
+      description: "Brand Hub",
+      status: "completed",
+      dataLoader: async () => {
+        if (!brandId) return null;
+        const response = await brands.getBrandHubTab(brandId, "essence");
+        return { type: "brand_hub", data: response };
+      },
+    },
+    {
+      number: 12,
       name: "Asset Creation",
       description: "Brand assets (logos, colors, etc.)",
       status: "completed",
@@ -268,7 +298,7 @@ const HistoryContainer: React.FC = () => {
       },
     },
     {
-      number: 11,
+      number: 13,
       name: "Testimonial",
       description: "User feedback and testimonial",
       status: "completed",
@@ -279,7 +309,7 @@ const HistoryContainer: React.FC = () => {
     },
     // Payment step - only shown in dev mode (filtered below)
     {
-      number: 12,
+      number: 14,
       name: "Payment",
       description: "Payment processing (Dev Mode)",
       status: "completed",
@@ -298,7 +328,7 @@ const HistoryContainer: React.FC = () => {
   // Filter steps based on dev mode - hide testimonial and payment steps in production
   const visibleSteps = devMode
     ? steps
-    : steps.filter((s) => s.number !== 11 && s.number !== 12);
+    : steps.filter((s) => s.number !== 13 && s.number !== 14);
 
   const toggleStep = async (stepNumber: number) => {
     const isCurrentlyExpanded = expandedSteps[stepNumber];
@@ -360,7 +390,7 @@ const HistoryContainer: React.FC = () => {
       alert(
         `Failed to revert: ${
           error.response?.data?.message || error.message || "Unknown error"
-        }`
+        }`,
       );
     } finally {
       setIsReverting(false);
@@ -439,7 +469,7 @@ const HistoryContainer: React.FC = () => {
                     (a: any) =>
                       a.question_id === q.id ||
                       a.question_id === q.question_id ||
-                      a.id === q.id
+                      a.id === q.id,
                   );
                 } else {
                   answer = data.answers[q.id] || data.answers[q.question_id];
@@ -475,7 +505,7 @@ const HistoryContainer: React.FC = () => {
                         (a: any) =>
                           a.question_id === q.id ||
                           a.question_id === q.question_id ||
-                          a.id === q.id
+                          a.id === q.id,
                       );
                     } else {
                       // Object/dictionary format - answers[questionId]
@@ -520,7 +550,7 @@ const HistoryContainer: React.FC = () => {
                   {JSON.stringify(
                     { questions: data.questions, answers: data.answers },
                     null,
-                    2
+                    2,
                   )}
                 </pre>
               </div>
@@ -544,7 +574,7 @@ const HistoryContainer: React.FC = () => {
             Object.entries(data.data.personas).forEach(
               ([_, persona]: [string, any]) => {
                 text += `${persona.name}\n${persona.description}\n\n`;
-              }
+              },
             );
           }
 
@@ -781,20 +811,13 @@ const HistoryContainer: React.FC = () => {
             <div className="flex items-center flex-wrap gap-2 justify-between mb-2">
               <h4 className="font-semibold text-gray-900">Brand Assets:</h4>
               {brandId && (
-                <div className="flex items-center gap-3">
-                  <DownloadAllButton
-                    brandId={brandId}
-                    brandName={currentBrand?.name || "brand"}
-                    variant="link"
-                  />
-                  <button
-                    onClick={() => setShareModalOpen(true)}
-                    className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700"
-                  >
-                    <Share2 className="h-4 w-4 mr-1" />
-                    Share
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShareModalOpen(true)}
+                  className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700"
+                >
+                  <Share2 className="h-4 w-4 mr-1" />
+                  Share
+                </button>
               )}
             </div>
             {data.data?.assets && Array.isArray(data.data.assets) ? (
@@ -880,7 +903,7 @@ const HistoryContainer: React.FC = () => {
                                 <div className="text-xs text-gray-500 pt-2 border-t border-gray-100">
                                   Created:{" "}
                                   {new Date(
-                                    loadedAsset.created_at
+                                    loadedAsset.created_at,
                                   ).toLocaleString()}
                                 </div>
                               )}
@@ -1048,8 +1071,8 @@ const HistoryContainer: React.FC = () => {
                       isCompleted
                         ? "hover:bg-gray-50 cursor-pointer"
                         : isActive
-                        ? "cursor-default"
-                        : "cursor-not-allowed"
+                          ? "cursor-default"
+                          : "cursor-not-allowed"
                     }`}
                   >
                     <div className="flex items-start gap-4 flex-wrap">
@@ -1059,8 +1082,8 @@ const HistoryContainer: React.FC = () => {
                             isCompleted
                               ? "bg-primary-600 text-white"
                               : isActive
-                              ? "bg-yellow-500 text-white"
-                              : "bg-gray-300 text-gray-600"
+                                ? "bg-yellow-500 text-white"
+                                : "bg-gray-300 text-gray-600"
                           }`}
                         >
                           {step.number}
@@ -1082,16 +1105,16 @@ const HistoryContainer: React.FC = () => {
                               e.stopPropagation();
                               if (currentBrand && brandId) {
                                 console.log(
-                                  "🔵 History Continue button clicked"
+                                  "🔵 History Continue button clicked",
                                 );
                                 console.log("Brand ID:", brandId);
                                 console.log(
                                   "Current status:",
-                                  currentBrand.current_status
+                                  currentBrand.current_status,
                                 );
                                 let route = getRouteForStatus(
                                   brandId,
-                                  currentBrand.current_status as any
+                                  currentBrand.current_status as any,
                                 );
                                 // For questionnaire step, navigate directly to summary view
                                 if (
@@ -1106,7 +1129,7 @@ const HistoryContainer: React.FC = () => {
                               } else {
                                 console.error(
                                   "❌ Missing currentBrand or brandId:",
-                                  { currentBrand, brandId }
+                                  { currentBrand, brandId },
                                 );
                               }
                             }}

@@ -5,7 +5,6 @@ import {
   Route,
   Navigate,
   useParams,
-  useLocation,
 } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useAuthStore } from "./store/auth";
@@ -26,19 +25,22 @@ import FeedbackReviewFlowContainer from "./components/FeedbackReview/FeedbackRev
 import BrandNameContainer from "./components/BrandName/BrandNameContainer";
 import BrandSummary from "./components/BrandSummary/BrandSummary";
 import TestimonialContainer from "./components/Testimonial/TestimonialContainer";
+import VisualIdentityContainer from "./components/VisualIdentity/VisualIdentityContainer";
 import PaymentContainer from "./components/Payment/PaymentContainer";
 import PaymentSuccess from "./components/Payment/PaymentSuccess";
 import PaymentCancel from "./components/Payment/PaymentCancel";
 import CompletedContainer from "./components/Completed/CompletedContainer";
+import BrandHubContainer from "./components/BrandHub/BrandHubContainer";
 import HistoryContainer from "./components/History/HistoryContainer";
 import ColorSchemaPresenter from "./components/ColorSchemaPresenter/ColorSchemaPresenter";
 import MarkdownPage from "./components/MarkdownPage";
 import Footer from "./components/common/Footer";
 import CookieConsent from "./components/common/CookieConsent";
-import BrandAssets from "./components/BrandAssets/BrandAssets";
+// Note: Brand assets are surfaced via history / completed views, not as a standalone route here
 import Profile from "./components/Profile";
 import "./index.css";
 import { RouterActions } from "./components/common/RouterActions";
+import BrandAssets from "./components/BrandAssets/BrandAssets";
 
 function BrandAssetsWrapper() {
   const { brandId } = useParams();
@@ -187,6 +189,22 @@ const App: React.FC = () => {
               element={
                 <AuthGuard>
                   <BrandNameContainer />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/brands/:brandId/create-visual-identity"
+              element={
+                <AuthGuard>
+                  <VisualIdentityContainer />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/brands/:brandId/create-hub"
+              element={
+                <AuthGuard>
+                  <BrandHubContainer />
                 </AuthGuard>
               }
             />

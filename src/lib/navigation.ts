@@ -10,6 +10,8 @@ export type BrandStatus =
   | "feedback_review_jtbd"
   | "feedback_review_archetype"
   | "pick_name"
+  | "create_visual_identity"
+  | "create_hub"
   | "create_assets"
   | "testimonial"
   | "payment"
@@ -27,6 +29,8 @@ export const BRAND_STATUS_FEEDBACK_REVIEW_JTBD = "feedback_review_jtbd";
 export const BRAND_STATUS_FEEDBACK_REVIEW_ARCHETYPE =
   "feedback_review_archetype";
 export const BRAND_STATUS_PICK_NAME = "pick_name";
+export const BRAND_STATUS_CREATE_VISUAL_IDENTITY = "create_visual_identity";
+export const BRAND_STATUS_CREATE_HUB = "create_hub";
 export const BRAND_STATUS_CREATE_ASSETS = "create_assets";
 export const BRAND_STATUS_TESTIMONIAL = "testimonial";
 export const BRAND_STATUS_PAYMENT = "payment";
@@ -35,7 +39,7 @@ export const BRAND_STATUS_COMPLETED = "completed";
 // Navigation utility that maps brand status to routes
 export const getRouteForStatus = (
   brandId: string,
-  status: BrandStatus
+  status: BrandStatus,
 ): string => {
   const routes: Record<BrandStatus, string> = {
     new_brand: `/brands/${brandId}/explanation`,
@@ -48,6 +52,8 @@ export const getRouteForStatus = (
     feedback_review_jtbd: `/brands/${brandId}/feedback-review/jtbd`,
     feedback_review_archetype: `/brands/${brandId}/feedback-review/archetype`,
     pick_name: `/brands/${brandId}/pick-name`,
+    create_visual_identity: `/brands/${brandId}/create-visual-identity`,
+    create_hub: `/brands/${brandId}/create-hub`,
     create_assets: `/brands/${brandId}/create-assets`,
     testimonial: `/brands/${brandId}/testimonial`,
     payment: `/brands/${brandId}/payment`,
@@ -62,13 +68,13 @@ export const getRouteForStatus = (
 export const navigateAfterProgress = (
   navigate: (path: string) => void,
   brandId: string,
-  statusUpdate: { status?: BrandStatus; current_status?: BrandStatus }
+  statusUpdate: { status?: BrandStatus; current_status?: BrandStatus },
 ) => {
   const status = statusUpdate.status || statusUpdate.current_status;
   if (!status) {
     console.error(
       "navigateAfterProgress: No status found in statusUpdate",
-      statusUpdate
+      statusUpdate,
     );
     navigate(`/brands/${brandId}`);
     return;

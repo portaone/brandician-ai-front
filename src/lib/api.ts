@@ -677,15 +677,20 @@ export const brands = {
     });
   },
 
-  produceAssets: async (brandId: string, currentApi: AxiosInstance = api) => {
-    const key = createRequestKey(
-      "POST",
-      apiPath(`/brands/${brandId}/produce-assets/`)
-    );
+  produceAssets: async (
+    brandId: string,
+    assetType?: string,
+    currentApi: AxiosInstance = api
+  ) => {
+    const basePath = apiPath(`/brands/${brandId}/produce-assets/`);
+    const url =
+      assetType && assetType.length > 0
+        ? `${basePath}?asset_type=${encodeURIComponent(assetType)}`
+        : basePath;
+
+    const key = createRequestKey("POST", url);
     return deduplicate(key, async () => {
-      const response = await currentApi.post(
-        apiPath(`/brands/${brandId}/produce-assets/`)
-      );
+      const response = await currentApi.post(url);
       return response.data;
     });
   },
@@ -719,6 +724,45 @@ export const brands = {
 
   deleteAllAssets: async (brandId: string) => {
     await api.delete(apiPath(`/brands/${brandId}/assets/`));
+  },
+
+  // Brand Hub (strategy hub) endpoints
+  getBrandHub: async (brandId: string, currentApi: AxiosInstance = api) => {
+    const key = createRequestKey("GET", apiPath(`/brands/${brandId}/hub`));
+    return deduplicate(key, async () => {
+      const response = await currentApi.get(apiPath(`/brands/${brandId}/hub`));
+      return response.data;
+    });
+  },
+
+  getBrandHubTab: async (
+    brandId: string,
+    tab: string,
+    currentApi: AxiosInstance = api
+  ) => {
+    const key = createRequestKey(
+      "GET",
+      apiPath(`/brands/${brandId}/hub/tabs/${tab}`)
+    );
+    return deduplicate(key, async () => {
+      const response = await currentApi.get(
+        apiPath(`/brands/${brandId}/hub/tabs/${tab}`)
+      );
+      return response.data;
+    });
+  },
+
+  generateBrandHub: async (brandId: string) => {
+    const key = createRequestKey(
+      "POST",
+      apiPath(`/brands/${brandId}/hub/generate`)
+    );
+    return deduplicate(key, async () => {
+      const response = await api.post(
+        apiPath(`/brands/${brandId}/hub/generate`)
+      );
+      return response.data;
+    });
   },
 
   pickName: async (brandId: string) => {

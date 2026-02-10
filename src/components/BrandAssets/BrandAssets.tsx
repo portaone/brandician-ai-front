@@ -30,7 +30,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
   const { progressBrandStatus } = useBrandStore();
   const [assetSummaries, setAssetSummaries] = useState<BrandAssetSummary[]>([]);
   const [loadedAssets, setLoadedAssets] = useState<Record<string, LoadedAsset>>(
-    {}
+    {},
   );
   const [activeTab, setActiveTab] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
@@ -80,9 +80,8 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
   const pollForAssets = async () => {
     try {
       console.log("🔄 Polling for generated assets...");
-      const response: BrandAssetsListResponse = await brands.listAssets(
-        brandId
-      );
+      const response: BrandAssetsListResponse =
+        await brands.listAssets(brandId);
 
       if (response.assets.length > 0) {
         console.log("✅ Assets are ready!");
@@ -135,9 +134,8 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
 
       try {
         console.log("🔄 Fetching brand assets list for:", brandId);
-        const response: BrandAssetsListResponse = await brands.listAssets(
-          brandId
-        );
+        const response: BrandAssetsListResponse =
+          await brands.listAssets(brandId);
 
         if (isMounted) {
           setAssetSummaries(response.assets);
@@ -171,7 +169,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
         if (isMounted) {
           console.error("❌ Failed to load brand assets list:", e);
           setError(
-            "Failed to load brand assets. They may not be generated yet."
+            "Failed to load brand assets. They may not be generated yet.",
           );
         }
       } finally {
@@ -199,7 +197,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
   // Function to load individual asset details
   const loadAssetDetails = async (
     assetId: string,
-    forceReload: boolean = false
+    forceReload: boolean = false,
   ) => {
     if (
       !forceReload &&
@@ -256,7 +254,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
 
   const assetTypes = useMemo(
     () => Array.from(new Set(assetSummaries.map((a) => a.type))),
-    [assetSummaries]
+    [assetSummaries],
   );
 
   const handleProceedToPayment = async () => {
@@ -275,7 +273,8 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="loader-container flex-col">
+        <BrandicianLoader />
         Loading Brand Assets...
       </div>
     );
@@ -404,7 +403,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
                   "🎯 Rendering asset:",
                   loaded.id,
                   loaded.type,
-                  !!loaded.asset
+                  !!loaded.asset,
                 );
                 return (
                   <div

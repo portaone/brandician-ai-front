@@ -28,6 +28,7 @@ export interface Brand extends BrandReduced {
   summary?: string;
   status_description?: string;
   archetype?: string;
+  feedback?: string;
   draft?: BrandNameSuggestion;
   alt_options?: BrandNameSuggestion[];
 }
@@ -77,6 +78,8 @@ export type BrandAssetType =
   | "visual_style"
   | "text_writer_prompt"
   | "brand_book"
+  | "palette"
+  | "visual_style"
   | "ext_system_asset";
 
 export interface JTBD {
