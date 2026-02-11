@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
-import { JTBD, SuggestedPersona, JTBDImportance, JTBD_IMPORTANCE_LABELS, IMPORTANCE_TO_RANKING, JTBDPersonaIn, PersonaInfo } from "../../types";
+import { JTBD, SuggestedPersona, JTBDImportance, JTBD_IMPORTANCE_LABELS, IMPORTANCE_TO_RANKING, RANKING_TO_IMPORTANCE, JTBDPersonaIn, PersonaInfo } from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
@@ -148,6 +148,7 @@ const JTBDContainer: React.FC = () => {
             ...data,
             _key: data.id || key,
             id: data.id || key,
+            importance: data.importance ?? (data.ranking !== undefined ? RANKING_TO_IMPORTANCE[data.ranking] : undefined),
           }),
         );
         setPersonas(personasArray);

@@ -171,6 +171,11 @@ export const RANKING_TO_IMPORTANCE_LABEL: Record<number, string> = Object.fromEn
   ]),
 ) as Record<number, string>;
 
+/** Maps numeric ranking (0–5) → JTBDImportance key */
+export const RANKING_TO_IMPORTANCE: Record<number, JTBDImportance> = Object.fromEntries(
+  Object.entries(IMPORTANCE_TO_RANKING).map(([key, rank]) => [rank, key]),
+) as Record<number, JTBDImportance>;
+
 export type SurveyQuestionType =
   | "text"
   | "single_choice"
