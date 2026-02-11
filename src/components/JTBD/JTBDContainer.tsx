@@ -2,6 +2,7 @@ import { ArrowRight, Edit2, Loader, RefreshCw, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
+import { navigateAfterProgress } from "../../lib/navigation";
 import { scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
 import { JTBD, SuggestedPersona, JTBDImportance, JTBD_IMPORTANCE_LABELS, IMPORTANCE_TO_RANKING, RANKING_TO_IMPORTANCE, JTBDPersonaIn, PersonaInfo } from "../../types";
@@ -115,7 +116,7 @@ function toJTBDPersonaIn(persona: PersonaItem): JTBDPersonaIn {
 const JTBDContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { currentBrand, selectBrand, loadJTBD, isLoading, error } =
+  const { currentBrand, selectBrand, loadJTBD, progressBrandStatus, isLoading, error } =
     useBrandStore();
   const [personas, setPersonas] = useState<PersonaItem[]>([]);
   const [drivers, setDrivers] = useState("");
@@ -276,7 +277,8 @@ const JTBDContainer: React.FC = () => {
           brands.updateJTBDDrivers(brandId, drivers),
         ]);
 
-        navigate(`/brands/${brandId}/survey`);
+        const statusUpdate = await progressBrandStatus(brandId);
+        navigateAfterProgress(navigate, brandId, statusUpdate);
       } catch (error) {
         console.error("Failed to update JTBD:", error);
       } finally {
