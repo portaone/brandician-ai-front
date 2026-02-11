@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
-import { JTBD, JTBDImportance, JTBD_IMPORTANCE_LABELS, JTBDPersonaIn, PersonaInfo } from "../../types";
+import { JTBD, SuggestedPersona, JTBDImportance, JTBD_IMPORTANCE_LABELS, JTBDPersonaIn, PersonaInfo } from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
@@ -45,7 +45,7 @@ const renderPersonaInfo = (info: PersonaInfo) => {
 };
 
 /** Get the display content for a persona - prefers info fields, falls back to description */
-const getPersonaDisplayContent = (persona: JTBD): React.ReactNode => {
+const getPersonaDisplayContent = (persona: PersonaItem): React.ReactNode => {
   if (persona.info) {
     const infoContent = renderPersonaInfo(persona.info);
     if (infoContent) return infoContent;
@@ -61,7 +61,7 @@ const getPersonaDisplayContent = (persona: JTBD): React.ReactNode => {
 };
 
 /** Check if persona has meaningful content (info or description) */
-const hasPersonaContent = (persona: JTBD): boolean => {
+const hasPersonaContent = (persona: PersonaItem): boolean => {
   if (persona.info) {
     const hasInfoContent = Object.entries(PERSONA_INFO_LABELS).some(
       ([key]) => {
@@ -83,13 +83,41 @@ const IMPORTANCE_TO_RANKING: Record<string, number> = {
   very_important: 5,
 };
 
-function toJTBDPersonaIn(persona: JTBD): JTBDPersonaIn {
+/**
+ * Local display type for the component.
+ * - `_key` is always present (for React key and internal lookups)
+ * - `id` is set only for personas already persisted in the database
+ *   (undefined for suggested-but-not-yet-saved personas)
+ */
+interface PersonaItem {
+  _key: string;
+  id?: string;
+  name: string;
+  description?: string;
+  info?: PersonaInfo;
+  ranking?: number;
+  survey_prevalence?: number;
+  confidence?: string;
+  importance?: JTBDImportance;
+}
+
+/** Convert a suggested persona (from the backend) to a PersonaItem without id */
+function toSuggestedPersonaItem(data: SuggestedPersona): PersonaItem {
+  return {
+    _key: crypto.randomUUID(),
+    name: data.name,
+    description: data.description,
+    info: data.info,
+    // id intentionally absent — not yet persisted
+  };
+}
+
+function toJTBDPersonaIn(persona: PersonaItem): JTBDPersonaIn {
   return {
     name: persona.name,
     info: persona.info,
     ranking: persona.ranking ?? (persona.importance ? IMPORTANCE_TO_RANKING[persona.importance] : undefined),
     survey_prevalence: persona.survey_prevalence,
-    confidence: persona.confidence,
   };
 }
 
@@ -98,11 +126,11 @@ const JTBDContainer: React.FC = () => {
   const navigate = useNavigate();
   const { currentBrand, selectBrand, loadJTBD, isLoading, error } =
     useBrandStore();
-  const [personas, setPersonas] = useState<JTBD[]>([]);
+  const [personas, setPersonas] = useState<PersonaItem[]>([]);
   const [drivers, setDrivers] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>("rating");
-  const [editingPersona, setEditingPersona] = useState<JTBD | null>(null);
+  const [editingPersona, setEditingPersona] = useState<PersonaItem | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isEditingDrivers, setIsEditingDrivers] = useState(false);
   const isRegeneratingRef = useRef<boolean>(false);
@@ -112,30 +140,47 @@ const JTBDContainer: React.FC = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      if (brandId && !hasInitialized.current) {
-        hasInitialized.current = true;
-        await selectBrand(brandId);
-        await loadJTBD(brandId);
+      if (!brandId || hasInitialized.current) return;
+      hasInitialized.current = true;
+
+      await selectBrand(brandId);
+      await loadJTBD(brandId);
+
+      // After loadJTBD completes, check if we have persisted data
+      const state = useBrandStore.getState();
+      const jtbd = state.currentBrand?.jtbd;
+
+      if (jtbd?.personas && Object.keys(jtbd.personas).length > 0) {
+        // Persisted personas — have real IDs
+        const personasArray: PersonaItem[] = Object.entries(jtbd.personas).map(
+          ([key, data]) => ({
+            ...data,
+            _key: data.id || key,
+            id: data.id || key,
+          }),
+        );
+        setPersonas(personasArray);
+        setDrivers(jtbd.drivers || "");
+      } else {
+        // No persisted JTBD — suggest initial personas
+        setIsRegenerating(true);
+        try {
+          const suggestedData = await brands.suggestJTBD(brandId);
+          if (suggestedData?.personas?.length) {
+            setPersonas(suggestedData.personas.map(toSuggestedPersonaItem));
+          }
+          if (suggestedData?.drivers) {
+            setDrivers(suggestedData.drivers);
+          }
+        } catch (err) {
+          console.error("Failed to suggest JTBD:", err);
+        } finally {
+          setIsRegenerating(false);
+        }
       }
     };
     loadData();
   }, [brandId, selectBrand, loadJTBD]);
-
-  useEffect(() => {
-    if (currentBrand?.jtbd) {
-      const jtbdData = currentBrand.jtbd;
-      if (jtbdData.personas) {
-        const personasArray = Object.entries(jtbdData.personas).map(
-          ([id, data]) => ({
-            ...data,
-            id: data.id ?? id,
-          }),
-        );
-        setPersonas(personasArray);
-      }
-      setDrivers(jtbdData.drivers || "");
-    }
-  }, [currentBrand]);
 
   useEffect(() => {
     if (editingPersona) {
@@ -150,23 +195,23 @@ const JTBDContainer: React.FC = () => {
   }, [editingPersona]);
 
   const handleImportanceChange = (
-    personaId: string,
+    key: string,
     importance: JTBDImportance,
   ) => {
     if (importance === "not_applicable") {
-      handleRemovePersona(personaId);
+      handleRemovePersona(key);
     } else {
       setPersonas((prev) =>
-        prev.map((p) => (p.id === personaId ? { ...p, importance } : p)),
+        prev.map((p) => (p._key === key ? { ...p, importance } : p)),
       );
     }
   };
 
-  const handleRemovePersona = (personaId: string) => {
-    setPersonas((prev) => prev.filter((p) => p.id !== personaId));
+  const handleRemovePersona = (key: string) => {
+    setPersonas((prev) => prev.filter((p) => p._key !== key));
   };
 
-  const handleEditPersona = (persona: JTBD) => {
+  const handleEditPersona = (persona: PersonaItem) => {
     setEditingPersona(persona);
   };
 
@@ -175,7 +220,7 @@ const JTBDContainer: React.FC = () => {
     if (!editingPersona) return;
 
     setPersonas((prev) =>
-      prev.map((p) => (p.id === editingPersona.id ? editingPersona : p)),
+      prev.map((p) => (p._key === editingPersona._key ? editingPersona : p)),
     );
     setEditingPersona(null);
   };
@@ -229,10 +274,12 @@ const JTBDContainer: React.FC = () => {
       try {
         const selectedPersonas = getSelectedPersonas();
 
-        // Create each accepted persona individually and save drivers
+        // Save each persona: POST for new (no id), PUT for existing (has id)
         await Promise.all([
           ...selectedPersonas.map((persona) =>
-            brands.createJTBDPersona(brandId, persona.id, toJTBDPersonaIn(persona))
+            persona.id
+              ? brands.updateJTBDPersona(brandId, persona.id, toJTBDPersonaIn(persona))
+              : brands.createJTBDPersona(brandId, toJTBDPersonaIn(persona))
           ),
           brands.updateJTBDDrivers(brandId, drivers),
         ]);
@@ -254,7 +301,16 @@ const JTBDContainer: React.FC = () => {
     isRegeneratingRef.current = true;
     setIsRegenerating(true);
     try {
-      await loadJTBD(brandId);
+      const suggestedData = await brands.suggestJTBD(brandId);
+      if (suggestedData?.personas?.length) {
+        const newPersonas: PersonaItem[] = suggestedData.personas.map(toSuggestedPersonaItem);
+        // Merge: keep existing personas, add new ones by name deduplication
+        setPersonas((prev) => {
+          const existingNames = new Set(prev.map((p) => p.name.toLowerCase()));
+          const toAdd = newPersonas.filter((p) => !existingNames.has(p.name.toLowerCase()));
+          return [...prev, ...toAdd];
+        });
+      }
     } catch (error) {
       // Optionally show error
     } finally {
@@ -481,7 +537,7 @@ const JTBDContainer: React.FC = () => {
               <div className="space-y-6">
                 {personas.map((persona) => (
                   <div
-                    key={persona.id}
+                    key={persona._key}
                     className="border border-neutral-200 rounded-lg p-2"
                   >
                     <div className="flex justify-between items-start mb-4">
@@ -494,7 +550,7 @@ const JTBDContainer: React.FC = () => {
                         </div>
                       </div>
                       <button
-                        onClick={() => handleRemovePersona(persona.id)}
+                        onClick={() => handleRemovePersona(persona._key)}
                         className="text-neutral-400 hover:text-red-500 transition-colors"
                         title="Remove persona"
                       >
@@ -509,7 +565,7 @@ const JTBDContainer: React.FC = () => {
                             key={value}
                             onClick={() =>
                               handleImportanceChange(
-                                persona.id,
+                                persona._key,
                                 value as JTBDImportance,
                               )
                             }
@@ -559,7 +615,7 @@ const JTBDContainer: React.FC = () => {
                 <div className="space-y-4">
                   {getSelectedPersonas().map((persona) => (
                     <div
-                      key={persona.id}
+                      key={persona._key}
                       className="border border-neutral-200 rounded-lg p-2 sm:p-4"
                     >
                       <div className="flex justify-between items-start">

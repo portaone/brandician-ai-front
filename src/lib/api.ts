@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import { BrandStatus } from "./navigation";
-import { JTBDList, Survey, SubmissionLink, AdjustObject, JTBD, JTBDPersonaIn, JTBDPersonaAdjustment } from "../types";
+import { JTBDList, SuggestedJTBDList, Survey, SubmissionLink, AdjustObject, JTBD, JTBDPersonaIn, JTBDPersonaAdjustment } from "../types";
 import { config } from "../config";
 
 // Extend axios config to include our metadata
@@ -393,38 +393,13 @@ export const brands = {
     await api.delete(apiPath(`/brands/${brandId}/answers/${answerId}`));
   },
 
-  getJTBD: async (brandId: string) => {
+  getJTBD: async (brandId: string): Promise<JTBDList | null> => {
     try {
-      console.log("Attempting to get JTBD for brand:", brandId);
-      // Try to get existing JTBD first
       const response = await api.get(apiPath(`/brands/${brandId}/jtbd/`));
-      console.log("Successfully retrieved existing JTBD:", response.data);
-      return response.data;
+      return response.data as JTBDList;
     } catch (error: any) {
-      console.log(
-        "JTBD GET failed:",
-        error.response?.status,
-        error.response?.data
-      );
       if (error.response?.status === 404) {
-        console.log("No JTBD exists, attempting to generate new one...");
-        // If no JTBD exists, suggest new one
-        const key = createRequestKey(
-          "POST",
-          apiPath(`/brands/${brandId}/jtbd/`)
-        );
-        return deduplicate(key, async () => {
-          try {
-            const response = await api.post(
-              apiPath(`/brands/${brandId}/jtbd/`)
-            );
-            console.log("Successfully generated new JTBD:", response.data);
-            return response.data;
-          } catch (postError: any) {
-            console.error("Failed to generate JTBD:", postError.response?.data);
-            throw postError;
-          }
-        });
+        return null;
       }
       throw error;
     }
@@ -438,8 +413,8 @@ export const brands = {
     await api.put(apiPath(`/brands/${brandId}/jtbd/${personaId}/`), persona);
   },
 
-  createJTBDPersona: async (brandId: string, personaId: string, persona: JTBDPersonaIn): Promise<JTBD> => {
-    const response = await api.post(apiPath(`/brands/${brandId}/jtbd/${personaId}/`), persona);
+  createJTBDPersona: async (brandId: string, persona: JTBDPersonaIn): Promise<JTBD> => {
+    const response = await api.post(apiPath(`/brands/${brandId}/jtbd/persona/`), persona);
     return response.data;
   },
 
@@ -666,9 +641,9 @@ export const brands = {
     return response.data;
   },
 
-  suggestJTBD: async (brandId: string) => {
+  suggestJTBD: async (brandId: string): Promise<SuggestedJTBDList> => {
     const response = await api.post(apiPath(`/brands/${brandId}/jtbd`));
-    return response.data;
+    return response.data as SuggestedJTBDList;
   },
 
   getArchetype: async (brandId: string) => {

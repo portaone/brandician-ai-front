@@ -652,7 +652,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
 
         if (isNew && choice === "include") {
           // Create new persona
-          await brands.createJTBDPersona(brandId, newPersona.id, toJTBDPersonaIn(newPersona));
+          await brands.createJTBDPersona(brandId, toJTBDPersonaIn(newPersona));
         } else if (!isNew && choice === "adjusted") {
           // Update existing persona with new version
           await brands.updateJTBDPersona(brandId, newPersona.id, toJTBDPersonaIn(newPersona));

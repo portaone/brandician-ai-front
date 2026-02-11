@@ -246,7 +246,7 @@ export const useBrandStore = create<BrandState>((set) => ({
         currentBrand: state.currentBrand
           ? {
               ...state.currentBrand,
-              jtbd: jtbdData,
+              jtbd: jtbdData ?? undefined,
             }
           : null,
         isLoading: false,

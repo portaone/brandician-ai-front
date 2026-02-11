@@ -96,6 +96,14 @@ export interface PersonaInfo {
 
 export type ConfidenceLevel = "LOW" | "MEDIUM" | "HIGH";
 
+/** Suggested persona from the suggest endpoint — no id or server-controlled fields */
+export interface SuggestedPersona {
+  name: string;
+  description?: string;
+  info?: PersonaInfo;
+}
+
+/** Full persisted persona with mandatory id */
 export interface JTBD {
   id: string;
   name: string;
@@ -119,6 +127,12 @@ export type JTBDPersonaAdjustment = [JTBD | null, JTBD];
 
 export interface JTBDList {
   personas: Record<string, JTBD>;
+  drivers?: string;
+}
+
+/** Suggested JTBD list from suggest endpoint — personas have no ids */
+export interface SuggestedJTBDList {
+  personas: SuggestedPersona[];
   drivers?: string;
 }
 
