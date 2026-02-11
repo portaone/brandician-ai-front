@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { scrollToTop } from "../../lib/utils";
-import { JTBD, JTBDList, JTBDPersonaAdjustment, JTBDPersonaIn, PersonaInfo, AdjustObject } from "../../types";
+import { JTBD, JTBDList, JTBDPersonaAdjustment, JTBDPersonaIn, PersonaInfo, AdjustObject, RANKING_TO_IMPORTANCE_LABEL, IMPORTANCE_TO_RANKING, JTBDImportance } from "../../types";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import ReactMarkdown from "react-markdown";
@@ -137,6 +137,8 @@ interface PersonaWidgetProps {
   index: number;
   choice: PersonaChoice | null;
   onChoiceChange: (choice: PersonaChoice) => void;
+  rankingOverride?: number;
+  onRankingChange: (ranking: number) => void;
 }
 
 const PersonaWidget: React.FC<PersonaWidgetProps> = ({
@@ -144,9 +146,12 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
   index,
   choice,
   onChoiceChange,
+  rankingOverride,
+  onRankingChange,
 }) => {
   const [oldPersona, newPersona] = adjustment;
   const isNewPersona = oldPersona === null;
+  const effectiveRanking = rankingOverride ?? newPersona.ranking;
 
   return (
     <div
@@ -218,15 +223,23 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
               Confidence: {newPersona.confidence}
             </span>
           )}
-          {newPersona.survey_prevalence !== undefined && (
+          {newPersona.survey_prevalence !== undefined && newPersona.survey_prevalence !== null && (
             <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">
-              Survey: {newPersona.survey_prevalence}%
+              Matches {newPersona.survey_prevalence}% of survey responders
             </span>
           )}
-          {newPersona.ranking !== undefined && (
-            <span className="px-2 py-1 rounded-full bg-purple-100 text-purple-800 font-medium">
-              Ranking: {newPersona.ranking}/5
-            </span>
+          {effectiveRanking !== undefined && effectiveRanking !== null && (
+            <select
+              value={effectiveRanking}
+              onChange={(e) => onRankingChange(Number(e.target.value))}
+              className="px-2 py-1 rounded-full bg-purple-100 text-purple-800 font-medium border-none cursor-pointer text-xs appearance-auto"
+            >
+              {Object.entries(IMPORTANCE_TO_RANKING).map(([key, rank]) => (
+                <option key={rank} value={rank}>
+                  {RANKING_TO_IMPORTANCE_LABEL[rank]}
+                </option>
+              ))}
+            </select>
           )}
         </div>
       )}
@@ -490,6 +503,9 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
   const [personaChoices, setPersonaChoices] = useState<
     Record<number, PersonaChoice>
   >({});
+  const [rankingOverrides, setRankingOverrides] = useState<
+    Record<number, number>
+  >({});
   const [driversChoice, setDriversChoice] = useState<
     "original" | "adjusted" | null
   >(null);
@@ -520,6 +536,13 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
     }));
   };
 
+  const handleRankingChange = (index: number, ranking: number) => {
+    setRankingOverrides((prev) => ({
+      ...prev,
+      [index]: ranking,
+    }));
+  };
+
   const handleDriversChoiceChange = (choice: "original" | "adjusted") => {
     setDriversChoice(choice);
   };
@@ -527,6 +550,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
   // Reset choices when data changes
   const resetChoices = () => {
     setPersonaChoices({});
+    setRankingOverrides({});
     setDriversChoice(null);
   };
 
@@ -649,13 +673,19 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
         const [oldPersona, newPersona] = personasAdjustments[i];
         const choice = personaChoices[i];
         const isNew = oldPersona === null;
+        const personaWithRanking = rankingOverrides[i] !== undefined
+          ? { ...newPersona, ranking: rankingOverrides[i] }
+          : newPersona;
 
         if (isNew && choice === "include") {
           // Create new persona
-          await brands.createJTBDPersona(brandId, toJTBDPersonaIn(newPersona));
+          await brands.createJTBDPersona(brandId, toJTBDPersonaIn(personaWithRanking));
         } else if (!isNew && choice === "adjusted") {
           // Update existing persona with new version
-          await brands.updateJTBDPersona(brandId, newPersona.id, toJTBDPersonaIn(newPersona));
+          await brands.updateJTBDPersona(brandId, newPersona.id, toJTBDPersonaIn(personaWithRanking));
+        } else if (!isNew && choice === "original" && rankingOverrides[i] !== undefined) {
+          // Keep original text but update ranking if user changed it
+          await brands.updateJTBDPersona(brandId, oldPersona!.id, toJTBDPersonaIn({ ...oldPersona!, ranking: rankingOverrides[i] }));
         } else if (!isNew && choice === "remove") {
           // Delete existing persona
           await brands.deleteJTBDPersona(brandId, oldPersona!.id);
@@ -803,6 +833,10 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
                     onChoiceChange={(choice) =>
                       handlePersonaChoiceChange(index, choice)
                     }
+                    rankingOverride={rankingOverrides[index]}
+                    onRankingChange={(ranking) =>
+                      handleRankingChange(index, ranking)
+                    }
                   />
                 ))}
               </div>
@@ -825,6 +859,10 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
                       choice={personaChoices[personaIndex] || null}
                       onChoiceChange={(choice) =>
                         handlePersonaChoiceChange(personaIndex, choice)
+                      }
+                      rankingOverride={rankingOverrides[personaIndex]}
+                      onRankingChange={(ranking) =>
+                        handleRankingChange(personaIndex, ranking)
                       }
                     />
                   );

@@ -1,9 +1,9 @@
-import { Edit2, Loader, RefreshCw } from "lucide-react";
+import { Check, Edit2, Loader, RefreshCw, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { scrollToTop } from "../../lib/utils";
-import { JTBD, JTBDPersonaIn, PersonaInfo } from "../../types";
+import { JTBD, JTBDPersonaIn, PersonaInfo, RANKING_TO_IMPORTANCE_LABEL, IMPORTANCE_TO_RANKING } from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
@@ -48,8 +48,8 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingPersona, setEditingPersona] = useState<JTBD | null>(null);
+  const [editingField, setEditingField] = useState<string | null>(null); // "name" | keyof PersonaInfo | null
+  const [editingValue, setEditingValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const hasLoadedRef = useRef(false);
 
@@ -102,10 +102,7 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
     if (!brandId || !persona) return;
     setIsSaving(true);
     try {
-      const personaToSave = isEditing && editingPersona ? editingPersona : persona;
-      await brands.savePrimaryPersona(brandId, toJTBDPersonaIn(personaToSave));
-      setIsEditing(false);
-      setEditingPersona(null);
+      await brands.savePrimaryPersona(brandId, toJTBDPersonaIn(persona));
       onComplete();
     } catch (err: any) {
       console.error("Failed to save primary persona:", err);
@@ -120,38 +117,33 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
     scrollToTop();
   };
 
-  const handleSkip = () => {
-    onComplete();
-    scrollToTop();
+  const startEditField = (field: string, currentValue: string) => {
+    setEditingField(field);
+    setEditingValue(currentValue);
   };
 
-  const handleStartEditing = () => {
-    setEditingPersona(persona ? { ...persona } : null);
-    setIsEditing(true);
+  const cancelEditField = () => {
+    setEditingField(null);
+    setEditingValue("");
   };
 
-  const handleCancelEditing = () => {
-    setEditingPersona(null);
-    setIsEditing(false);
-  };
-
-  const handleSaveEdits = () => {
-    if (editingPersona) {
-      setPersona(editingPersona);
+  const saveEditField = () => {
+    if (!persona || editingField === null) return;
+    if (editingField === "name") {
+      setPersona({ ...persona, name: editingValue });
+    } else {
+      setPersona({
+        ...persona,
+        info: { ...persona.info, [editingField]: editingValue },
+      });
     }
-    setIsEditing(false);
-    setEditingPersona(null);
+    setEditingField(null);
+    setEditingValue("");
   };
 
-  const handleEditInfoField = (field: keyof PersonaInfo, value: string) => {
-    if (!editingPersona) return;
-    setEditingPersona({
-      ...editingPersona,
-      info: {
-        ...editingPersona.info,
-        [field]: value,
-      },
-    });
+  const handleRankingChange = (ranking: number) => {
+    if (!persona) return;
+    setPersona({ ...persona, ranking });
   };
 
   if (isLoading) {
@@ -175,33 +167,27 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
             Generation Failed
           </h2>
           <p className="text-red-600 mb-6">{error}</p>
-          <div className="flex justify-center gap-3">
-            <Button
-              onClick={() => {
-                hasLoadedRef.current = false;
-                setError(null);
-                setIsLoading(true);
-                // Trigger re-load
-                const loadAgain = async () => {
-                  try {
-                    const data = await brands.generatePrimaryPersona(brandId!);
-                    setPersona(data);
-                  } catch (err: any) {
-                    setError(err?.response?.data?.message || "Failed to generate primary persona.");
-                  } finally {
-                    setIsLoading(false);
-                  }
-                };
-                loadAgain();
-              }}
-              size="md"
-            >
-              Try Again
-            </Button>
-            <Button onClick={handleSkip} variant="secondary" size="md">
-              Skip
-            </Button>
-          </div>
+          <Button
+            onClick={() => {
+              hasLoadedRef.current = false;
+              setError(null);
+              setIsLoading(true);
+              const loadAgain = async () => {
+                try {
+                  const data = await brands.generatePrimaryPersona(brandId!);
+                  setPersona(data);
+                } catch (err: any) {
+                  setError(err?.response?.data?.message || "Failed to generate primary persona.");
+                } finally {
+                  setIsLoading(false);
+                }
+              };
+              loadAgain();
+            }}
+            size="md"
+          >
+            Try Again
+          </Button>
         </div>
       </div>
     );
@@ -211,93 +197,12 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
     return null;
   }
 
-  const displayPersona = isEditing && editingPersona ? editingPersona : persona;
-
-  const renderPersonaInfoDisplay = (info: PersonaInfo | undefined) => {
-    if (!info) return <p className="text-gray-400 italic">No details available</p>;
-
-    const fields = Object.entries(PERSONA_INFO_LABELS).filter(([key]) => {
-      const val = info[key as keyof PersonaInfo];
-      return typeof val === "string" && val.trim().length > 0;
-    });
-
-    if (fields.length === 0) return <p className="text-gray-400 italic">No details available</p>;
-
-    return fields.map(([key, label]) => (
-      <div key={key} className="mb-4 last:mb-0">
-        <h4 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-1">
-          {label}
-        </h4>
-        <div className="prose prose-sm max-w-none text-neutral-700">
-          <ReactMarkdown>{info[key as keyof PersonaInfo] as string}</ReactMarkdown>
-        </div>
-      </div>
-    ));
-  };
-
-  const renderEditForm = () => {
-    if (!editingPersona) return null;
-
-    const fields = Object.entries(PERSONA_INFO_LABELS).filter(([key]) => {
-      const val = editingPersona.info?.[key as keyof PersonaInfo];
-      return typeof val === "string" && val.trim().length > 0;
-    });
-
-    return (
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
-            Persona Name
-          </label>
-          <input
-            type="text"
-            value={editingPersona.name}
-            onChange={(e) =>
-              setEditingPersona({ ...editingPersona, name: e.target.value })
-            }
-            className="w-full p-2 border border-neutral-300 rounded-md"
-          />
-        </div>
-
-        {fields.length > 0 ? (
-          fields.map(([key, label]) => (
-            <div key={key}>
-              <label className="block text-sm font-medium text-neutral-700 mb-1">
-                {label}
-              </label>
-              <textarea
-                value={(editingPersona.info?.[key as keyof PersonaInfo] as string) || ""}
-                onChange={(e) => handleEditInfoField(key as keyof PersonaInfo, e.target.value)}
-                className="w-full min-h-[100px] p-2 border border-neutral-300 rounded-md"
-              />
-            </div>
-          ))
-        ) : editingPersona.description !== undefined ? (
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 mb-1">
-              Description
-            </label>
-            <textarea
-              value={editingPersona.description || ""}
-              onChange={(e) =>
-                setEditingPersona({ ...editingPersona, description: e.target.value })
-              }
-              className="w-full min-h-[150px] p-2 border border-neutral-300 rounded-md"
-            />
-          </div>
-        ) : null}
-
-        <div className="flex justify-end gap-2">
-          <Button type="button" onClick={handleCancelEditing} variant="ghost" size="md">
-            Cancel
-          </Button>
-          <Button type="button" onClick={handleSaveEdits} size="md">
-            Apply Changes
-          </Button>
-        </div>
-      </div>
-    );
-  };
+  const infoFields = persona.info
+    ? Object.entries(PERSONA_INFO_LABELS).filter(([key]) => {
+        const val = persona.info?.[key as keyof PersonaInfo];
+        return typeof val === "string" && val.trim().length > 0;
+      })
+    : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
@@ -329,62 +234,135 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
           )}
 
           <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
-            {/* Persona header */}
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h2 className="text-xl font-bold text-neutral-800">
-                  {displayPersona.name}
-                </h2>
-                {/* Metadata badges */}
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {displayPersona.confidence && (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      displayPersona.confidence === "HIGH" ? "bg-green-100 text-green-800" :
-                      displayPersona.confidence === "MEDIUM" ? "bg-yellow-100 text-yellow-800" :
-                      "bg-red-100 text-red-800"
-                    }`}>
-                      Confidence: {displayPersona.confidence}
-                    </span>
-                  )}
-                  {displayPersona.survey_prevalence !== undefined && (
-                    <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-medium">
-                      Survey Prevalence: {displayPersona.survey_prevalence}%
-                    </span>
-                  )}
-                  {displayPersona.ranking !== undefined && (
-                    <span className="px-2 py-1 rounded-full bg-purple-100 text-purple-800 text-xs font-medium">
-                      Ranking: {displayPersona.ranking}/5
-                    </span>
-                  )}
+            {/* Persona name — inline editable */}
+            <div className="mb-4 group">
+              {editingField === "name" ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editingValue}
+                    onChange={(e) => setEditingValue(e.target.value)}
+                    className="text-xl font-bold text-neutral-800 flex-1 p-1 border border-primary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveEditField();
+                      if (e.key === "Escape") cancelEditField();
+                    }}
+                  />
+                  <button onClick={saveEditField} className="text-green-600 hover:text-green-700 p-1" title="Save">
+                    <Check className="h-5 w-5" />
+                  </button>
+                  <button onClick={cancelEditField} className="text-neutral-400 hover:text-neutral-600 p-1" title="Cancel">
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
-              </div>
-              {!isEditing && (
-                <button
-                  onClick={handleStartEditing}
-                  className="text-neutral-400 hover:text-primary-600 transition-colors"
-                  title="Edit persona"
-                >
-                  <Edit2 className="h-5 w-5" />
-                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-neutral-800">{persona.name}</h2>
+                  <button
+                    onClick={() => startEditField("name", persona.name)}
+                    className="text-neutral-300 hover:text-primary-600 transition-colors opacity-0 group-hover:opacity-100"
+                    title="Edit name"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+                </div>
               )}
             </div>
 
-            {/* Persona content */}
-            {isEditing ? (
-              renderEditForm()
-            ) : (
-              <div className="mt-4">
-                {displayPersona.info ? (
-                  renderPersonaInfoDisplay(displayPersona.info)
-                ) : displayPersona.description ? (
-                  <div className="prose prose-sm max-w-none text-neutral-700">
-                    <ReactMarkdown>{displayPersona.description}</ReactMarkdown>
-                  </div>
-                ) : (
-                  <p className="text-neutral-400 italic">No details available</p>
-                )}
-              </div>
-            )}
+            {/* Metadata badges */}
+            <div className="flex flex-wrap gap-2 mb-4 text-xs">
+              {persona.confidence && (
+                <span className={`px-2 py-1 rounded-full font-medium ${
+                  persona.confidence === "HIGH" ? "bg-green-100 text-green-800" :
+                  persona.confidence === "MEDIUM" ? "bg-yellow-100 text-yellow-800" :
+                  "bg-red-100 text-red-800"
+                }`}>
+                  Confidence: {persona.confidence}
+                </span>
+              )}
+              {persona.survey_prevalence !== undefined && persona.survey_prevalence !== null && (
+                <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">
+                  Matches {persona.survey_prevalence}% of survey responders
+                </span>
+              )}
+              {persona.ranking !== undefined && persona.ranking !== null && (
+                <select
+                  value={persona.ranking}
+                  onChange={(e) => handleRankingChange(Number(e.target.value))}
+                  className="px-2 py-1 rounded-full bg-purple-100 text-purple-800 font-medium border-none cursor-pointer text-xs appearance-auto"
+                >
+                  {Object.entries(IMPORTANCE_TO_RANKING).map(([key, rank]) => (
+                    <option key={rank} value={rank}>
+                      {RANKING_TO_IMPORTANCE_LABEL[rank]}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* PersonaInfo fields — each individually editable */}
+            <div className="space-y-4">
+              {infoFields.length > 0 ? (
+                infoFields.map(([key, label]) => {
+                  const value = persona.info?.[key as keyof PersonaInfo] as string;
+                  const isFieldEditing = editingField === key;
+
+                  return (
+                    <div key={key} className="group">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide">
+                          {label}
+                        </h4>
+                        {!isFieldEditing && (
+                          <button
+                            onClick={() => startEditField(key, value)}
+                            className="text-neutral-300 hover:text-primary-600 transition-colors opacity-0 group-hover:opacity-100"
+                            title={`Edit ${label}`}
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      {isFieldEditing ? (
+                        <div>
+                          <textarea
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            className="w-full min-h-[100px] p-2 border border-primary-300 rounded-md text-neutral-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                            autoFocus
+                          />
+                          <div className="flex justify-end gap-2 mt-1">
+                            <button
+                              onClick={cancelEditField}
+                              className="text-sm text-neutral-500 hover:text-neutral-700 px-2 py-1"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={saveEditField}
+                              className="text-sm text-primary-600 hover:text-primary-700 font-medium px-2 py-1"
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="prose prose-sm max-w-none text-neutral-700">
+                          <ReactMarkdown>{value}</ReactMarkdown>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              ) : persona.description ? (
+                <div className="prose prose-sm max-w-none text-neutral-700">
+                  <ReactMarkdown>{persona.description}</ReactMarkdown>
+                </div>
+              ) : (
+                <p className="text-neutral-400 italic">No details available</p>
+              )}
+            </div>
           </div>
 
           {/* Actions */}
@@ -404,28 +382,17 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
               Regenerate
             </Button>
 
-            <div className="flex flex-wrap gap-3">
-              <Button
-                type="button"
-                variant="ghost"
-                size="md"
-                onClick={handleSkip}
-                disabled={isSaving}
-              >
-                Skip
-              </Button>
-              <Button
-                type="button"
-                size="lg"
-                onClick={handleSave}
-                disabled={isSaving || isEditing}
-              >
-                {isSaving && (
-                  <Loader className="animate-spin h-5 w-5 mr-2 inline" />
-                )}
-                Accept & Save
-              </Button>
-            </div>
+            <Button
+              type="button"
+              size="lg"
+              onClick={handleSave}
+              disabled={isSaving || editingField !== null}
+            >
+              {isSaving && (
+                <Loader className="animate-spin h-5 w-5 mr-2 inline" />
+              )}
+              Accept & Save
+            </Button>
           </div>
         </div>
       </div>

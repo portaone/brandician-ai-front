@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
-import { JTBD, SuggestedPersona, JTBDImportance, JTBD_IMPORTANCE_LABELS, JTBDPersonaIn, PersonaInfo } from "../../types";
+import { JTBD, SuggestedPersona, JTBDImportance, JTBD_IMPORTANCE_LABELS, IMPORTANCE_TO_RANKING, JTBDPersonaIn, PersonaInfo } from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
@@ -72,15 +72,6 @@ const hasPersonaContent = (persona: PersonaItem): boolean => {
     if (hasInfoContent) return true;
   }
   return !!(persona.description && persona.description.trim().length > 0);
-};
-
-const IMPORTANCE_TO_RANKING: Record<string, number> = {
-  not_applicable: 0,
-  not_important: 1,
-  rarely_important: 2,
-  somewhat_important: 3,
-  important: 4,
-  very_important: 5,
 };
 
 /**

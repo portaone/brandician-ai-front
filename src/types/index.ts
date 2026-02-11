@@ -153,6 +153,24 @@ export const JTBD_IMPORTANCE_LABELS: Record<JTBDImportance, string> = {
   very_important: "Very important",
 };
 
+/** Maps JTBDImportance key → numeric ranking (0–5) used by the backend */
+export const IMPORTANCE_TO_RANKING: Record<JTBDImportance, number> = {
+  not_applicable: 0,
+  not_important: 1,
+  rarely_important: 2,
+  somewhat_important: 3,
+  important: 4,
+  very_important: 5,
+};
+
+/** Maps numeric ranking (0–5) → display label, derived from JTBD_IMPORTANCE_LABELS */
+export const RANKING_TO_IMPORTANCE_LABEL: Record<number, string> = Object.fromEntries(
+  Object.entries(IMPORTANCE_TO_RANKING).map(([key, rank]) => [
+    rank,
+    JTBD_IMPORTANCE_LABELS[key as JTBDImportance],
+  ]),
+) as Record<number, string>;
+
 export type SurveyQuestionType =
   | "text"
   | "single_choice"
