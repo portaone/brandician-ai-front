@@ -1,9 +1,10 @@
 import { ArrowRight, Edit2, Loader, RefreshCw, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { brands } from "../../lib/api";
 import { scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
-import { JTBD, JTBDImportance, JTBD_IMPORTANCE_LABELS } from "../../types";
+import { JTBD, JTBDImportance, JTBD_IMPORTANCE_LABELS, JTBDPersonaIn, PersonaInfo } from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
@@ -14,10 +15,88 @@ import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 
 type Step = "rating" | "editing" | "drivers";
 
+const PERSONA_INFO_LABELS: Record<string, string> = {
+  narrative: "Narrative",
+  demographics: "Demographics",
+  psychographics: "Psychographics",
+  jobs_to_be_done: "Jobs to be Done",
+  context_triggers: "Context & Triggers",
+  desired_outcomes: "Desired Outcomes",
+  current_struggles: "Current Struggles",
+  connection_to_brand: "Connection to Brand",
+};
+
+/** Render structured PersonaInfo fields as labeled markdown sections */
+const renderPersonaInfo = (info: PersonaInfo) => {
+  const fields = Object.entries(PERSONA_INFO_LABELS);
+  const rendered = fields
+    .filter(([key]) => info[key as keyof PersonaInfo] && typeof info[key as keyof PersonaInfo] === "string")
+    .map(([key, label]) => (
+      <div key={key} className="mb-3 last:mb-0">
+        <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">
+          {label}
+        </h4>
+        <div className="prose prose-sm max-w-none text-neutral-700">
+          <ReactMarkdown>{info[key as keyof PersonaInfo] as string}</ReactMarkdown>
+        </div>
+      </div>
+    ));
+  return rendered.length > 0 ? rendered : null;
+};
+
+/** Get the display content for a persona - prefers info fields, falls back to description */
+const getPersonaDisplayContent = (persona: JTBD): React.ReactNode => {
+  if (persona.info) {
+    const infoContent = renderPersonaInfo(persona.info);
+    if (infoContent) return infoContent;
+  }
+  if (persona.description) {
+    return persona.description.split("\n").map((paragraph, index) => (
+      <p key={index} className="text-neutral-600 mb-2 last:mb-0">
+        {paragraph.trim()}
+      </p>
+    ));
+  }
+  return <p className="text-neutral-400 italic">No description available</p>;
+};
+
+/** Check if persona has meaningful content (info or description) */
+const hasPersonaContent = (persona: JTBD): boolean => {
+  if (persona.info) {
+    const hasInfoContent = Object.entries(PERSONA_INFO_LABELS).some(
+      ([key]) => {
+        const val = persona.info?.[key as keyof PersonaInfo];
+        return typeof val === "string" && val.trim().length > 0;
+      }
+    );
+    if (hasInfoContent) return true;
+  }
+  return !!(persona.description && persona.description.trim().length > 0);
+};
+
+const IMPORTANCE_TO_RANKING: Record<string, number> = {
+  not_applicable: 0,
+  not_important: 1,
+  rarely_important: 2,
+  somewhat_important: 3,
+  important: 4,
+  very_important: 5,
+};
+
+function toJTBDPersonaIn(persona: JTBD): JTBDPersonaIn {
+  return {
+    name: persona.name,
+    info: persona.info,
+    ranking: persona.ranking ?? (persona.importance ? IMPORTANCE_TO_RANKING[persona.importance] : undefined),
+    survey_prevalence: persona.survey_prevalence,
+    confidence: persona.confidence,
+  };
+}
+
 const JTBDContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { currentBrand, selectBrand, loadJTBD, updateJTBD, isLoading, error } =
+  const { currentBrand, selectBrand, loadJTBD, isLoading, error } =
     useBrandStore();
   const [personas, setPersonas] = useState<JTBD[]>([]);
   const [drivers, setDrivers] = useState("");
@@ -57,6 +136,7 @@ const JTBDContainer: React.FC = () => {
       setDrivers(jtbdData.drivers || "");
     }
   }, [currentBrand]);
+
   useEffect(() => {
     if (editingPersona) {
       setTimeout(() => {
@@ -100,6 +180,17 @@ const JTBDContainer: React.FC = () => {
     setEditingPersona(null);
   };
 
+  const handleEditingInfoFieldChange = (field: keyof PersonaInfo, value: string) => {
+    if (!editingPersona) return;
+    setEditingPersona({
+      ...editingPersona,
+      info: {
+        ...editingPersona.info,
+        [field]: value,
+      },
+    });
+  };
+
   const handleDriversChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setDrivers(e.target.value);
   };
@@ -124,18 +215,8 @@ const JTBDContainer: React.FC = () => {
       .slice(0, 3);
   };
 
-  const renderParagraphs = (text: string) => {
-    return text.split("\n").map((paragraph, index) => (
-      <p key={index} className="text-neutral-600 mb-2 last:mb-0">
-        {paragraph.trim()}
-      </p>
-    ));
-  };
-
   const canProceedFromRating = getSelectedPersonas().length >= 3;
-  const canProceedFromEditing = getSelectedPersonas().every(
-    (p) => p.description && p.description.trim().length > 0,
-  );
+  const canProceedFromEditing = getSelectedPersonas().every(hasPersonaContent);
   const canProceedFromDrivers = drivers.trim().length > 0;
 
   const handleProceed = async () => {
@@ -147,18 +228,15 @@ const JTBDContainer: React.FC = () => {
       setIsSubmitting(true);
       try {
         const selectedPersonas = getSelectedPersonas();
-        const jtbdData = {
-          personas: selectedPersonas.reduce(
-            (acc, persona) => ({
-              ...acc,
-              [persona.id]: persona,
-            }),
-            {},
-          ),
-          drivers,
-        };
 
-        await updateJTBD(brandId, jtbdData);
+        // Create each accepted persona individually and save drivers
+        await Promise.all([
+          ...selectedPersonas.map((persona) =>
+            brands.createJTBDPersona(brandId, persona.id, toJTBDPersonaIn(persona))
+          ),
+          brands.updateJTBDDrivers(brandId, drivers),
+        ]);
+
         navigate(`/brands/${brandId}/survey`);
       } catch (error) {
         console.error("Failed to update JTBD:", error);
@@ -223,6 +301,94 @@ const JTBDContainer: React.FC = () => {
       </div>
     );
   }
+
+  /** Render the editing form - shows per-field textareas if info is present, otherwise single description textarea */
+  const renderEditingForm = () => {
+    if (!editingPersona) return null;
+
+    const hasInfo = editingPersona.info && Object.entries(PERSONA_INFO_LABELS).some(
+      ([key]) => {
+        const val = editingPersona.info?.[key as keyof PersonaInfo];
+        return typeof val === "string" && val.trim().length > 0;
+      }
+    );
+
+    return (
+      <form onSubmit={handleSavePersona} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-1">
+            Persona Name
+          </label>
+          <input
+            type="text"
+            value={editingPersona.name}
+            onChange={(e) =>
+              setEditingPersona({
+                ...editingPersona,
+                name: e.target.value,
+              })
+            }
+            className="w-full p-2 border border-neutral-300 rounded-md"
+          />
+        </div>
+
+        {hasInfo ? (
+          // Structured PersonaInfo editing with per-field textareas
+          Object.entries(PERSONA_INFO_LABELS)
+            .filter(([key]) => {
+              const val = editingPersona.info?.[key as keyof PersonaInfo];
+              return typeof val === "string" && val.trim().length > 0;
+            })
+            .map(([key, label]) => (
+              <div key={key}>
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
+                  {label}
+                </label>
+                <textarea
+                  value={(editingPersona.info?.[key as keyof PersonaInfo] as string) || ""}
+                  onChange={(e) =>
+                    handleEditingInfoFieldChange(key as keyof PersonaInfo, e.target.value)
+                  }
+                  className="w-full min-h-[100px] p-2 border border-neutral-300 rounded-md"
+                />
+              </div>
+            ))
+        ) : (
+          // Legacy description editing
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1">
+              Description
+            </label>
+            <textarea
+              value={editingPersona.description || ""}
+              onChange={(e) =>
+                setEditingPersona({
+                  ...editingPersona,
+                  description: e.target.value,
+                })
+              }
+              className="w-full min-h-[150px] p-2 border border-neutral-300 rounded-md"
+              placeholder="Enter description with each section on a new line..."
+            />
+          </div>
+        )}
+
+        <div className="flex justify-end space-x-2">
+          <Button
+            type="button"
+            onClick={() => setEditingPersona(null)}
+            variant="ghost"
+            size="md"
+          >
+            Cancel
+          </Button>
+          <Button type="submit" size="md">
+            Save Changes
+          </Button>
+        </div>
+      </form>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
@@ -319,12 +485,12 @@ const JTBDContainer: React.FC = () => {
                     className="border border-neutral-200 rounded-lg p-2"
                   >
                     <div className="flex justify-between items-start mb-4">
-                      <div>
+                      <div className="flex-1">
                         <h3 className="text-lg font-medium text-neutral-800">
                           {persona.name}
                         </h3>
                         <div className="mt-2">
-                          {renderParagraphs(persona.description)}
+                          {getPersonaDisplayContent(persona)}
                         </div>
                       </div>
                       <button
@@ -388,53 +554,7 @@ const JTBDContainer: React.FC = () => {
               </p>
 
               {editingPersona ? (
-                <form onSubmit={handleSavePersona} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-1">
-                      Persona Name
-                    </label>
-                    <input
-                      type="text"
-                      value={editingPersona.name}
-                      onChange={(e) =>
-                        setEditingPersona({
-                          ...editingPersona,
-                          name: e.target.value,
-                        })
-                      }
-                      className="w-full p-2 border border-neutral-300 rounded-md"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-1">
-                      Description
-                    </label>
-                    <textarea
-                      value={editingPersona.description}
-                      onChange={(e) =>
-                        setEditingPersona({
-                          ...editingPersona,
-                          description: e.target.value,
-                        })
-                      }
-                      className="w-full min-h-[150px] p-2 border border-neutral-300 rounded-md"
-                      placeholder="Enter description with each section on a new line..."
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      type="button"
-                      onClick={() => setEditingPersona(null)}
-                      variant="ghost"
-                      size="md"
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit" size="md">
-                      Save Changes
-                    </Button>
-                  </div>
-                </form>
+                renderEditingForm()
               ) : (
                 <div className="space-y-4">
                   {getSelectedPersonas().map((persona) => (
@@ -448,7 +568,7 @@ const JTBDContainer: React.FC = () => {
                             {persona.name}
                           </h3>
                           <div className="mt-2">
-                            {renderParagraphs(persona.description)}
+                            {getPersonaDisplayContent(persona)}
                           </div>
                         </div>
                         <button

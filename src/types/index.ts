@@ -82,13 +82,40 @@ export type BrandAssetType =
   | "visual_style"
   | "ext_system_asset";
 
+export interface PersonaInfo {
+  narrative?: string;
+  demographics?: string;
+  psychographics?: string;
+  jobs_to_be_done?: string;
+  context_triggers?: string;
+  desired_outcomes?: string;
+  current_struggles?: string;
+  connection_to_brand?: string;
+  comment?: Record<string, string>;
+}
+
+export type ConfidenceLevel = "LOW" | "MEDIUM" | "HIGH";
+
 export interface JTBD {
   id: string;
-  brand_id: string;
   name: string;
-  description: string;
+  description?: string;
+  info?: PersonaInfo;
+  ranking?: number;
+  survey_prevalence?: number;
+  confidence?: ConfidenceLevel;
   importance?: JTBDImportance;
 }
+
+export interface JTBDPersonaIn {
+  name: string;
+  info?: PersonaInfo;
+  ranking?: number;
+  survey_prevalence?: number;
+  confidence?: ConfidenceLevel;
+}
+
+export type JTBDPersonaAdjustment = [JTBD | null, JTBD];
 
 export interface JTBDList {
   personas: Record<string, JTBD>;

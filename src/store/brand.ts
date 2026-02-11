@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { brands } from "../lib/api";
-import { Brand, Question, Answer, JTBDList } from "../types";
+import { Brand, Question, Answer, JTBDList, JTBDPersonaIn } from "../types";
 import { BrandStatus } from "../lib/navigation";
 import { AxiosInstance } from "axios";
 
@@ -57,6 +57,7 @@ interface BrandState {
   progressBrandStatus: (brandId: string) => Promise<{ status: BrandStatus }>;
   loadJTBD: (brandId: string) => Promise<void>;
   updateJTBD: (brandId: string, jtbd: JTBDList) => Promise<void>;
+  updateJTBDPersona: (brandId: string, personaId: string, persona: JTBDPersonaIn) => Promise<void>;
   generateBrandSummary: (brandId: string) => Promise<void>;
   updateBrandSummary: (brandId: string, summary: string) => Promise<void>;
   loadSummary: (brandId: string) => Promise<string>;
@@ -280,6 +281,28 @@ export const useBrandStore = create<BrandState>((set) => ({
       set({ isLoading: false, error: "Failed to update JTBD" });
       throw error;
     }
+  },
+
+  updateJTBDPersona: async (brandId: string, personaId: string, persona: JTBDPersonaIn) => {
+    await brands.updateJTBDPersona(brandId, personaId, persona);
+    set((state) => ({
+      currentBrand: state.currentBrand && state.currentBrand.jtbd
+        ? {
+            ...state.currentBrand,
+            jtbd: {
+              ...state.currentBrand.jtbd,
+              personas: {
+                ...state.currentBrand.jtbd.personas,
+                [personaId]: {
+                  ...state.currentBrand.jtbd.personas[personaId],
+                  ...persona,
+                  id: personaId,
+                },
+              },
+            },
+          }
+        : state.currentBrand,
+    }));
   },
 
   generateBrandSummary: async (brandId: string) => {

@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { scrollToTop } from "../../lib/utils";
-import { AdjustObject, JTBDList } from "../../types";
+import { JTBD, JTBDList, JTBDPersonaAdjustment, JTBDPersonaIn, PersonaInfo, AdjustObject } from "../../types";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import ReactMarkdown from "react-markdown";
@@ -11,12 +11,33 @@ import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { useBrandStore } from "../../store/brand";
 
+const PERSONA_INFO_LABELS: Record<string, string> = {
+  narrative: "Narrative",
+  demographics: "Demographics",
+  psychographics: "Psychographics",
+  jobs_to_be_done: "Jobs to be Done",
+  context_triggers: "Context & Triggers",
+  desired_outcomes: "Desired Outcomes",
+  current_struggles: "Current Struggles",
+  connection_to_brand: "Connection to Brand",
+};
+
+function toJTBDPersonaIn(persona: JTBD): JTBDPersonaIn {
+  return {
+    name: persona.name,
+    info: persona.info,
+    ranking: persona.ranking,
+    survey_prevalence: persona.survey_prevalence,
+    confidence: persona.confidence,
+  };
+}
+
 // Global cache to prevent duplicate API calls across component instances
 const adjustmentCache = new Map<
   string,
   {
     loading: boolean;
-    personasData?: AdjustObject[];
+    personasData?: JTBDPersonaAdjustment[];
     driversData?: AdjustObject;
     error?: string;
   }
@@ -27,100 +48,105 @@ interface JTBDAdjustmentContainerProps {
   onError: (error: string) => void;
 }
 
-// Single persona widget component
+const MarkdownBlock: React.FC<{ text: string }> = ({ text }) => {
+  return (
+    <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+      <ReactMarkdown>{text}</ReactMarkdown>
+    </div>
+  );
+};
+
+const MarkdownInline: React.FC<{ text: string }> = ({ text }) => {
+  return (
+    <ReactMarkdown
+      components={{
+        p({ children }) {
+          return <span>{children}</span>;
+        },
+      }}
+    >
+      {text}
+    </ReactMarkdown>
+  );
+};
+
+/** Check if a PersonaInfo field value is substantive (not empty or "N/A") */
+const isSubstantiveValue = (val: unknown): val is string => {
+  if (typeof val !== "string") return false;
+  const trimmed = val.trim().toLowerCase();
+  return trimmed.length > 0 && trimmed !== "n/a" && trimmed !== "na" && trimmed !== "none" && trimmed !== "-";
+};
+
+/** Render structured PersonaInfo fields */
+const renderPersonaInfoFields = (info: PersonaInfo | undefined) => {
+  if (!info) return <p className="text-gray-400 italic">No data</p>;
+
+  const fields = Object.entries(PERSONA_INFO_LABELS)
+    .filter(([key]) => isSubstantiveValue(info[key as keyof PersonaInfo]));
+
+  if (fields.length === 0) {
+    // Show LLM comment if available, explaining why data is empty
+    if (info.comment && Object.keys(info.comment).length > 0) {
+      const commentText = Object.values(info.comment).filter(Boolean).join(" ");
+      if (commentText) {
+        return (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-amber-800 text-sm italic">{commentText}</p>
+          </div>
+        );
+      }
+    }
+    return <p className="text-gray-400 italic">No data available</p>;
+  }
+
+  return fields.map(([key, label]) => (
+    <div key={key} className="mb-3 last:mb-0">
+      <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+        {label}
+      </h5>
+      <div className="prose prose-sm max-w-none text-gray-700">
+        <ReactMarkdown>{info[key as keyof PersonaInfo] as string}</ReactMarkdown>
+      </div>
+    </div>
+  ));
+};
+
+/** Get display content for a JTBD persona - prefers info, falls back to description */
+const getPersonaDisplayContent = (persona: JTBD): React.ReactNode => {
+  if (persona.info) {
+    const hasSubstantiveFields = Object.entries(PERSONA_INFO_LABELS).some(
+      ([key]) => isSubstantiveValue(persona.info?.[key as keyof PersonaInfo])
+    );
+    if (hasSubstantiveFields) return renderPersonaInfoFields(persona.info);
+    // Even if no substantive fields, show comment if available
+    if (persona.info.comment && Object.keys(persona.info.comment).length > 0) {
+      return renderPersonaInfoFields(persona.info);
+    }
+  }
+  if (persona.description) {
+    return <MarkdownBlock text={persona.description} />;
+  }
+  return <p className="text-gray-400 italic">No description available</p>;
+};
+
+// Single persona widget component for [old, new] tuple format
+type PersonaChoice = "original" | "adjusted" | "include" | "remove";
+
 interface PersonaWidgetProps {
-  persona: AdjustObject;
+  adjustment: JTBDPersonaAdjustment;
   index: number;
-  isNewPersona?: boolean;
-  onChangeClick: (id: string) => void;
-  explanationRefs: React.MutableRefObject<{
-    [id: string]: HTMLDivElement | null;
-  }>;
-  choice: "original" | "adjusted" | "include" | null;
-  onChoiceChange: (choice: "original" | "adjusted" | "include") => void;
+  choice: PersonaChoice | null;
+  onChoiceChange: (choice: PersonaChoice) => void;
 }
 
 const PersonaWidget: React.FC<PersonaWidgetProps> = ({
-  persona,
+  adjustment,
   index,
-  isNewPersona = false,
-  onChangeClick,
-  explanationRefs,
   choice,
   onChoiceChange,
 }) => {
-  const personaScope = `persona-${index}`;
-  const makeSuggestionKey = (id: string) => `${personaScope}-${id}`;
-
-  const MarkdownBlock: React.FC<{ text: string }> = ({ text }) => {
-    return (
-      <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
-        <ReactMarkdown>{text}</ReactMarkdown>
-      </div>
-    );
-  };
-
-  const MarkdownInline: React.FC<{ text: string }> = ({ text }) => {
-    return (
-      <ReactMarkdown
-        components={{
-          p({ children }) {
-            return <span>{children}</span>;
-          },
-        }}
-      >
-        {text}
-      </ReactMarkdown>
-    );
-  };
-
-  function renderChanges() {
-    if (!persona.changes || persona.changes.length === 0) {
-      return persona.new_text ? (
-        <MarkdownBlock text={persona.new_text} />
-      ) : (
-        <em>No changes were suggested.</em>
-      );
-    }
-    return persona.changes.map((seg, i) => {
-      if (seg.type === "text") {
-        return <MarkdownInline key={i} text={seg.content} />;
-      }
-      if (seg.type === "change") {
-        let style = {};
-        if (seg.t === "mod")
-          style = {
-            fontWeight: "bold",
-            background: "#f0f6ff",
-            color: "#1d4ed8",
-          };
-        if (seg.t === "del")
-          style = {
-            textDecoration: "line-through",
-            background: "#fef2f2",
-            color: "#b91c1c",
-          };
-        if (seg.t === "ref")
-          style = {
-            fontStyle: "italic",
-            background: "#fef9e7",
-            color: "#b26a00",
-          };
-        return (
-          <span
-            key={i}
-            style={style}
-            className="inline cursor-pointer px-1 rounded transition-colors hover:bg-yellow-100"
-            title="Click to see the explanation of the suggestion"
-            onClick={() => seg.id && onChangeClick(makeSuggestionKey(seg.id))}
-          >
-            <MarkdownInline text={seg.content} />
-          </span>
-        );
-      }
-      return null;
-    });
-  }
+  const [oldPersona, newPersona] = adjustment;
+  const isNewPersona = oldPersona === null;
 
   return (
     <div
@@ -132,7 +158,7 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
     >
       <div className="flex items-center gap-2 mb-4">
         <h3 className="text-lg font-semibold text-gray-900 p-2 sm:p-0">
-          {isNewPersona ? "New Suggested Persona" : `Persona ${index + 1}`}
+          {isNewPersona ? "New Suggested Persona" : `Persona: ${oldPersona?.name || `#${index + 1}`}`}
         </h3>
         {isNewPersona && (
           <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
@@ -143,23 +169,26 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Current/Original Text */}
+        {/* Current/Original */}
         <div>
           <h4 className="text-sm font-medium text-gray-700 px-2 sm:px-0 mb-2">
             {isNewPersona ? "Additional Persona" : "Current"}
           </h4>
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-h-[120px]">
-            <div className="text-gray-700 text-sm leading-relaxed">
-              {isNewPersona ? (
-                <MarkdownBlock text="This is a newly suggested persona based on feedback analysis." />
-              ) : (
-                <MarkdownBlock text={persona.old_text} />
-              )}
-            </div>
+            {isNewPersona ? (
+              <p className="text-gray-500 italic text-sm">
+                This is a newly suggested persona based on feedback analysis.
+              </p>
+            ) : (
+              <div>
+                <h5 className="font-medium text-gray-800 mb-2">{oldPersona!.name}</h5>
+                {getPersonaDisplayContent(oldPersona!)}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Proposed/New Text */}
+        {/* Proposed/New */}
         <div>
           <h4 className="text-sm font-medium text-gray-700 px-2 sm:px-0 mb-2">
             {isNewPersona ? "Suggested Content" : "Proposed"}
@@ -171,50 +200,39 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
                 : "bg-blue-50 border-blue-200"
             }`}
           >
-            <div className="text-gray-700 text-sm leading-relaxed">
-              {renderChanges()}
-            </div>
+            <h5 className="font-medium text-gray-800 mb-2">{newPersona.name}</h5>
+            {getPersonaDisplayContent(newPersona)}
           </div>
         </div>
       </div>
 
-      {/* Footnotes for this persona */}
-      {persona.footnotes && persona.footnotes.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <h4 className="text-sm font-medium text-gray-700 mb-3 p-2 sm:p-0">
-            Changes Explained
-          </h4>
-          <div className="space-y-2">
-            {persona.footnotes.map((note) => (
-              <div
-                key={note.id}
-                ref={(el) =>
-                  (explanationRefs.current[makeSuggestionKey(note.id)] = el)
-                }
-                className="bg-gray-50 border border-gray-200 rounded-lg sm:p-3 p-2 transition-all text-sm"
-              >
-                <p className="text-gray-700 font-medium">
-                  Suggestion {note.id}
-                </p>
-                <MarkdownBlock text={note.text} />
-                {note.url && (
-                  <a
-                    href={note.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-700 text-xs mt-1 inline-block"
-                  >
-                    View source →
-                  </a>
-                )}
-              </div>
-            ))}
-          </div>
+      {/* Metadata: confidence, ranking, survey_prevalence */}
+      {(newPersona.confidence || newPersona.ranking !== undefined || newPersona.survey_prevalence !== undefined) && (
+        <div className="mt-3 flex flex-wrap gap-3 text-xs">
+          {newPersona.confidence && (
+            <span className={`px-2 py-1 rounded-full font-medium ${
+              newPersona.confidence === "HIGH" ? "bg-green-100 text-green-800" :
+              newPersona.confidence === "MEDIUM" ? "bg-yellow-100 text-yellow-800" :
+              "bg-red-100 text-red-800"
+            }`}>
+              Confidence: {newPersona.confidence}
+            </span>
+          )}
+          {newPersona.survey_prevalence !== undefined && (
+            <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">
+              Survey: {newPersona.survey_prevalence}%
+            </span>
+          )}
+          {newPersona.ranking !== undefined && (
+            <span className="px-2 py-1 rounded-full bg-purple-100 text-purple-800 font-medium">
+              Ranking: {newPersona.ranking}/5
+            </span>
+          )}
         </div>
       )}
 
       {/* Choice Controls */}
-      <div className="mt-4 pt-4 border-t  border-gray-200">
+      <div className="mt-4 pt-4 border-t border-gray-200">
         <h4 className="text-sm font-medium text-gray-700 mb-3">
           {isNewPersona
             ? "What would you like to do with this new persona?"
@@ -224,7 +242,7 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
           {!isNewPersona && (
             <button
               onClick={() => onChoiceChange("original")}
-              className={`sm:px-4 sm:py-2 p-3  rounded-lg font-medium text-sm transition-colors ${
+              className={`sm:px-4 sm:py-2 p-3 rounded-lg font-medium text-sm transition-colors ${
                 choice === "original"
                   ? "bg-gray-600 text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -247,7 +265,7 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
               </button>
               <button
                 onClick={() => onChoiceChange("original")}
-                className={`sm:px-4 sm:py-2 p-3  rounded-lg font-medium text-sm transition-colors ${
+                className={`sm:px-4 sm:py-2 p-3 rounded-lg font-medium text-sm transition-colors ${
                   choice === "original"
                     ? "bg-red-600 text-white"
                     : "bg-red-100 text-red-700 hover:bg-red-200"
@@ -257,16 +275,28 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
               </button>
             </>
           ) : (
-            <button
-              onClick={() => onChoiceChange("adjusted")}
-              className={`sm:px-4 sm:py-2 p-3  rounded-lg font-medium text-sm transition-colors ${
-                choice === "adjusted"
-                  ? "bg-blue-600 text-white"
-                  : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-              }`}
-            >
-              Accept Adjusted
-            </button>
+            <>
+              <button
+                onClick={() => onChoiceChange("adjusted")}
+                className={`sm:px-4 sm:py-2 p-3 rounded-lg font-medium text-sm transition-colors ${
+                  choice === "adjusted"
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                }`}
+              >
+                Accept Adjusted
+              </button>
+              <button
+                onClick={() => onChoiceChange("remove")}
+                className={`sm:px-4 sm:py-2 p-3 rounded-lg font-medium text-sm transition-colors ${
+                  choice === "remove"
+                    ? "bg-red-600 text-white"
+                    : "bg-red-100 text-red-700 hover:bg-red-200"
+                }`}
+              >
+                Remove Persona
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -274,7 +304,7 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
   );
 };
 
-// Drivers diff component
+// Drivers diff component (unchanged from old format - drivers still use AdjustObject)
 interface DriversDiffProps {
   driversAdjustment: AdjustObject;
   onChangeClick: (id: string) => void;
@@ -294,28 +324,6 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
 }) => {
   const driversScope = "drivers";
   const makeSuggestionKey = (id: string) => `${driversScope}-${id}`;
-
-  const MarkdownBlock: React.FC<{ text: string }> = ({ text }) => {
-    return (
-      <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
-        <ReactMarkdown>{text}</ReactMarkdown>
-      </div>
-    );
-  };
-
-  const MarkdownInline: React.FC<{ text: string }> = ({ text }) => {
-    return (
-      <ReactMarkdown
-        components={{
-          p({ children }) {
-            return <span>{children}</span>;
-          },
-        }}
-      >
-        {text}
-      </ReactMarkdown>
-    );
-  };
 
   function renderChanges() {
     if (!driversAdjustment.changes || driversAdjustment.changes.length === 0) {
@@ -422,7 +430,7 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-700 text-sm mt-2 inline-block"
                     >
-                      View source →
+                      View source
                     </a>
                   )}
                 </div>
@@ -469,9 +477,9 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
 }) => {
   const { brandId } = useParams<{ brandId: string }>();
   const [personasAdjustments, setPersonasAdjustments] = useState<
-    AdjustObject[] | null
+    JTBDPersonaAdjustment[] | null
   >(null);
-  const { currentBrand } = useBrandStore();
+  const { currentBrand, updateJTBDPersona } = useBrandStore();
   const [driversAdjustment, setDriversAdjustment] =
     useState<AdjustObject | null>(null);
   const [currentJTBD, setCurrentJTBD] = useState<JTBDList | null>(null);
@@ -480,7 +488,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
 
   // Track user choices for each persona and drivers
   const [personaChoices, setPersonaChoices] = useState<
-    Record<number, "original" | "adjusted" | "include">
+    Record<number, PersonaChoice>
   >({});
   const [driversChoice, setDriversChoice] = useState<
     "original" | "adjusted" | null
@@ -504,7 +512,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
   // Choice change handlers
   const handlePersonaChoiceChange = (
     index: number,
-    choice: "original" | "adjusted" | "include",
+    choice: PersonaChoice,
   ) => {
     setPersonaChoices((prev) => ({
       ...prev,
@@ -545,7 +553,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
       const cacheKey = `jtbd-adjustment-${brandId}`;
       const cached = adjustmentCache.get(cacheKey);
       if (hasLoadedRef.current || isLoadingRef.current) {
-        console.log("🛑 Prevented duplicate JTBD adjustment call");
+        console.log("Prevented duplicate JTBD adjustment call");
         return;
       }
       if (cached?.loading) {
@@ -553,7 +561,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
         return;
       }
       if (cached?.personasData && cached?.driversData) {
-        console.log("📋 Using cached JTBD adjustment data");
+        console.log("Using cached JTBD adjustment data");
         setPersonasAdjustments(cached.personasData);
         setDriversAdjustment(cached.driversData);
         setIsLoading(false);
@@ -566,7 +574,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
       adjustmentCache.set(cacheKey, { loading: true });
 
       try {
-        console.log("🔄 Loading JTBD adjustments for brand:", brandId);
+        console.log("Loading JTBD adjustments for brand:", brandId);
 
         // First get current JTBD data
         const jtbdData = await brands.getJTBD(brandId);
@@ -583,7 +591,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
         if (isMounted) {
           setPersonasAdjustments(personasData);
           setDriversAdjustment(driversData);
-          resetChoices(); // Reset choices when new data is loaded
+          resetChoices();
           hasLoadedRef.current = true;
           adjustmentCache.set(cacheKey, {
             loading: false,
@@ -593,7 +601,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
         }
       } catch (error: any) {
         if (isMounted) {
-          console.error("❌ Failed to load JTBD adjustments:", error);
+          console.error("Failed to load JTBD adjustments:", error);
           let errorMessage =
             "Failed to load JTBD adjustments. Please try again.";
           if (error?.response?.status === 500) {
@@ -634,23 +642,37 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
     if (!brandId || !currentJTBD || !personasAdjustments || !driversAdjustment)
       return;
     try {
-      console.log("[DEBUG] JTBDAdjustment: Updating JTBD...");
+      console.log("[DEBUG] JTBDAdjustment: Updating JTBD personas individually...");
 
-      // Update with new personas and drivers
-      const updatedJTBD: JTBDList = {
-        personas: currentJTBD.personas, // Keep existing persona structure but will be overridden by new content
-        drivers: driversAdjustment.new_text || currentJTBD.drivers || "",
-      };
+      // Process each persona adjustment based on user choices
+      for (let i = 0; i < personasAdjustments.length; i++) {
+        const [oldPersona, newPersona] = personasAdjustments[i];
+        const choice = personaChoices[i];
+        const isNew = oldPersona === null;
 
-      await brands.updateJTBD(brandId, updatedJTBD);
-      console.log(
-        "[DEBUG] JTBDAdjustment: JTBD updated, calling onComplete...",
-      );
+        if (isNew && choice === "include") {
+          // Create new persona
+          await brands.createJTBDPersona(brandId, newPersona.id, toJTBDPersonaIn(newPersona));
+        } else if (!isNew && choice === "adjusted") {
+          // Update existing persona with new version
+          await brands.updateJTBDPersona(brandId, newPersona.id, toJTBDPersonaIn(newPersona));
+        } else if (!isNew && choice === "remove") {
+          // Delete existing persona
+          await brands.deleteJTBDPersona(brandId, oldPersona!.id);
+        }
+        // "original" means keep as-is (no API call needed)
+      }
+
+      // Update drivers if user chose adjusted
+      if (driversChoice === "adjusted") {
+        await brands.updateJTBDDrivers(brandId, driversAdjustment.new_text || currentJTBD.drivers || "");
+      }
+
+      console.log("[DEBUG] JTBDAdjustment: JTBD updated, calling onComplete...");
 
       const cacheKey = `jtbd-adjustment-${brandId}`;
       adjustmentCache.delete(cacheKey);
       onComplete();
-      console.log("[DEBUG] JTBDAdjustment: onComplete called");
     } catch (error: any) {
       console.error("Failed to update JTBD:", error);
       let errorMessage = "Failed to update JTBD. Please try again.";
@@ -734,12 +756,8 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
   }
 
   // Separate existing personas and new suggestions
-  const existingPersonas = personasAdjustments.filter(
-    (p) => p.old_text && p.old_text.trim() !== "",
-  );
-  const newPersonas = personasAdjustments.filter(
-    (p) => !p.old_text || p.old_text.trim() === "",
-  );
+  const existingPersonas = personasAdjustments.filter(([old]) => old !== null);
+  const newPersonas = personasAdjustments.filter(([old]) => old === null);
 
   // Check if all choices are made
   const totalPersonas = personasAdjustments.length;
@@ -764,29 +782,6 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
             </div>
           </div>
 
-          {/* Survey Status */}
-          {personasAdjustments[0]?.survey && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h3 className="text-lg font-medium text-blue-800 mb-2">
-                Survey Status
-              </h3>
-              <p className="text-blue-700">
-                <span className="font-semibold">
-                  {personasAdjustments[0].survey.number_of_responses}
-                </span>{" "}
-                responses collected
-              </p>
-              {personasAdjustments[0].survey.last_response_date && (
-                <p className="text-blue-600 text-sm">
-                  Last response:{" "}
-                  {new Date(
-                    personasAdjustments[0].survey.last_response_date,
-                  ).toLocaleDateString()}
-                </p>
-              )}
-            </div>
-          )}
-
           {/* Personas Section */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
@@ -799,14 +794,11 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
                 <h3 className="text-lg font-semibold text-gray-800">
                   Updated Personas
                 </h3>
-                {existingPersonas.map((persona, index) => (
+                {existingPersonas.map((adjustment, index) => (
                   <PersonaWidget
                     key={`existing-${index}`}
-                    persona={persona}
+                    adjustment={adjustment}
                     index={index}
-                    isNewPersona={false}
-                    onChangeClick={handleChangeClick}
-                    explanationRefs={explanationRefs}
                     choice={personaChoices[index] || null}
                     onChoiceChange={(choice) =>
                       handlePersonaChoiceChange(index, choice)
@@ -823,16 +815,13 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
                   <Plus className="h-5 w-5 text-green-600" />
                   Newly Suggested Personas
                 </h3>
-                {newPersonas.map((persona, index) => {
+                {newPersonas.map((adjustment, index) => {
                   const personaIndex = existingPersonas.length + index;
                   return (
                     <PersonaWidget
                       key={`new-${index}`}
-                      persona={persona}
+                      adjustment={adjustment}
                       index={personaIndex}
-                      isNewPersona={true}
-                      onChangeClick={handleChangeClick}
-                      explanationRefs={explanationRefs}
                       choice={personaChoices[personaIndex] || null}
                       onChoiceChange={(choice) =>
                         handlePersonaChoiceChange(personaIndex, choice)
@@ -867,7 +856,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
                   <p>
                     Persona choices: {personaChoicesMade}/{totalPersonas}
                   </p>
-                  <p>Drivers choice: {driversChoice ? "✓" : "✗"}</p>
+                  <p>Drivers choice: {driversChoice ? "done" : "pending"}</p>
                 </div>
               </div>
             )}
@@ -876,7 +865,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
               <div className="text-sm text-gray-600">
                 {allChoicesMade ? (
                   <span className="text-green-600 font-medium">
-                    ✓ All choices made - ready to proceed
+                    All choices made - ready to proceed
                   </span>
                 ) : (
                   <span className="text-amber-600">

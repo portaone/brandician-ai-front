@@ -168,6 +168,14 @@ const App: React.FC = () => {
               }
             />
             <Route
+              path="/brands/:brandId/feedback-review/primary-persona"
+              element={
+                <AuthGuard>
+                  <FeedbackReviewFlowContainer />
+                </AuthGuard>
+              }
+            />
+            <Route
               path="/brands/:brandId/feedback-review/archetype"
               element={
                 <AuthGuard>
