@@ -4,10 +4,12 @@ import { brands } from "../../lib/api";
 import ArchetypeAdjustmentContainer from "./ArchetypeAdjustmentContainer";
 import JTBDAdjustmentContainer from "./JTBDAdjustmentContainer";
 import SummaryAdjustmentContainer from "./SummaryAdjustmentContainer";
+import PrimaryPersonaContainer from "../PrimaryPersona/PrimaryPersonaContainer";
 import {
   BrandStatus,
   BRAND_STATUS_FEEDBACK_REVIEW_SUMMARY,
   BRAND_STATUS_FEEDBACK_REVIEW_JTBD,
+  BRAND_STATUS_PRIMARY_PERSONA_SELECTION,
   BRAND_STATUS_FEEDBACK_REVIEW_ARCHETYPE,
   BRAND_STATUS_PICK_NAME,
 } from "../../lib/navigation";
@@ -36,6 +38,12 @@ const REVIEW_STEPS: ReviewStep[] = [
     component: JTBDAdjustmentContainer,
     title: "Review Jobs-to-be-Done",
     status: BRAND_STATUS_FEEDBACK_REVIEW_JTBD,
+  },
+  {
+    id: "primary-persona",
+    component: PrimaryPersonaContainer,
+    title: "Select Primary Persona",
+    status: BRAND_STATUS_PRIMARY_PERSONA_SELECTION,
   },
   {
     id: "archetype",
@@ -90,6 +98,7 @@ const FeedbackReviewFlowContainer: React.FC = () => {
     const getStepFromPath = () => {
       if (location.pathname.endsWith("/summary")) return "summary";
       if (location.pathname.endsWith("/jtbd")) return "jtbd";
+      if (location.pathname.endsWith("/primary-persona")) return "primary-persona";
       if (location.pathname.endsWith("/archetype")) return "archetype";
       if (location.pathname.endsWith("/feedback-review")) return null; // Old generic path
       return null;
@@ -219,6 +228,7 @@ const FeedbackReviewFlowContainer: React.FC = () => {
   const getStepFromPath = () => {
     if (location.pathname.endsWith("/summary")) return "summary";
     if (location.pathname.endsWith("/jtbd")) return "jtbd";
+    if (location.pathname.endsWith("/primary-persona")) return "primary-persona";
     if (location.pathname.endsWith("/archetype")) return "archetype";
     return null;
   };
