@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { scrollToTop } from "../../lib/utils";
-import { JTBD, JTBDPersonaIn, PersonaInfo, RANKING_TO_IMPORTANCE_LABEL, IMPORTANCE_TO_RANKING } from "../../types";
+import { JTBD, JTBDPersonaIn, PersonaInfo } from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
@@ -139,11 +139,6 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
     }
     setEditingField(null);
     setEditingValue("");
-  };
-
-  const handleRankingChange = (ranking: number) => {
-    if (!persona) return;
-    setPersona({ ...persona, ranking });
   };
 
   if (isLoading) {
@@ -285,19 +280,6 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
                 <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">
                   Matches {persona.survey_prevalence}% of survey responders
                 </span>
-              )}
-              {persona.ranking !== undefined && persona.ranking !== null && (
-                <select
-                  value={persona.ranking}
-                  onChange={(e) => handleRankingChange(Number(e.target.value))}
-                  className="px-2 py-1 rounded-full bg-purple-100 text-purple-800 font-medium border-none cursor-pointer text-xs appearance-auto"
-                >
-                  {Object.entries(IMPORTANCE_TO_RANKING).map(([key, rank]) => (
-                    <option key={rank} value={rank}>
-                      {RANKING_TO_IMPORTANCE_LABEL[rank]}
-                    </option>
-                  ))}
-                </select>
               )}
             </div>
 

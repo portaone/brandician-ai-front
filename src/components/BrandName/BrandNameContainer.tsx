@@ -104,26 +104,20 @@ const BrandNameContainer: React.FC = () => {
     try {
       const nameOptions = await brands.pickName(brandId);
 
-      const suggestions = [];
+      // Update current draft shown at the top
       if (nameOptions.draft) {
-        suggestions.push({
-          name: nameOptions.draft.name,
-          rationale: nameOptions.draft.description,
-          domains_available: nameOptions.draft.domains_available || [],
-          score: nameOptions.draft.score,
-        });
+        setCurrentDraft(nameOptions.draft);
       }
-      if (Array.isArray(nameOptions.alt_options)) {
-        suggestions.push(
-          ...nameOptions.alt_options.map((opt: BrandName) => ({
+      // Only show alt_options in suggestions (draft is already displayed at the top)
+      const newSuggestions = Array.isArray(nameOptions.alt_options)
+        ? nameOptions.alt_options.map((opt: BrandName) => ({
             name: opt.name,
             rationale: opt.description,
             domains_available: opt.domains_available || [],
             score: opt.score,
-          })),
-        );
-      }
-      setSuggestions(suggestions);
+          }))
+        : [];
+      setSuggestions(newSuggestions);
     } catch (error) {
       setError("Failed to generate new suggestions");
     } finally {
