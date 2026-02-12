@@ -125,17 +125,11 @@ const BrandNameContainer: React.FC = () => {
     }
   };
 
-  const handleGetDomains = async (domains: string[]) => {
-    if (!brandId || domains.length === 0) return;
-
-    try {
-      const response = await brands.registerDomains(brandId, domains);
-      window.open(response.registration_url, "_blank");
-    } catch (error) {
-      console.error("Failed to get domain registration URL:", error);
-      // Fallback to GoDaddy
-      window.open("https://www.godaddy.com", "_blank");
-    }
+  const handleDomainClick = (domain: string) => {
+    window.open(
+      `https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(domain)}`,
+      "_blank",
+    );
   };
 
   if (isLoading) {
@@ -190,27 +184,18 @@ const BrandNameContainer: React.FC = () => {
                           {currentDraft.domains_available
                             .filter((domain: string) => domain.includes("."))
                             .map((domain: string, i: number) => (
-                              <span
+                              <button
                                 key={i}
-                                className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono"
+                                onClick={() => handleDomainClick(domain)}
+                                className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono hover:bg-green-200 cursor-pointer transition-colors"
                               >
                                 {domain}
-                              </span>
+                              </button>
                             ))}
                         </div>
-                        <Button
-                          onClick={() =>
-                            handleGetDomains(
-                              currentDraft.domains_available.filter(
-                                (domain: string) => domain.includes("."),
-                              ),
-                            )
-                          }
-                          variant="secondary"
-                          size="sm"
-                        >
-                          Get them now!
-                        </Button>
+                        <p className="text-xs text-green-700 italic">
+                          Click on the domain name to purchase!
+                        </p>
                       </>
                     )}
                 </div>
@@ -285,28 +270,21 @@ const BrandNameContainer: React.FC = () => {
                             {suggestion.domains_available
                               .filter((domain) => domain.includes("."))
                               .map((domain, i) => (
-                                <span
+                                <button
                                   key={i}
-                                  className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDomainClick(domain);
+                                  }}
+                                  className="inline-block px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono hover:bg-green-200 cursor-pointer transition-colors"
                                 >
                                   {domain}
-                                </span>
+                                </button>
                               ))}
                           </div>
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleGetDomains(
-                                suggestion.domains_available?.filter((domain) =>
-                                  domain.includes("."),
-                                ) || [],
-                              );
-                            }}
-                            variant="secondary"
-                            size="sm"
-                          >
-                            Get them now!
-                          </Button>
+                          <p className="text-xs text-green-700 italic">
+                            Click on the domain name to purchase!
+                          </p>
                         </>
                       )}
                     <div className="mt-3 flex justify-end">
