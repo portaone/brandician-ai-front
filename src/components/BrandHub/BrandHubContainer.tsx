@@ -14,7 +14,8 @@ type UiTabKey =
   | "strategy"
   | "positioning"
   | "visual_identity"
-  | "voice_content";
+  | "voice_content"
+  | "gaps";
 
 type HubMap = Record<string, string | null | undefined>;
 
@@ -23,6 +24,7 @@ const BACKEND_TAB_FOR_UI: Record<UiTabKey, string> = {
   positioning: "positioning",
   visual_identity: "visual_identity",
   voice_content: "expression",
+  gaps: "gaps",
 };
 
 interface UiTabConfig {
@@ -170,7 +172,84 @@ const TAB_CONFIGS: UiTabConfig[] = [
       },
     ],
   },
+  {
+    key: "gaps",
+    label: "Gaps",
+    description:
+      "Identify market opportunities and competitive gaps where your brand can stand out.",
+    properties: [
+      {
+        key: "gap_list",
+        title: "Market & Competitive Gaps",
+        helper:
+          "Underserved needs, unmet expectations, and whitespace opportunities your brand can own.",
+      },
+    ],
+  },
 ];
+
+// --- Gaps support ---
+
+interface Gap {
+  property: string;
+  name?: string;
+  description: string;
+  impact?: string;
+  quick_fix_question?: string;
+  survey_questions?: string[];
+  workaround?: string;
+  validation_method?: string;
+  priority: string; // "CRITICAL" | "HIGH" | "MEDIUM" | "LOW"
+}
+
+interface PropertyConfidence {
+  level: string; // "HIGH" | "MEDIUM" | "LOW"
+  reasoning?: string;
+}
+
+const PRIORITY_STYLES: Record<string, string> = {
+  CRITICAL: "bg-red-100 text-red-800",
+  HIGH: "bg-orange-100 text-orange-800",
+  MEDIUM: "bg-yellow-100 text-yellow-800",
+  LOW: "bg-green-100 text-green-800",
+};
+
+const CONFIDENCE_STYLES: Record<string, string> = {
+  HIGH: "bg-green-100 text-green-800",
+  MEDIUM: "bg-yellow-100 text-yellow-800",
+  LOW: "bg-red-100 text-red-800",
+};
+
+/** Look up confidence for a property using flexible key matching. */
+function findConfidence(
+  propKey: string,
+  propTitle: string,
+  levels: Record<string, PropertyConfidence>,
+): PropertyConfidence | null {
+  if (levels[propKey]) return levels[propKey];
+  if (levels[propTitle]) return levels[propTitle];
+  const lowerKey = propKey.toLowerCase();
+  const lowerTitle = propTitle.toLowerCase();
+  for (const [k, v] of Object.entries(levels)) {
+    const lk = k.toLowerCase();
+    if (lk === lowerKey || lk === lowerTitle) return v;
+  }
+  return null;
+}
+
+/** Count gaps whose property field matches a given property key or title. */
+function countGapsForProperty(
+  propKey: string,
+  propTitle: string,
+  gaps: Gap[],
+): number {
+  const lk = propKey.toLowerCase();
+  const lt = propTitle.toLowerCase();
+  return gaps.filter((g) => {
+    const gp = (g.property || "").toLowerCase();
+    return gp === lk || gp === lt || gp.includes(lt) || lt.includes(gp);
+  }).length;
+}
 
 const BrandHubContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -188,22 +267,30 @@ const BrandHubContainer: React.FC = () => {
     positioning: {},
     visual_identity: {},
     voice_content: {},
+    gaps: {},
   });
   const [tabLoading, setTabLoading] = useState<Record<UiTabKey, boolean>>({
     strategy: false,
     positioning: false,
     visual_identity: false,
     voice_content: false,
+    gaps: false,
   });
   const [tabError, setTabError] = useState<Record<UiTabKey, string | null>>({
     strategy: null,
     positioning: null,
     visual_identity: null,
     voice_content: null,
+    gaps: null,
   });
   const [hasAnyContent, setHasAnyContent] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProgressing, setIsProgressing] = useState(false);
+  const [gapsData, setGapsData] = useState<Gap[]>([]);
+  const [confidenceLevels, setConfidenceLevels] = useState<
+    Record<string, PropertyConfidence>
+  >({});
+  const [gapsLoading, setGapsLoading] = useState(false);
 
   useEffect(() => {
     if (!brandId) return;
@@ -262,6 +349,35 @@ const BrandHubContainer: React.FC = () => {
     }
   };
 
+  const loadGaps = async () => {
+    if (!brandId) return;
+    setGapsLoading(true);
+    try {
+      const response = await brands.getBrandHubTab(brandId, "gaps");
+      const gapList = response?.properties?.gap_list;
+
+      if (gapList && typeof gapList === "object" && !Array.isArray(gapList)) {
+        // gap_list is a map: { confidence_levels: {...}, gaps: [...] }
+        if (Array.isArray(gapList.gaps)) {
+          setGapsData(gapList.gaps);
+        }
+        if (
+          gapList.confidence_levels &&
+          typeof gapList.confidence_levels === "object"
+        ) {
+          setConfidenceLevels(gapList.confidence_levels);
+        }
+      } else if (Array.isArray(gapList)) {
+        // Fallback: gap_list is directly an array
+        setGapsData(gapList);
+      }
+    } catch {
+      // Gaps loading is best-effort
+    } finally {
+      setGapsLoading(false);
+    }
+  };
+
   const generateHub = async () => {
     if (!brandId) return;
     setIsGenerating(true);
@@ -273,9 +389,13 @@ const BrandHubContainer: React.FC = () => {
         positioning: {},
         visual_identity: {},
         voice_content: {},
+        gaps: {},
       });
       setHasAnyContent(false);
+      setGapsData([]);
+      setConfidenceLevels({});
       await loadTab(activeTab);
+      await loadGaps();
     } catch (e: any) {
       console.error("Failed to generate Brand Hub:", e);
       setTabError((prev) => ({
@@ -308,8 +428,15 @@ const BrandHubContainer: React.FC = () => {
     }
   };
 
+  // Load gaps data eagerly so badges appear on all tabs
   useEffect(() => {
     if (brandId) {
+      loadGaps();
+    }
+  }, [brandId]);
+
+  useEffect(() => {
+    if (brandId && activeTab !== "gaps") {
       loadTab(activeTab, { allowGenerate: true });
     }
   }, [brandId, activeTab]);
@@ -408,48 +535,128 @@ const BrandHubContainer: React.FC = () => {
 
           {/* Content */}
           <div className="space-y-4 mb-10">
-            {currentTabLoading && (
+            {(activeTab === "gaps" ? gapsLoading : currentTabLoading) && (
               <div className="flex items-center text-neutral-600 text-sm">
                 <Loader className="h-4 w-4 animate-spin mr-2" />
                 Loading Brand Hub content...
               </div>
             )}
 
-            {currentTabConfig.properties.map((prop) => {
-              const value = (currentHub && currentHub[prop.key]) || "";
-              const hasContent =
-                typeof value === "string" && value.trim().length > 0;
-
-              return (
-                <div
-                  key={prop.key}
-                  className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5"
-                >
-                  <div className="flex flex-wrap gap-3 items-start justify-between mb-3">
-                    <div>
-                      <h2 className="text-lg sm:text-xl font-semibold text-neutral-800">
-                        {prop.title}
-                      </h2>
-                      {prop.helper && (
-                        <p className="text-xs sm:text-sm text-neutral-500 mt-1 max-w-2xl">
-                          {prop.helper}
-                        </p>
-                      )}
+            {activeTab === "gaps" ? (
+              /* ── Gaps tab: structured list ── */
+              gapsData.length > 0 ? (
+                gapsData.map((gap, index) => (
+                  <div
+                    key={index}
+                    className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5"
+                  >
+                    <div className="flex flex-wrap gap-2 items-center mb-2">
+                      <h3 className="text-lg font-semibold text-neutral-800">
+                        {gap.name || gap.property}
+                      </h3>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_STYLES[gap.priority.toUpperCase()] || "bg-neutral-100 text-neutral-600"}`}
+                      >
+                        {gap.priority}
+                      </span>
                     </div>
-                  </div>
-
-                  {hasContent ? (
-                    <div className="prose prose-sm max-w-none text-neutral-700">
-                      <ReactMarkdown>{value as string}</ReactMarkdown>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-neutral-400 italic">
-                      This section hasn’t been populated yet.
+                    {gap.property && gap.name && (
+                      <p className="text-xs text-neutral-500 mb-1">
+                        {gap.property}
+                      </p>
+                    )}
+                    <p className="text-sm text-neutral-700">
+                      {gap.description}
                     </p>
-                  )}
+                    {gap.impact && (
+                      <p className="text-sm text-neutral-600 mt-1">
+                        <span className="font-medium">Impact:</span>{" "}
+                        {gap.impact}
+                      </p>
+                    )}
+                    {gap.quick_fix_question && (
+                      <p className="text-sm text-primary-700 mt-2 italic">
+                        Quick fix: {gap.quick_fix_question}
+                      </p>
+                    )}
+                    {gap.workaround && (
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Workaround: {gap.workaround}
+                      </p>
+                    )}
+                  </div>
+                ))
+              ) : !gapsLoading ? (
+                <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5 text-center">
+                  <p className="text-sm text-neutral-400 italic">
+                    No gaps detected. Your brand hub looks complete!
+                  </p>
                 </div>
-              );
-            })}
+              ) : null
+            ) : (
+              /* ── Other tabs: properties with confidence & gap badges ── */
+              currentTabConfig.properties.map((prop) => {
+                const value = (currentHub && currentHub[prop.key]) || "";
+                const hasContent =
+                  typeof value === "string" && value.trim().length > 0;
+                const conf = findConfidence(
+                  prop.key,
+                  prop.title,
+                  confidenceLevels,
+                );
+                const gapCount = countGapsForProperty(
+                  prop.key,
+                  prop.title,
+                  gapsData,
+                );
+
+                return (
+                  <div
+                    key={prop.key}
+                    className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5"
+                  >
+                    <div className="flex flex-wrap gap-3 items-start justify-between mb-3">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h2 className="text-lg sm:text-xl font-semibold text-neutral-800">
+                            {prop.title}
+                          </h2>
+                          {conf && (
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-xs font-medium ${CONFIDENCE_STYLES[conf.level.toUpperCase()] || "bg-neutral-100 text-neutral-600"}`}
+                              title={conf.reasoning || undefined}
+                            >
+                              Confidence: {conf.level}
+                            </span>
+                          )}
+                          {gapCount > 0 && (
+                            <span className="px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-800 font-medium">
+                              {gapCount} gap
+                              {gapCount !== 1 ? "s" : ""}
+                            </span>
+                          )}
+                        </div>
+                        {prop.helper && (
+                          <p className="text-xs sm:text-sm text-neutral-500 mt-1 max-w-2xl">
+                            {prop.helper}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {hasContent ? (
+                      <div className="prose prose-sm max-w-none text-neutral-700">
+                        <ReactMarkdown>{value as string}</ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-neutral-400 italic">
+                        This section hasn't been populated yet.
+                      </p>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
 
           {/* Regenerate Hub Button (always available once there is any content) */}
