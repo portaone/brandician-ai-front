@@ -9,6 +9,7 @@ import BrandicianLoader from "../common/BrandicianLoader";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
 type UiTabKey =
   | "strategy"
@@ -443,9 +444,7 @@ const BrandHubContainer: React.FC = () => {
 
   if (brandLoading || !currentBrand || !brandId || isGenerating) {
     return (
-      <div className="loader-container">
-        <BrandicianLoader />
-      </div>
+      <BrandicianLoader config={LOADER_CONFIGS.brandHub} isComplete={false} />
     );
   }
 

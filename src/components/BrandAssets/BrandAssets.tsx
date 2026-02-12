@@ -272,12 +272,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
   };
 
   if (isLoading) {
-    return (
-      <div className="loader-container flex-col">
-        <BrandicianLoader />
-        Loading Brand Assets...
-      </div>
-    );
+    return <BrandicianLoader />;
   }
 
   if (error) {

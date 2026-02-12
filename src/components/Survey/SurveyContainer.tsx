@@ -22,6 +22,7 @@ import HistoryButton from "../common/HistoryButton";
 import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
+import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
 const SurveyContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -377,9 +378,7 @@ const SurveyContainer: React.FC = () => {
 
   if (isBrandLoading || (isLoadingSurvey && !surveyError)) {
     return (
-      <div className="loader-container">
-        <BrandicianLoader />
-      </div>
+      <BrandicianLoader config={LOADER_CONFIGS.survey} isComplete={false} />
     );
   }
 

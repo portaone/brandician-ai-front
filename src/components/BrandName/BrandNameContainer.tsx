@@ -10,6 +10,7 @@ import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
+import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
 interface BrandNameSuggestion {
   name: string;
@@ -134,12 +135,7 @@ const BrandNameContainer: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="loader-container">
-        <div className="flex flex-col items-center">
-          <BrandicianLoader />
-          <p className="text-gray-600">Loading brand naming options...</p>
-        </div>
-      </div>
+      <BrandicianLoader config={LOADER_CONFIGS.brandName} isComplete={false} />
     );
   }
 

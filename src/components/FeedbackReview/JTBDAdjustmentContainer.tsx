@@ -3,13 +3,24 @@ import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { scrollToTop } from "../../lib/utils";
-import { JTBD, JTBDList, JTBDPersonaAdjustment, JTBDPersonaIn, PersonaInfo, AdjustObject, RANKING_TO_IMPORTANCE_LABEL, IMPORTANCE_TO_RANKING, JTBDImportance } from "../../types";
+import {
+  JTBD,
+  JTBDList,
+  JTBDPersonaAdjustment,
+  JTBDPersonaIn,
+  PersonaInfo,
+  AdjustObject,
+  RANKING_TO_IMPORTANCE_LABEL,
+  IMPORTANCE_TO_RANKING,
+  JTBDImportance,
+} from "../../types";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import ReactMarkdown from "react-markdown";
 import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { useBrandStore } from "../../store/brand";
+import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
 const PERSONA_INFO_LABELS: Record<string, string> = {
   narrative: "Narrative",
@@ -74,15 +85,22 @@ const MarkdownInline: React.FC<{ text: string }> = ({ text }) => {
 const isSubstantiveValue = (val: unknown): val is string => {
   if (typeof val !== "string") return false;
   const trimmed = val.trim().toLowerCase();
-  return trimmed.length > 0 && trimmed !== "n/a" && trimmed !== "na" && trimmed !== "none" && trimmed !== "-";
+  return (
+    trimmed.length > 0 &&
+    trimmed !== "n/a" &&
+    trimmed !== "na" &&
+    trimmed !== "none" &&
+    trimmed !== "-"
+  );
 };
 
 /** Render structured PersonaInfo fields */
 const renderPersonaInfoFields = (info: PersonaInfo | undefined) => {
   if (!info) return <p className="text-gray-400 italic">No data</p>;
 
-  const fields = Object.entries(PERSONA_INFO_LABELS)
-    .filter(([key]) => isSubstantiveValue(info[key as keyof PersonaInfo]));
+  const fields = Object.entries(PERSONA_INFO_LABELS).filter(([key]) =>
+    isSubstantiveValue(info[key as keyof PersonaInfo]),
+  );
 
   if (fields.length === 0) {
     // Show LLM comment if available, explaining why data is empty
@@ -105,7 +123,9 @@ const renderPersonaInfoFields = (info: PersonaInfo | undefined) => {
         {label}
       </h5>
       <div className="prose prose-sm max-w-none text-gray-700">
-        <ReactMarkdown>{info[key as keyof PersonaInfo] as string}</ReactMarkdown>
+        <ReactMarkdown>
+          {info[key as keyof PersonaInfo] as string}
+        </ReactMarkdown>
       </div>
     </div>
   ));
@@ -115,7 +135,7 @@ const renderPersonaInfoFields = (info: PersonaInfo | undefined) => {
 const getPersonaDisplayContent = (persona: JTBD): React.ReactNode => {
   if (persona.info) {
     const hasSubstantiveFields = Object.entries(PERSONA_INFO_LABELS).some(
-      ([key]) => isSubstantiveValue(persona.info?.[key as keyof PersonaInfo])
+      ([key]) => isSubstantiveValue(persona.info?.[key as keyof PersonaInfo]),
     );
     if (hasSubstantiveFields) return renderPersonaInfoFields(persona.info);
     // Even if no substantive fields, show comment if available
@@ -163,7 +183,9 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
     >
       <div className="flex items-center gap-2 mb-4">
         <h3 className="text-lg font-semibold text-gray-900 p-2 sm:p-0">
-          {isNewPersona ? "New Suggested Persona" : `Persona: ${oldPersona?.name || `#${index + 1}`}`}
+          {isNewPersona
+            ? "New Suggested Persona"
+            : `Persona: ${oldPersona?.name || `#${index + 1}`}`}
         </h3>
         {isNewPersona && (
           <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
@@ -186,7 +208,9 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
               </p>
             ) : (
               <div>
-                <h5 className="font-medium text-gray-800 mb-2">{oldPersona!.name}</h5>
+                <h5 className="font-medium text-gray-800 mb-2">
+                  {oldPersona!.name}
+                </h5>
                 {getPersonaDisplayContent(oldPersona!)}
               </div>
             )}
@@ -205,29 +229,38 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
                 : "bg-blue-50 border-blue-200"
             }`}
           >
-            <h5 className="font-medium text-gray-800 mb-2">{newPersona.name}</h5>
+            <h5 className="font-medium text-gray-800 mb-2">
+              {newPersona.name}
+            </h5>
             {getPersonaDisplayContent(newPersona)}
           </div>
         </div>
       </div>
 
       {/* Metadata: confidence, ranking, survey_prevalence */}
-      {(newPersona.confidence || newPersona.ranking !== undefined || newPersona.survey_prevalence !== undefined) && (
+      {(newPersona.confidence ||
+        newPersona.ranking !== undefined ||
+        newPersona.survey_prevalence !== undefined) && (
         <div className="mt-3 flex flex-wrap gap-3 text-xs">
           {newPersona.confidence && (
-            <span className={`px-2 py-1 rounded-full font-medium ${
-              newPersona.confidence === "HIGH" ? "bg-green-100 text-green-800" :
-              newPersona.confidence === "MEDIUM" ? "bg-yellow-100 text-yellow-800" :
-              "bg-red-100 text-red-800"
-            }`}>
+            <span
+              className={`px-2 py-1 rounded-full font-medium ${
+                newPersona.confidence === "HIGH"
+                  ? "bg-green-100 text-green-800"
+                  : newPersona.confidence === "MEDIUM"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-red-100 text-red-800"
+              }`}
+            >
               Confidence: {newPersona.confidence}
             </span>
           )}
-          {newPersona.survey_prevalence !== undefined && newPersona.survey_prevalence !== null && (
-            <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">
-              Matches {newPersona.survey_prevalence}% of survey responders
-            </span>
-          )}
+          {newPersona.survey_prevalence !== undefined &&
+            newPersona.survey_prevalence !== null && (
+              <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">
+                Matches {newPersona.survey_prevalence}% of survey responders
+              </span>
+            )}
           {effectiveRanking !== undefined && effectiveRanking !== null && (
             <select
               value={effectiveRanking}
@@ -526,10 +559,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
   };
 
   // Choice change handlers
-  const handlePersonaChoiceChange = (
-    index: number,
-    choice: PersonaChoice,
-  ) => {
+  const handlePersonaChoiceChange = (index: number, choice: PersonaChoice) => {
     setPersonaChoices((prev) => ({
       ...prev,
       [index]: choice,
@@ -666,26 +696,44 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
     if (!brandId || !currentJTBD || !personasAdjustments || !driversAdjustment)
       return;
     try {
-      console.log("[DEBUG] JTBDAdjustment: Updating JTBD personas individually...");
+      console.log(
+        "[DEBUG] JTBDAdjustment: Updating JTBD personas individually...",
+      );
 
       // Process each persona adjustment based on user choices
       for (let i = 0; i < personasAdjustments.length; i++) {
         const [oldPersona, newPersona] = personasAdjustments[i];
         const choice = personaChoices[i];
         const isNew = oldPersona === null;
-        const personaWithRanking = rankingOverrides[i] !== undefined
-          ? { ...newPersona, ranking: rankingOverrides[i] }
-          : newPersona;
+        const personaWithRanking =
+          rankingOverrides[i] !== undefined
+            ? { ...newPersona, ranking: rankingOverrides[i] }
+            : newPersona;
 
         if (isNew && choice === "include") {
           // Create new persona
-          await brands.createJTBDPersona(brandId, toJTBDPersonaIn(personaWithRanking));
+          await brands.createJTBDPersona(
+            brandId,
+            toJTBDPersonaIn(personaWithRanking),
+          );
         } else if (!isNew && choice === "adjusted") {
           // Update existing persona with new version
-          await brands.updateJTBDPersona(brandId, newPersona.id, toJTBDPersonaIn(personaWithRanking));
-        } else if (!isNew && choice === "original" && rankingOverrides[i] !== undefined) {
+          await brands.updateJTBDPersona(
+            brandId,
+            newPersona.id,
+            toJTBDPersonaIn(personaWithRanking),
+          );
+        } else if (
+          !isNew &&
+          choice === "original" &&
+          rankingOverrides[i] !== undefined
+        ) {
           // Keep original text but update ranking if user changed it
-          await brands.updateJTBDPersona(brandId, oldPersona!.id, toJTBDPersonaIn({ ...oldPersona!, ranking: rankingOverrides[i] }));
+          await brands.updateJTBDPersona(
+            brandId,
+            oldPersona!.id,
+            toJTBDPersonaIn({ ...oldPersona!, ranking: rankingOverrides[i] }),
+          );
         } else if (!isNew && choice === "remove") {
           // Delete existing persona
           await brands.deleteJTBDPersona(brandId, oldPersona!.id);
@@ -695,10 +743,15 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
 
       // Update drivers if user chose adjusted
       if (driversChoice === "adjusted") {
-        await brands.updateJTBDDrivers(brandId, driversAdjustment.new_text || currentJTBD.drivers || "");
+        await brands.updateJTBDDrivers(
+          brandId,
+          driversAdjustment.new_text || currentJTBD.drivers || "",
+        );
       }
 
-      console.log("[DEBUG] JTBDAdjustment: JTBD updated, calling onComplete...");
+      console.log(
+        "[DEBUG] JTBDAdjustment: JTBD updated, calling onComplete...",
+      );
 
       const cacheKey = `jtbd-adjustment-${brandId}`;
       adjustmentCache.delete(cacheKey);
@@ -750,14 +803,10 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
 
   if (isLoading) {
     return (
-      <div className="loader-container">
-        <div className="flex flex-col items-center gap-2">
-          <BrandicianLoader />
-          <p className="text-gray-600">
-            Analyzing feedback to adjust JTBD personas and drivers...
-          </p>
-        </div>
-      </div>
+      <BrandicianLoader
+        config={LOADER_CONFIGS.feedbackNeeds}
+        isComplete={false}
+      />
     );
   }
 

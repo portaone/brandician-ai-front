@@ -5,7 +5,16 @@ import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
-import { JTBD, SuggestedPersona, JTBDImportance, JTBD_IMPORTANCE_LABELS, IMPORTANCE_TO_RANKING, RANKING_TO_IMPORTANCE, JTBDPersonaIn, PersonaInfo } from "../../types";
+import {
+  JTBD,
+  SuggestedPersona,
+  JTBDImportance,
+  JTBD_IMPORTANCE_LABELS,
+  IMPORTANCE_TO_RANKING,
+  RANKING_TO_IMPORTANCE,
+  JTBDPersonaIn,
+  PersonaInfo,
+} from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
@@ -13,6 +22,7 @@ import ReactMarkdown from "react-markdown";
 import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
+import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
 type Step = "rating" | "editing" | "drivers";
 
@@ -31,14 +41,20 @@ const PERSONA_INFO_LABELS: Record<string, string> = {
 const renderPersonaInfo = (info: PersonaInfo) => {
   const fields = Object.entries(PERSONA_INFO_LABELS);
   const rendered = fields
-    .filter(([key]) => info[key as keyof PersonaInfo] && typeof info[key as keyof PersonaInfo] === "string")
+    .filter(
+      ([key]) =>
+        info[key as keyof PersonaInfo] &&
+        typeof info[key as keyof PersonaInfo] === "string",
+    )
     .map(([key, label]) => (
       <div key={key} className="mb-3 last:mb-0">
         <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">
           {label}
         </h4>
         <div className="prose prose-sm max-w-none text-neutral-700">
-          <ReactMarkdown>{info[key as keyof PersonaInfo] as string}</ReactMarkdown>
+          <ReactMarkdown>
+            {info[key as keyof PersonaInfo] as string}
+          </ReactMarkdown>
         </div>
       </div>
     ));
@@ -64,12 +80,10 @@ const getPersonaDisplayContent = (persona: PersonaItem): React.ReactNode => {
 /** Check if persona has meaningful content (info or description) */
 const hasPersonaContent = (persona: PersonaItem): boolean => {
   if (persona.info) {
-    const hasInfoContent = Object.entries(PERSONA_INFO_LABELS).some(
-      ([key]) => {
-        const val = persona.info?.[key as keyof PersonaInfo];
-        return typeof val === "string" && val.trim().length > 0;
-      }
-    );
+    const hasInfoContent = Object.entries(PERSONA_INFO_LABELS).some(([key]) => {
+      const val = persona.info?.[key as keyof PersonaInfo];
+      return typeof val === "string" && val.trim().length > 0;
+    });
     if (hasInfoContent) return true;
   }
   return !!(persona.description && persona.description.trim().length > 0);
@@ -108,7 +122,11 @@ function toJTBDPersonaIn(persona: PersonaItem): JTBDPersonaIn {
   return {
     name: persona.name,
     info: persona.info,
-    ranking: persona.ranking ?? (persona.importance ? IMPORTANCE_TO_RANKING[persona.importance] : undefined),
+    ranking:
+      persona.ranking ??
+      (persona.importance
+        ? IMPORTANCE_TO_RANKING[persona.importance]
+        : undefined),
     survey_prevalence: persona.survey_prevalence,
   };
 }
@@ -116,13 +134,21 @@ function toJTBDPersonaIn(persona: PersonaItem): JTBDPersonaIn {
 const JTBDContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
-  const { currentBrand, selectBrand, loadJTBD, progressBrandStatus, isLoading, error } =
-    useBrandStore();
+  const {
+    currentBrand,
+    selectBrand,
+    loadJTBD,
+    progressBrandStatus,
+    isLoading,
+    error,
+  } = useBrandStore();
   const [personas, setPersonas] = useState<PersonaItem[]>([]);
   const [drivers, setDrivers] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>("rating");
-  const [editingPersona, setEditingPersona] = useState<PersonaItem | null>(null);
+  const [editingPersona, setEditingPersona] = useState<PersonaItem | null>(
+    null,
+  );
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isEditingDrivers, setIsEditingDrivers] = useState(false);
   const isRegeneratingRef = useRef<boolean>(false);
@@ -149,7 +175,11 @@ const JTBDContainer: React.FC = () => {
             ...data,
             _key: data.id || key,
             id: data.id || key,
-            importance: data.importance ?? (data.ranking !== undefined ? RANKING_TO_IMPORTANCE[data.ranking] : undefined),
+            importance:
+              data.importance ??
+              (data.ranking !== undefined
+                ? RANKING_TO_IMPORTANCE[data.ranking]
+                : undefined),
           }),
         );
         setPersonas(personasArray);
@@ -187,10 +217,7 @@ const JTBDContainer: React.FC = () => {
     }
   }, [editingPersona]);
 
-  const handleImportanceChange = (
-    key: string,
-    importance: JTBDImportance,
-  ) => {
+  const handleImportanceChange = (key: string, importance: JTBDImportance) => {
     if (importance === "not_applicable") {
       handleRemovePersona(key);
     } else {
@@ -218,7 +245,10 @@ const JTBDContainer: React.FC = () => {
     setEditingPersona(null);
   };
 
-  const handleEditingInfoFieldChange = (field: keyof PersonaInfo, value: string) => {
+  const handleEditingInfoFieldChange = (
+    field: keyof PersonaInfo,
+    value: string,
+  ) => {
     if (!editingPersona) return;
     setEditingPersona({
       ...editingPersona,
@@ -271,8 +301,12 @@ const JTBDContainer: React.FC = () => {
         await Promise.all([
           ...selectedPersonas.map((persona) =>
             persona.id
-              ? brands.updateJTBDPersona(brandId, persona.id, toJTBDPersonaIn(persona))
-              : brands.createJTBDPersona(brandId, toJTBDPersonaIn(persona))
+              ? brands.updateJTBDPersona(
+                  brandId,
+                  persona.id,
+                  toJTBDPersonaIn(persona),
+                )
+              : brands.createJTBDPersona(brandId, toJTBDPersonaIn(persona)),
           ),
           brands.updateJTBDDrivers(brandId, drivers),
         ]);
@@ -297,11 +331,15 @@ const JTBDContainer: React.FC = () => {
     try {
       const suggestedData = await brands.suggestJTBD(brandId);
       if (suggestedData?.personas?.length) {
-        const newPersonas: PersonaItem[] = suggestedData.personas.map(toSuggestedPersonaItem);
+        const newPersonas: PersonaItem[] = suggestedData.personas.map(
+          toSuggestedPersonaItem,
+        );
         // Merge: keep existing personas, add new ones by name deduplication
         setPersonas((prev) => {
           const existingNames = new Set(prev.map((p) => p.name.toLowerCase()));
-          const toAdd = newPersonas.filter((p) => !existingNames.has(p.name.toLowerCase()));
+          const toAdd = newPersonas.filter(
+            (p) => !existingNames.has(p.name.toLowerCase()),
+          );
           return [...prev, ...toAdd];
         });
       }
@@ -317,9 +355,10 @@ const JTBDContainer: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="loader-container">
-        <BrandicianLoader />
-      </div>
+      <BrandicianLoader
+        config={LOADER_CONFIGS.customerNeeds}
+        isComplete={false}
+      />
     );
   }
 
@@ -356,12 +395,12 @@ const JTBDContainer: React.FC = () => {
   const renderEditingForm = () => {
     if (!editingPersona) return null;
 
-    const hasInfo = editingPersona.info && Object.entries(PERSONA_INFO_LABELS).some(
-      ([key]) => {
+    const hasInfo =
+      editingPersona.info &&
+      Object.entries(PERSONA_INFO_LABELS).some(([key]) => {
         const val = editingPersona.info?.[key as keyof PersonaInfo];
         return typeof val === "string" && val.trim().length > 0;
-      }
-    );
+      });
 
     return (
       <form onSubmit={handleSavePersona} className="space-y-4">
@@ -395,9 +434,16 @@ const JTBDContainer: React.FC = () => {
                   {label}
                 </label>
                 <textarea
-                  value={(editingPersona.info?.[key as keyof PersonaInfo] as string) || ""}
+                  value={
+                    (editingPersona.info?.[
+                      key as keyof PersonaInfo
+                    ] as string) || ""
+                  }
                   onChange={(e) =>
-                    handleEditingInfoFieldChange(key as keyof PersonaInfo, e.target.value)
+                    handleEditingInfoFieldChange(
+                      key as keyof PersonaInfo,
+                      e.target.value,
+                    )
                   }
                   className="w-full min-h-[100px] p-2 border border-neutral-300 rounded-md"
                 />

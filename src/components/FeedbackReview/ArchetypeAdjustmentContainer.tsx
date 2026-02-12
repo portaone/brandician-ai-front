@@ -9,6 +9,7 @@ import ReactMarkdown from "react-markdown";
 import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { useBrandStore } from "../../store/brand";
+import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
 interface ArchetypeAdjustment {
   old_archetype: string;
@@ -243,14 +244,10 @@ const ArchetypeAdjustmentContainer: React.FC<
 
   if (isLoading) {
     return (
-      <div className="loader-container">
-        <div className="flex flex-col items-center px-2 gap-2">
-          <BrandicianLoader />
-          <p className="text-gray-600">
-            Analyzing feedback for adjusting brand archetype...
-          </p>
-        </div>
-      </div>
+      <BrandicianLoader
+        config={LOADER_CONFIGS.feedbackArchetype}
+        isComplete={false}
+      />
     );
   }
 

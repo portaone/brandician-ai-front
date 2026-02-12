@@ -10,6 +10,7 @@ import ReactMarkdown from "react-markdown";
 import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { useBrandStore } from "../../store/brand";
+import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
 // Global cache to prevent duplicate API calls across component instances
 const adjustmentCache = new Map<
@@ -560,15 +561,10 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
 
   if (isLoading) {
     return (
-      <div className="loader-container">
-        <div className="flex flex-col items-center gap-2 px-2">
-          <BrandicianLoader />
-          <p className="text-gray-600">
-            Analyzing feedback of potential customers to adjust the brand
-            summary...
-          </p>
-        </div>
-      </div>
+      <BrandicianLoader
+        config={LOADER_CONFIGS.feedbackSummary}
+        isComplete={false}
+      />
     );
   }
 

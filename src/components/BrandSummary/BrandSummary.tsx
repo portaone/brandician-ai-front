@@ -10,6 +10,7 @@ import ReactMarkdown from "react-markdown";
 import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
+import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
 const BrandSummary: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -121,16 +122,12 @@ const BrandSummary: React.FC = () => {
     scrollToTop();
   };
 
-  if (isLoading || isGenerating) {
+  if (isGenerating) {
     return (
-      <div className="loader-container flex-col">
-        <BrandicianLoader />
-        <div className="text-center">
-          <p className="mt-4 text-lg text-gray-600">
-            {isGenerating ? "Generating brand summary..." : "Loading..."}
-          </p>
-        </div>
-      </div>
+      <BrandicianLoader
+        config={LOADER_CONFIGS.brandSummary}
+        isComplete={false}
+      />
     );
   }
 

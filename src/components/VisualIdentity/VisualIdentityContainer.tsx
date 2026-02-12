@@ -11,6 +11,7 @@ import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
+import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
 type VisualAssetsState = {
   visualStyle: BrandAsset | null;
@@ -146,20 +147,12 @@ const VisualIdentityContainer: React.FC = () => {
     [currentBrand],
   );
 
-  if (!brandId || brandLoading || !currentBrand) {
+  if (!brandId || brandLoading || !currentBrand || !hasAnyVisual) {
     return (
-      <div className="loader-container">
-        <BrandicianLoader />
-      </div>
-    );
-  }
-
-  if (isLoading && !hasAnyVisual) {
-    return (
-      <div className="loader-container flex-col text-center">
-        <BrandicianLoader />
-        Loading visual identity...
-      </div>
+      <BrandicianLoader
+        config={LOADER_CONFIGS.visualIdentity}
+        isComplete={false}
+      />
     );
   }
 

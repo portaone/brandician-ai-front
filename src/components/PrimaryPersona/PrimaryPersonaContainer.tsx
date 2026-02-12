@@ -11,6 +11,7 @@ import ReactMarkdown from "react-markdown";
 import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { useBrandStore } from "../../store/brand";
+import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
 const PERSONA_INFO_LABELS: Record<string, string> = {
   narrative: "Narrative",
@@ -81,8 +82,7 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
     if (!brandId || isRegenerating) return;
     setIsRegenerating(true);
     setError(null);
-    setIsEditing(false);
-    setEditingPersona(null);
+
     try {
       const data = await brands.generatePrimaryPersona(brandId);
       setPersona(data);
@@ -143,14 +143,10 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
 
   if (isLoading) {
     return (
-      <div className="loader-container">
-        <div className="flex flex-col items-center gap-2">
-          <BrandicianLoader />
-          <p className="text-gray-600">
-            Generating your primary persona...
-          </p>
-        </div>
-      </div>
+      <BrandicianLoader
+        config={LOADER_CONFIGS.primaryPersona}
+        isComplete={false}
+      />
     );
   }
 
@@ -172,7 +168,10 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
                   const data = await brands.generatePrimaryPersona(brandId!);
                   setPersona(data);
                 } catch (err: any) {
-                  setError(err?.response?.data?.message || "Failed to generate primary persona.");
+                  setError(
+                    err?.response?.data?.message ||
+                      "Failed to generate primary persona.",
+                  );
                 } finally {
                   setIsLoading(false);
                 }
@@ -217,9 +216,9 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
           </div>
 
           <p className="text-neutral-600 mb-6">
-            Based on your JTBD personas and survey feedback, we've generated a primary
-            persona that represents your most important target customer. Review and
-            edit as needed, then accept to continue.
+            Based on your JTBD personas and survey feedback, we've generated a
+            primary persona that represents your most important target customer.
+            Review and edit as needed, then accept to continue.
           </p>
 
           {error && (
@@ -244,16 +243,26 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
                       if (e.key === "Escape") cancelEditField();
                     }}
                   />
-                  <button onClick={saveEditField} className="text-green-600 hover:text-green-700 p-1" title="Save">
+                  <button
+                    onClick={saveEditField}
+                    className="text-green-600 hover:text-green-700 p-1"
+                    title="Save"
+                  >
                     <Check className="h-5 w-5" />
                   </button>
-                  <button onClick={cancelEditField} className="text-neutral-400 hover:text-neutral-600 p-1" title="Cancel">
+                  <button
+                    onClick={cancelEditField}
+                    className="text-neutral-400 hover:text-neutral-600 p-1"
+                    title="Cancel"
+                  >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-bold text-neutral-800">{persona.name}</h2>
+                  <h2 className="text-xl font-bold text-neutral-800">
+                    {persona.name}
+                  </h2>
                   <button
                     onClick={() => startEditField("name", persona.name)}
                     className="text-neutral-300 hover:text-primary-600 transition-colors opacity-0 group-hover:opacity-100"
@@ -268,26 +277,33 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
             {/* Metadata badges */}
             <div className="flex flex-wrap gap-2 mb-4 text-xs">
               {persona.confidence && (
-                <span className={`px-2 py-1 rounded-full font-medium ${
-                  persona.confidence === "HIGH" ? "bg-green-100 text-green-800" :
-                  persona.confidence === "MEDIUM" ? "bg-yellow-100 text-yellow-800" :
-                  "bg-red-100 text-red-800"
-                }`}>
+                <span
+                  className={`px-2 py-1 rounded-full font-medium ${
+                    persona.confidence === "HIGH"
+                      ? "bg-green-100 text-green-800"
+                      : persona.confidence === "MEDIUM"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : "bg-red-100 text-red-800"
+                  }`}
+                >
                   Confidence: {persona.confidence}
                 </span>
               )}
-              {persona.survey_prevalence !== undefined && persona.survey_prevalence !== null && (
-                <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">
-                  Matches {persona.survey_prevalence}% of survey responders
-                </span>
-              )}
+              {persona.survey_prevalence !== undefined &&
+                persona.survey_prevalence !== null && (
+                  <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">
+                    Matches {persona.survey_prevalence}% of survey responders
+                  </span>
+                )}
             </div>
 
             {/* PersonaInfo fields — each individually editable */}
             <div className="space-y-4">
               {infoFields.length > 0 ? (
                 infoFields.map(([key, label]) => {
-                  const value = persona.info?.[key as keyof PersonaInfo] as string;
+                  const value = persona.info?.[
+                    key as keyof PersonaInfo
+                  ] as string;
                   const isFieldEditing = editingField === key;
 
                   return (
