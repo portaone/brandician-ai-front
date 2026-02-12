@@ -219,7 +219,7 @@ const BrandHubContainer: React.FC = () => {
     if (!brandId) return;
 
     // Avoid refetching if we already have data for this tab
-    if (!opts?.allowGenerate && Object.keys(tabData[tabKey] || {}).length > 0) {
+    if (Object.keys(tabData[tabKey] || {}).length > 0) {
       return;
     }
 
@@ -310,11 +310,11 @@ const BrandHubContainer: React.FC = () => {
 
   useEffect(() => {
     if (brandId) {
-      loadTab(activeTab, { allowGenerate: false });
+      loadTab(activeTab, { allowGenerate: true });
     }
   }, [brandId, activeTab]);
 
-  if (brandLoading || !currentBrand || !brandId) {
+  if (brandLoading || !currentBrand || !brandId || isGenerating) {
     return (
       <div className="loader-container">
         <BrandicianLoader />
