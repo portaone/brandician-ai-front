@@ -212,6 +212,11 @@ const BrandList: React.FC = () => {
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <h3 className="text-lg font-medium text-gray-900 flex-1">
                     {brand.name}
+                    {brand.brand_name && brand.brand_name !== brand.name && (
+                      <span className="block text-sm font-normal text-primary-600">
+                        {brand.brand_name}
+                      </span>
+                    )}
                   </h3>
                   <div
                     className="relative"

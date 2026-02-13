@@ -68,7 +68,7 @@ const TAB_CONFIGS: UiTabConfig[] = [
       },
       {
         key: "jobs_to_be_done",
-        title: "Jobs-to-Be-Done (JTBD) Summary",
+        title: "Customer Needs Summary",
         helper:
           "The functional, emotional, and social needs your brand helps your audience solve.",
       },
