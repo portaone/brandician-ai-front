@@ -323,12 +323,13 @@ const BrandHubContainer: React.FC = () => {
 
   const loadTab = async (
     tabKey: UiTabKey,
-    opts?: { allowGenerate?: boolean },
+    opts?: { allowGenerate?: boolean; force?: boolean },
   ) => {
     if (!brandId) return;
 
     // Avoid refetching if we already have data for this tab
-    if (Object.keys(tabData[tabKey] || {}).length > 0) {
+    // (skip check when force=true, e.g. after regeneration, to avoid stale closure)
+    if (!opts?.force && Object.keys(tabData[tabKey] || {}).length > 0) {
       return;
     }
 
@@ -416,7 +417,7 @@ const BrandHubContainer: React.FC = () => {
       setHasAnyContent(false);
       setGapsData([]);
       setConfidenceLevels({});
-      await loadTab(activeTab);
+      await loadTab(activeTab, { force: true });
       await loadGaps();
     } catch (e: any) {
       console.error("Failed to generate Brand Hub:", e);
