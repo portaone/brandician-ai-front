@@ -422,7 +422,7 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-2 sm:p-6">
       <h3 className="text-xl font-semibold text-gray-900 mb-6">
-        Jobs-to-be-Done Drivers
+        Customer Needs
       </h3>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -499,7 +499,7 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
-            Keep Original Drivers
+            Keep Original Customer Needs
           </button>
           <button
             onClick={() => onChoiceChange("adjusted")}
@@ -509,7 +509,7 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
                 : "bg-blue-100 text-blue-700 hover:bg-blue-200"
             }`}
           >
-            Accept Adjusted Drivers
+            Accept Adjusted Customer Needs
           </button>
         </div>
       </div>
@@ -851,7 +851,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
           <div className="flex justify-between flex-wrap gap-2 items-center mb-6">
             <h1 className="text-3xl font-display font-bold text-neutral-800">
               <BrandNameDisplay brand={currentBrand!} />
-              Review Jobs-to-be-Done
+              Review Customer Needs
             </h1>
             <div className="flex items-center flex-wrap gap-3">
               {brandId && (
@@ -966,7 +966,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
                   onClick={handleReject}
                   className="sm:px-6 sm:py-3 p-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
                 >
-                  Keep Current JTBD
+                  Keep Current Customer Needs
                 </button>
                 <button
                   onClick={handleReevaluate}

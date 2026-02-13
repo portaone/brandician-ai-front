@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowRight, Copy, Loader, RefreshCw } from "lucide-react";
+import { AlertCircle, ArrowRight, Check, ClipboardCopy, Copy, Loader, RefreshCw } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useNavigate, useParams } from "react-router-dom";
@@ -292,6 +292,27 @@ const BrandHubContainer: React.FC = () => {
     Record<string, PropertyConfidence>
   >({});
   const [gapsLoading, setGapsLoading] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const handleCopy = async (text: string, key: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    }
+  };
 
   useEffect(() => {
     if (!brandId) return;
@@ -549,15 +570,40 @@ const BrandHubContainer: React.FC = () => {
                     key={index}
                     className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5"
                   >
-                    <div className="flex flex-wrap gap-2 items-center mb-2">
-                      <h3 className="text-lg font-semibold text-neutral-800">
-                        {gap.name || gap.property}
-                      </h3>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_STYLES[gap.priority.toUpperCase()] || "bg-neutral-100 text-neutral-600"}`}
+                    <div className="flex flex-wrap gap-2 items-start justify-between mb-2">
+                      <div className="flex flex-wrap gap-2 items-center">
+                        <h3 className="text-lg font-semibold text-neutral-800">
+                          {gap.name || gap.property}
+                        </h3>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${PRIORITY_STYLES[gap.priority.toUpperCase()] || "bg-neutral-100 text-neutral-600"}`}
+                        >
+                          {gap.priority}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const parts = [gap.name || gap.property, gap.description];
+                          if (gap.impact) parts.push(`Impact: ${gap.impact}`);
+                          if (gap.quick_fix_question) parts.push(`Quick fix: ${gap.quick_fix_question}`);
+                          if (gap.workaround) parts.push(`Workaround: ${gap.workaround}`);
+                          handleCopy(parts.join("\n"), `gap-${index}`);
+                        }}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-neutral-200 bg-neutral-50 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800 transition-colors flex-shrink-0"
+                        title="Copy gap to clipboard"
                       >
-                        {gap.priority}
-                      </span>
+                        {copiedKey === `gap-${index}` ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 text-green-600" />
+                            <span className="text-green-600">Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <ClipboardCopy className="h-3.5 w-3.5" />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                     {gap.property && gap.name && (
                       <p className="text-xs text-neutral-500 mb-1">
@@ -641,6 +687,25 @@ const BrandHubContainer: React.FC = () => {
                           </p>
                         )}
                       </div>
+                      {hasContent && (
+                        <button
+                          onClick={() => handleCopy(value as string, prop.key)}
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-neutral-200 bg-neutral-50 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800 transition-colors flex-shrink-0"
+                          title={`Copy ${prop.title} to clipboard`}
+                        >
+                          {copiedKey === prop.key ? (
+                            <>
+                              <Check className="h-3.5 w-3.5 text-green-600" />
+                              <span className="text-green-600">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <ClipboardCopy className="h-3.5 w-3.5" />
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
 
                     {hasContent ? (

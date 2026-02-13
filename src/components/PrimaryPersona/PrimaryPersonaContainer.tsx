@@ -216,7 +216,7 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
           </div>
 
           <p className="text-neutral-600 mb-6">
-            Based on your JTBD personas and survey feedback, we've generated a
+            Based on your Customer Needs and survey feedback, we've generated a
             primary persona that represents your most important target customer.
             Review and edit as needed, then accept to continue.
           </p>
