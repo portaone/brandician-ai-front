@@ -180,7 +180,7 @@ const TAB_CONFIGS: UiTabConfig[] = [
       "Identify market opportunities and competitive gaps where your brand can stand out.",
     properties: [
       {
-        key: "gap_list",
+        key: "gaps",
         title: "Market & Competitive Gaps",
         helper:
           "Underserved needs, unmet expectations, and whitespace opportunities your brand can own.",
@@ -355,22 +355,22 @@ const BrandHubContainer: React.FC = () => {
     setGapsLoading(true);
     try {
       const response = await brands.getBrandHubTab(brandId, "gaps");
-      const gapList = response?.properties?.gap_list;
+      const gapsObj = response?.properties?.gaps;
 
-      if (gapList && typeof gapList === "object" && !Array.isArray(gapList)) {
-        // gap_list is a map: { confidence_levels: {...}, gaps: [...] }
-        if (Array.isArray(gapList.gaps)) {
-          setGapsData(gapList.gaps);
+      if (gapsObj && typeof gapsObj === "object" && !Array.isArray(gapsObj)) {
+        // gaps is a map: { confidence_levels: {...}, gap_list: [...] }
+        if (Array.isArray(gapsObj.gap_list)) {
+          setGapsData(gapsObj.gap_list);
         }
         if (
-          gapList.confidence_levels &&
-          typeof gapList.confidence_levels === "object"
+          gapsObj.confidence_levels &&
+          typeof gapsObj.confidence_levels === "object"
         ) {
-          setConfidenceLevels(gapList.confidence_levels);
+          setConfidenceLevels(gapsObj.confidence_levels);
         }
-      } else if (Array.isArray(gapList)) {
-        // Fallback: gap_list is directly an array
-        setGapsData(gapList);
+      } else if (Array.isArray(gapsObj)) {
+        // Fallback: gaps is directly an array
+        setGapsData(gapsObj);
       }
     } catch {
       // Gaps loading is best-effort
