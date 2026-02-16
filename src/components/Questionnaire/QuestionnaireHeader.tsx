@@ -18,9 +18,7 @@ const QuestionnaireHeader: React.FC<QuestionnaireHeaderProps> = ({
       <div className="container mx-auto sm:p-4 p-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-grow flex-wrap">
-            {brandId && (
-              <HistoryButton brandId={brandId} variant="outline" size="sm" />
-            )}
+            {brandId && <HistoryButton brandId={brandId} size="sm" />}
             <GetHelpButton variant="secondary" size="sm" />
           </div>
           <div className="flex items-end space-x-4 flex-col">

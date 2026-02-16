@@ -48,7 +48,7 @@ const RegisterForm: React.FC = () => {
         "Registration error:",
         error?.response?.data ||
           error?.message ||
-          "An unexpected error occurred"
+          "An unexpected error occurred",
       );
     }
   };
@@ -211,7 +211,7 @@ const RegisterForm: React.FC = () => {
                       <Button
                         type="button"
                         onClick={handleRetry}
-                        variant="secondary"
+                        variant="primary"
                         size="sm"
                         leftIcon={<RefreshCw className="h-3 w-3" />}
                       >

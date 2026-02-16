@@ -78,7 +78,7 @@ const BrandList: React.FC = () => {
   const handleClone = async (brandId: string, brandName: string) => {
     if (
       !confirm(
-        `Are you sure you want to clone "${brandName}"? This will create an exact copy of the brand with all its data.`
+        `Are you sure you want to clone "${brandName}"? This will create an exact copy of the brand with all its data.`,
       )
     ) {
       return;
@@ -95,7 +95,7 @@ const BrandList: React.FC = () => {
       alert(
         `Failed to clone brand: ${
           error.response?.data?.detail || error.message
-        }`
+        }`,
       );
     }
   };
@@ -127,7 +127,7 @@ const BrandList: React.FC = () => {
       alert(
         `Failed to rename brand: ${
           error.response?.data?.detail || error.message
-        }`
+        }`,
       );
     } finally {
       setIsRenaming(false);
@@ -137,7 +137,7 @@ const BrandList: React.FC = () => {
   const handleCopyLink = async (brand: Brand) => {
     const route = getRouteForStatus(
       brand.id,
-      (brand.current_status || "new_brand") as any
+      (brand.current_status || "new_brand") as any,
     );
     const fullUrl = `${window.location.origin}${route}`;
     try {
@@ -308,7 +308,7 @@ const BrandList: React.FC = () => {
                     onClick={() =>
                       handleContinue(
                         brand.id,
-                        brand.current_status || "new_brand"
+                        brand.current_status || "new_brand",
                       )
                     }
                     variant="primary"
@@ -407,7 +407,7 @@ const BrandList: React.FC = () => {
                 </Button>
                 <Button
                   onClick={handleDelete}
-                  variant="danger"
+                  variant="primary"
                   disabled={isDeleting}
                   loading={isDeleting}
                 >

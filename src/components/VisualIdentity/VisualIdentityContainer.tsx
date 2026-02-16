@@ -174,7 +174,7 @@ const VisualIdentityContainer: React.FC = () => {
               </p>
             </div>
             <div className="flex items-center flex-wrap gap-3">
-              <HistoryButton brandId={brandId} variant="outline" size="md" />
+              <HistoryButton brandId={brandId} size="md" />
               <GetHelpButton variant="secondary" size="md" />
             </div>
           </div>
@@ -230,7 +230,7 @@ const VisualIdentityContainer: React.FC = () => {
             <Button
               onClick={handleRegenerateVisuals}
               disabled={isGenerating}
-              variant="primary"
+              variant="secondary"
               size="lg"
               loading={isGenerating}
               leftIcon={!isGenerating && <RefreshCw className="h-5 w-5" />}

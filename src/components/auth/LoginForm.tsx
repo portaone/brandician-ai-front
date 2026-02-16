@@ -158,7 +158,7 @@ const LoginForm: React.FC = () => {
                       <Button
                         type="button"
                         onClick={handleRetry}
-                        variant="secondary"
+                        variant="primary"
                         size="sm"
                         leftIcon={<RefreshCw className="h-3 w-3" />}
                       >

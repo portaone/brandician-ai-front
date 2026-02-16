@@ -436,9 +436,7 @@ const SurveyContainer: React.FC = () => {
               Create Customer Survey
             </h1>
             <div className="flex items-center gap-3 flex-wrap">
-              {brandId && (
-                <HistoryButton brandId={brandId} variant="outline" size="md" />
-              )}
+              {brandId && <HistoryButton brandId={brandId} size="md" />}
               <GetHelpButton variant="secondary" size="md" />
             </div>
           </div>

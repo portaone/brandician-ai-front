@@ -602,9 +602,7 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
               Review Brand Summary
             </h1>
             <div className="flex flex-wrap items-center gap-3">
-              {brandId && (
-                <HistoryButton brandId={brandId} variant="outline" size="md" />
-              )}
+              {brandId && <HistoryButton brandId={brandId} size="md" />}
               <GetHelpButton variant="secondary" size="md" />
             </div>
           </div>

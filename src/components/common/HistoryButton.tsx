@@ -5,13 +5,13 @@ import Button from "./Button";
 
 interface HistoryButtonProps {
   brandId: string;
-  variant?: "primary" | "secondary" | "outline";
+  variant?: "primary" | "secondary" | "tertiary";
   size?: "sm" | "md" | "lg" | "xl";
 }
 
 const HistoryButton: React.FC<HistoryButtonProps> = ({
   brandId,
-  variant = "outline",
+  variant = "secondary",
   size = "md",
 }) => {
   const navigate = useNavigate();

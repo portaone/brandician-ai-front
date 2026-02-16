@@ -6,7 +6,7 @@ import { useAuthStore } from "../../store/auth";
 import Button from "./Button";
 
 interface GetHelpButtonProps {
-  variant?: "primary" | "secondary" | "outline";
+  variant?: "primary" | "secondary" | "tertiary";
   size?: "sm" | "md" | "lg";
   className?: string;
 }
@@ -17,7 +17,7 @@ interface GetHelpButtonProps {
 const getStorageKey = (
   key: string,
   userId?: string,
-  perPage: boolean = true
+  perPage: boolean = true,
 ) => {
   if (perPage) {
     return `getHelp_${userId}_${window.location.pathname}_${key}`;
@@ -28,7 +28,7 @@ const getStorageKey = (
 const getPersistedValue = (
   key: string,
   userId?: string,
-  perPage: boolean = true
+  perPage: boolean = true,
 ): string => {
   try {
     return sessionStorage.getItem(getStorageKey(key, userId, perPage)) || "";
@@ -41,7 +41,7 @@ const setPersistedValue = (
   key: string,
   value: string,
   userId?: string,
-  perPage: boolean = true
+  perPage: boolean = true,
 ): void => {
   try {
     sessionStorage.setItem(getStorageKey(key, userId, perPage), value);
@@ -77,7 +77,7 @@ const GetHelpButton: React.FC<GetHelpButtonProps> = ({
   });
   // Issue details are cached per-page per-user using sessionStorage
   const [issueDetails, setIssueDetails] = useState(
-    getPersistedValue("issueDetails", userId, true)
+    getPersistedValue("issueDetails", userId, true),
   );
   const [isSending, setIsSending] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
@@ -142,7 +142,7 @@ const GetHelpButton: React.FC<GetHelpButtonProps> = ({
       // Show success message
       setResultType("success");
       setResultMessage(
-        response.message || "Your help request has been sent successfully!"
+        response.message || "Your help request has been sent successfully!",
       );
       setShowResultModal(true);
 
@@ -244,7 +244,7 @@ const GetHelpButton: React.FC<GetHelpButtonProps> = ({
             <div className="flex justify-end gap-3 p-5 border-t border-gray-200">
               <Button
                 onClick={handleDismiss}
-                variant="outline"
+                variant="secondary"
                 size="md"
                 disabled={isSending}
               >

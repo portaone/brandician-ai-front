@@ -1133,7 +1133,7 @@ const HistoryContainer: React.FC = () => {
                                 );
                               }
                             }}
-                            className="text-xs px-2 py-1 rounded-md font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors whitespace-nowrap"
+                            className="btn-primary text-xs px-2 py-1 rounded-md font-medium  whitespace-nowrap min-h-[auto]"
                           >
                             Continue
                           </button>

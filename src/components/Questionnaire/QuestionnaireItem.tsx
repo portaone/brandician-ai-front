@@ -650,6 +650,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
           {!isLastQuestion && isAllQuestionsAnswered && (
             <Button
               type="button"
+              variant="secondary"
               onClick={handleShowSummary}
               disabled={isSubmitting || isProcessing || !!augmentationError}
               size="md"

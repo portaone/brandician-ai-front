@@ -110,7 +110,7 @@ interface PersonaItem {
 /** Convert a suggested persona (from the backend) to a PersonaItem without id */
 function toSuggestedPersonaItem(data: SuggestedPersona): PersonaItem {
   return {
-    _key: crypto.randomUUID(),
+    _key: crypto?.randomUUID(),
     name: data.name,
     description: data.description,
     info: data.info,
@@ -473,7 +473,7 @@ const JTBDContainer: React.FC = () => {
           <Button
             type="button"
             onClick={() => setEditingPersona(null)}
-            variant="ghost"
+            variant="secondary"
             size="md"
           >
             Cancel
@@ -496,9 +496,7 @@ const JTBDContainer: React.FC = () => {
               Jobs To Be Done Analysis
             </h1>
             <div className="flex items-center flex-wrap gap-3">
-              {brandId && (
-                <HistoryButton brandId={brandId} variant="outline" size="md" />
-              )}
+              {brandId && <HistoryButton brandId={brandId} size="md" />}
               <GetHelpButton variant="secondary" size="md" />
             </div>
           </div>
@@ -689,7 +687,7 @@ const JTBDContainer: React.FC = () => {
                 </h2>
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="primary"
                   size="md"
                   onClick={() => setIsEditingDrivers((v) => !v)}
                   disabled={isSubmitting}

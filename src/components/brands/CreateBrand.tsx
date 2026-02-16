@@ -28,7 +28,7 @@ const CreateBrand: React.FC = () => {
       <div className="max-w-2xl mx-auto py-4 sm:py-8 sm:px-6 lg:px-8">
         <Button
           onClick={() => navigate("/brands")}
-          variant="ghost"
+          variant="secondary"
           leftIcon={<ArrowLeft className="h-5 w-5" />}
           className="mb-6"
         >

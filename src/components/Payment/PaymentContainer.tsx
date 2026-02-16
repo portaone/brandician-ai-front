@@ -1,4 +1,10 @@
-import { AlertCircle, ArrowLeft, ArrowRight, Copy, CreditCard } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  Copy,
+  CreditCard,
+} from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { backendConfig, brands } from "../../lib/api";
@@ -28,7 +34,7 @@ const PaymentContainer: React.FC = () => {
 
   // Payment state
   const [paymentAmount, setPaymentAmount] = useState<string>(
-    () => sessionStorage.getItem("paymentAmount") || ""
+    () => sessionStorage.getItem("paymentAmount") || "",
   );
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<string>("credit_card");
@@ -43,7 +49,7 @@ const PaymentContainer: React.FC = () => {
     string | null
   >(null);
   const [googlePayMerchantId, setGooglePayMerchantId] = useState<string | null>(
-    null
+    null,
   );
   const [googlePayEnvironment, setGooglePayEnvironment] = useState<
     "TEST" | "PRODUCTION"
@@ -80,7 +86,9 @@ const PaymentContainer: React.FC = () => {
   const isZeroAmount = paymentAmount !== "" && parseFloat(paymentAmount) === 0;
   // Allow proceeding with zero amount - social sharing is optional, not required
   const canProceed =
-    paymentAmount !== "" && !isNaN(parseFloat(paymentAmount)) && parseFloat(paymentAmount) >= 0;
+    paymentAmount !== "" &&
+    !isNaN(parseFloat(paymentAmount)) &&
+    parseFloat(paymentAmount) >= 0;
 
   // Ref for amount input
   const amountInputRef = useRef<HTMLInputElement>(null);
@@ -96,7 +104,7 @@ const PaymentContainer: React.FC = () => {
     const error = searchParams.get("error");
     if (error === "payment_cancelled") {
       setPaymentError(
-        "Your payment was cancelled. Please try a different payment method or try again."
+        "Your payment was cancelled. Please try a different payment method or try again.",
       );
       if (paymentAmount && !isNaN(parseFloat(paymentAmount))) {
         setCurrentStep(2);
@@ -159,10 +167,10 @@ const PaymentContainer: React.FC = () => {
 
         // Filter methods based on available processors from backend
         const allowedMethodIds = availableProcessors.map(
-          (p) => processorToMethodId[p.toLowerCase()]
+          (p) => processorToMethodId[p.toLowerCase()],
         );
         const paymentMethods = allPaymentMethods.filter((m) =>
-          allowedMethodIds.includes(m.id)
+          allowedMethodIds.includes(m.id),
         );
 
         setAvailablePaymentMethods(paymentMethods);
@@ -199,8 +207,8 @@ const PaymentContainer: React.FC = () => {
         prev.map((method) =>
           method.id === "google_pay"
             ? { ...method, enabled: isGooglePayAvailable }
-            : method
-        )
+            : method,
+        ),
       );
     }
   }, [isGooglePayAvailable, isGooglePayLoading]);
@@ -254,7 +262,7 @@ const PaymentContainer: React.FC = () => {
           brandId,
           token,
           amount,
-          "USD"
+          "USD",
         );
         navigateAfterProgress(navigate, brandId, updatedBrand);
         return;
@@ -265,12 +273,12 @@ const PaymentContainer: React.FC = () => {
         brandId,
         parseFloat(paymentAmount),
         `Brand creation payment for ${currentBrand?.name || "brand"}`,
-        selectedPaymentMethod
+        selectedPaymentMethod,
       );
       // Redirect to payment processor checkout (no popup - avoids blocker issues)
       console.log(
         "Redirecting to payment checkout:",
-        paymentSession.checkout_url
+        paymentSession.checkout_url,
       );
 
       // Save amount so it persists if user cancels and returns
@@ -291,7 +299,7 @@ const PaymentContainer: React.FC = () => {
   };
 
   const handlePaymentAmountChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     setPaymentAmount(e.target.value);
     setErrors({ ...errors, payment: "" });
@@ -342,13 +350,7 @@ const PaymentContainer: React.FC = () => {
                   Support Our Mission
                 </h1>
                 <div className="flex-1 flex flex-wrap sm:justify-end gap-3">
-                  {brandId && (
-                    <HistoryButton
-                      brandId={brandId}
-                      variant="outline"
-                      size="md"
-                    />
-                  )}
+                  {brandId && <HistoryButton brandId={brandId} size="md" />}
                   <GetHelpButton variant="secondary" size="md" />
                 </div>
               </div>
@@ -479,7 +481,7 @@ const PaymentContainer: React.FC = () => {
                       <Button
                         onClick={handleCopyShareText}
                         leftIcon={<Copy className="h-4 w-4" />}
-                        variant="secondary"
+                        variant="primary"
                       >
                         Copy to Clipboard
                       </Button>
@@ -679,7 +681,7 @@ const PaymentContainer: React.FC = () => {
                     <div className="flex gap-3">
                       <Button
                         onClick={handleBackToAmount}
-                        variant="outline"
+                        variant="secondary"
                         leftIcon={<ArrowLeft className="h-5 w-5" />}
                         className="flex-1"
                       >

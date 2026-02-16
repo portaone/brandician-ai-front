@@ -152,9 +152,7 @@ const BrandNameContainer: React.FC = () => {
               Pick Your Brand Name
             </h1>
             <div className="flex items-center flex-wrap gap-3">
-              {brandId && (
-                <HistoryButton brandId={brandId} variant="outline" size="md" />
-              )}
+              {brandId && <HistoryButton brandId={brandId} size="md" />}
               <GetHelpButton variant="secondary" size="md" />
             </div>
           </div>
@@ -197,9 +195,7 @@ const BrandNameContainer: React.FC = () => {
                 </div>
                 <Button
                   onClick={() => handleSelectName(currentDraft.name)}
-                  variant={
-                    selectedName === currentDraft.name ? "primary" : "secondary"
-                  }
+                  variant="selection"
                   size="md"
                 >
                   {selectedName === currentDraft.name
@@ -218,7 +214,7 @@ const BrandNameContainer: React.FC = () => {
                 <Button
                   onClick={handleGenerateNewSuggestions}
                   disabled={isGenerating}
-                  variant="secondary"
+                  variant="primary"
                   size="sm"
                 >
                   {isGenerating ? (
@@ -286,11 +282,6 @@ const BrandNameContainer: React.FC = () => {
                     <div className="mt-3 flex justify-end">
                       <Button
                         onClick={() => handleSelectName(suggestion.name)}
-                        variant={
-                          selectedName === suggestion.name
-                            ? "primary"
-                            : "secondary"
-                        }
                         size="sm"
                       >
                         {selectedName === suggestion.name
@@ -318,7 +309,7 @@ const BrandNameContainer: React.FC = () => {
               {!isShowingCustomInput ? (
                 <Button
                   onClick={() => setIsShowingCustomInput(true)}
-                  variant="secondary"
+                  variant="primary"
                   size="md"
                 >
                   <Plus className="h-5 w-5 mr-2" />

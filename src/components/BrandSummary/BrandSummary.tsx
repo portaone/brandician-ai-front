@@ -198,9 +198,7 @@ const BrandSummary: React.FC = () => {
               Brand Summary
             </h1>
             <div className="flex items-center gap-3">
-              {brandId && (
-                <HistoryButton brandId={brandId} variant="outline" size="md" />
-              )}
+              {brandId && <HistoryButton brandId={brandId} size="md" />}
               <GetHelpButton variant="secondary" size="md" />
             </div>
           </div>
@@ -221,7 +219,7 @@ const BrandSummary: React.FC = () => {
                 </label>
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="primary"
                   size="md"
                   onClick={() => setIsEditing((v) => !v)}
                   disabled={isSubmitting}

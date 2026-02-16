@@ -55,7 +55,7 @@ const Profile: React.FC = () => {
       console.error("Failed to update profile:", err);
       setError(
         err.response?.data?.message ||
-          "Failed to update profile. Please try again."
+          "Failed to update profile. Please try again.",
       );
     } finally {
       setIsLoading(false);
@@ -155,7 +155,7 @@ const Profile: React.FC = () => {
                     />
                     <Button
                       onClick={() => setIsEditing(true)}
-                      variant="secondary"
+                      variant="primary"
                       size="md"
                     >
                       Edit
@@ -207,14 +207,14 @@ const Profile: React.FC = () => {
                   <div className="flex flex-col sm:flex-row gap-4">
                     <Button
                       onClick={() => navigate("/brands")}
-                      variant="secondary"
+                      variant="primary"
                       className="flex-1"
                     >
                       My Brands
                     </Button>
                     <Button
                       onClick={handleLogout}
-                      variant="danger"
+                      variant="secondary"
                       className="flex-1"
                     >
                       Log Out

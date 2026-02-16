@@ -1,4 +1,12 @@
-import { AlertCircle, ArrowRight, Check, ClipboardCopy, Copy, Loader, RefreshCw } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  Check,
+  ClipboardCopy,
+  Copy,
+  Loader,
+  RefreshCw,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useNavigate, useParams } from "react-router-dom";
@@ -494,7 +502,7 @@ const BrandHubContainer: React.FC = () => {
               </p>
             </div>
             <div className="flex items-center flex-wrap gap-3">
-              <HistoryButton brandId={brandId} variant="outline" size="md" />
+              <HistoryButton brandId={brandId} size="md" />
               <GetHelpButton variant="secondary" size="md" />
             </div>
           </div>
@@ -584,10 +592,15 @@ const BrandHubContainer: React.FC = () => {
                       </div>
                       <button
                         onClick={() => {
-                          const parts = [gap.name || gap.property, gap.description];
+                          const parts = [
+                            gap.name || gap.property,
+                            gap.description,
+                          ];
                           if (gap.impact) parts.push(`Impact: ${gap.impact}`);
-                          if (gap.quick_fix_question) parts.push(`Quick fix: ${gap.quick_fix_question}`);
-                          if (gap.workaround) parts.push(`Workaround: ${gap.workaround}`);
+                          if (gap.quick_fix_question)
+                            parts.push(`Quick fix: ${gap.quick_fix_question}`);
+                          if (gap.workaround)
+                            parts.push(`Workaround: ${gap.workaround}`);
                           handleCopy(parts.join("\n"), `gap-${index}`);
                         }}
                         className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-neutral-200 bg-neutral-50 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800 transition-colors flex-shrink-0"
@@ -730,7 +743,7 @@ const BrandHubContainer: React.FC = () => {
               <Button
                 onClick={generateHub}
                 disabled={isGenerating}
-                variant="primary"
+                variant="secondary"
                 size="lg"
                 loading={isGenerating}
                 leftIcon={!isGenerating && <RefreshCw className="h-5 w-5" />}

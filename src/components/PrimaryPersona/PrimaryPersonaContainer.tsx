@@ -208,9 +208,7 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
               Primary Persona
             </h1>
             <div className="flex items-center flex-wrap gap-3">
-              {brandId && (
-                <HistoryButton brandId={brandId} variant="outline" size="md" />
-              )}
+              {brandId && <HistoryButton brandId={brandId} size="md" />}
               <GetHelpButton variant="secondary" size="md" />
             </div>
           </div>

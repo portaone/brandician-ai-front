@@ -350,7 +350,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
         </div>
         <Button
           onClick={() => window.location.reload()}
-          variant="primary"
+          variant="secondary"
           size="md"
           leftIcon={<RefreshCw className="h-4 w-4" />}
         >
@@ -369,7 +369,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
               Brand Assets
             </h1>
             <div className="flex items-center flex-wrap gap-3">
-              <HistoryButton brandId={brandId} variant="outline" size="lg" />
+              <HistoryButton brandId={brandId} size="lg" />
               <GetHelpButton variant="secondary" size="lg" />
             </div>
           </div>
@@ -475,7 +475,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
             <Button
               onClick={startAssetGeneration}
               disabled={isGeneratingAssets}
-              variant="primary"
+              variant="secondary"
               size="lg"
               loading={isGeneratingAssets}
               leftIcon={

@@ -1,0 +1,158 @@
+/* Base button styles */
+.btn {
+  font-family:
+    "Source Sans 3",
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  line-height: 1.1;
+}
+/* Primary */
+.btn-primary {
+  background: var(--color-primary);
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 14px 24px 14px 24px;
+  height: auto;
+  min-height: 48px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #fc4945;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(253, 97, 94, 0.3);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(253, 97, 94, 0.2);
+}
+
+.btn-primary:disabled {
+  background: rgba(253, 97, 94, 0.3);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+/* Secondary */
+.btn-secondary {
+  background: transparent;
+  color: var(--color-secondary);
+  border: 2px solid var(--color-secondary);
+  border-radius: 12px;
+  padding: 12px 20px 12px 20px;
+  height: auto;
+  min-height: 44px;
+  font-weight: 500;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-secondary);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(127, 89, 113, 0.2);
+}
+
+.btn-secondary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-secondary:disabled {
+  border-color: rgba(127, 89, 113, 0.3);
+  color: rgba(127, 89, 113, 0.3);
+  cursor: not-allowed;
+}
+/* Tertiary */
+.btn-tertiary {
+  background: transparent;
+  color: var(--color-text);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 10px 16px;
+  height: auto;
+  min-height: 36px;
+  font-weight: 500;
+  font-size: var(--fs-sm);
+  text-transform: none;
+}
+
+.btn-tertiary:hover:not(:disabled) {
+  background: rgba(127, 89, 113, 0.1);
+  border-color: #ffffff;
+}
+
+.btn-tertiary:active:not(:disabled) {
+  background: rgba(127, 89, 113, 0.15);
+  border-color: #ffffff;
+}
+
+.btn-tertiary:disabled {
+  color: rgba(56, 50, 54, 0.4);
+  cursor: not-allowed;
+}
+/* Confirm */
+.btn-confirm {
+  background: transparent;
+  color: var(--color-secondary);
+  border: 2px solid var(--color-light);
+  border-radius: 12px;
+  padding: 12px 20px 12px 20px;
+  height: auto;
+  min-height: 44px;
+  font-weight: 500;
+}
+
+.btn-confirm:hover:not(:disabled) {
+  border-color: var(--color-secondary);
+  background: rgba(127, 89, 113, 0.05);
+}
+
+.btn-confirm:disabled {
+  border-color: rgba(191, 172, 184, 0.5);
+  color: rgba(127, 89, 113, 0.3);
+  cursor: not-allowed;
+}
+/* Selection */
+.btn-selection {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border: 2px solid var(--color-light);
+  border-radius: 12px;
+  padding: 16px 24px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-selection:hover:not(:disabled) {
+  background: rgba(191, 172, 184, 0.3);
+  border-color: var(--color-secondary);
+}
+
+.btn-selection.selected {
+  background: var(--color-secondary);
+  color: #ffffff;
+  border-color: var(--color-secondary);
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(56, 50, 54, 0.15);
+}
+
+.btn-selection:disabled {
+  background: var(--color-bg);
+  border: 1px solid rgba(191, 172, 184, 0.5);
+  color: rgba(56, 50, 54, 0.4);
+  cursor: not-allowed;
+}
