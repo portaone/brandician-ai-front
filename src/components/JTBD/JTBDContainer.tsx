@@ -110,7 +110,7 @@ interface PersonaItem {
 /** Convert a suggested persona (from the backend) to a PersonaItem without id */
 function toSuggestedPersonaItem(data: SuggestedPersona): PersonaItem {
   return {
-    _key: crypto?.randomUUID(),
+    _key: crypto.randomUUID(),
     name: data.name,
     description: data.description,
     info: data.info,
@@ -607,11 +607,7 @@ const JTBDContainer: React.FC = () => {
                                 value as JTBDImportance,
                               )
                             }
-                            className={`p-2 text-sm rounded-md transition-colors ${
-                              persona.importance === value
-                                ? "bg-primary-100 text-primary-700 border-primary-200"
-                                : "bg-neutral-50 text-neutral-700 hover:bg-neutral-100"
-                            }`}
+                            className={`btn-selection p-2 text-sm rounded-md ${persona.importance === value ? "selected" : ""}`}
                           >
                             {label}
                           </button>
@@ -624,7 +620,7 @@ const JTBDContainer: React.FC = () => {
               <div className="flex justify-between items-center mt-8">
                 <Button
                   type="button"
-                  variant="secondary"
+                  variant="selection"
                   size="md"
                   onClick={handleRegeneratePersonas}
                   disabled={isRegenerating || isLoading}

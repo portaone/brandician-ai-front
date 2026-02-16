@@ -159,6 +159,7 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
           </h2>
           <p className="text-red-600 mb-6">{error}</p>
           <Button
+            className="btn btn-primary"
             onClick={() => {
               hasLoadedRef.current = false;
               setError(null);
@@ -243,14 +244,14 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
                   />
                   <button
                     onClick={saveEditField}
-                    className="text-green-600 hover:text-green-700 p-1"
+                    className="btn btn-primary"
                     title="Save"
                   >
                     <Check className="h-5 w-5" />
                   </button>
                   <button
                     onClick={cancelEditField}
-                    className="text-neutral-400 hover:text-neutral-600 p-1"
+                    className="btn btn-secondary"
                     title="Cancel"
                   >
                     <X className="h-5 w-5" />
@@ -331,13 +332,13 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
                           <div className="flex justify-end gap-2 mt-1">
                             <button
                               onClick={cancelEditField}
-                              className="text-sm text-neutral-500 hover:text-neutral-700 px-2 py-1"
+                              className="btn-secondary px-2 py-1"
                             >
                               Cancel
                             </button>
                             <button
                               onClick={saveEditField}
-                              className="text-sm text-primary-600 hover:text-primary-700 font-medium px-2 py-1"
+                              className="btn-primary px-2 py-1"
                             >
                               Save
                             </button>

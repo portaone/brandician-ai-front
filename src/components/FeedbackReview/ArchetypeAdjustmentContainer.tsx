@@ -290,7 +290,7 @@ const ArchetypeAdjustmentContainer: React.FC<
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg sm:p-6 mb-8">
+          <div className="bg-white rounded-lg shadow-lg p-2 py-6 mb-8">
             {/* Old Archetype */}
             <div>
               <h3 className="text-xl font-medium text-neutral-800 p-2 sm:p-0 mb-4">
@@ -348,24 +348,18 @@ const ArchetypeAdjustmentContainer: React.FC<
               </div>
             </div>
             {/* Action Buttons */}
-            <div className="flex justify-end flex-wrap gap-2 p-2">
-              <button
-                onClick={handleReject}
-                className="sm:px-6 sm:py-3 p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
-              >
+            <div className="flex justify-end flex-wrap gap-2">
+              <button onClick={handleReject} className="btn btn-confirm">
                 Keep Current Archetype
               </button>
               <button
                 onClick={handleReevaluate}
                 disabled={isLoading}
-                className="px-6 py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn btn-secondary"
               >
                 Re-evaluate
               </button>
-              <button
-                onClick={handleAccept}
-                className="sm:px-6 sm:py-3 p-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
-              >
+              <button onClick={handleAccept} className="btn btn-primary">
                 Accept New Archetype
               </button>
             </div>

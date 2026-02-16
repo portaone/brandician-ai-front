@@ -607,7 +607,7 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-2 іsm:p-6 mb-8">
+          <div className="bg-white rounded-lg shadow-lg p-2 py-6 mb-8">
             {/* Survey Status */}
             {adjustment.survey && (
               <div className="mb-6 p-2 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -649,23 +649,17 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
 
             {/* Action Buttons */}
             <div className="flex justify-end flex-wrap gap-3 mt-4">
-              <button
-                onClick={handleReject}
-                className="sm:px-6 p-2 sm:py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
-              >
+              <button onClick={handleReject} className="btn btn-confirm">
                 Keep Current Summary
               </button>
               <button
                 onClick={handleReevaluate}
                 disabled={isLoading}
-                className="px-6 py-3 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn btn-secondary"
               >
                 Re-evaluate
               </button>
-              <button
-                onClick={handleAccept}
-                className="sm:px-6 sm:py-3 p-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
-              >
+              <button onClick={handleAccept} className="btn btn-primary">
                 Accept New Summary
               </button>
             </div>

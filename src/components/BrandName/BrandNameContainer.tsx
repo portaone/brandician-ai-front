@@ -194,6 +194,9 @@ const BrandNameContainer: React.FC = () => {
                     )}
                 </div>
                 <Button
+                  className={`${
+                    selectedName === currentDraft.name ? "selected" : ""
+                  }`}
                   onClick={() => handleSelectName(currentDraft.name)}
                   variant="selection"
                   size="md"
@@ -309,7 +312,7 @@ const BrandNameContainer: React.FC = () => {
               {!isShowingCustomInput ? (
                 <Button
                   onClick={() => setIsShowingCustomInput(true)}
-                  variant="primary"
+                  variant="secondary"
                   size="md"
                 >
                   <Plus className="h-5 w-5 mr-2" />

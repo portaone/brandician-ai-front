@@ -104,7 +104,7 @@ const TestimonialContainer: React.FC = () => {
   };
 
   const handleTestimonialChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLTextAreaElement>,
   ) => {
     setTestimonial(e.target.value);
     setErrors({ ...errors, testimonial: "" });
@@ -260,7 +260,7 @@ const TestimonialContainer: React.FC = () => {
                 <button
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="w-full inline-flex items-center justify-center px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="btn-primary w-full inline-flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-colors"
                 >
                   {isSubmitting ? (
                     <>

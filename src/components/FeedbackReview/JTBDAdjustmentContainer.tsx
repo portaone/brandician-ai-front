@@ -288,10 +288,8 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
           {!isNewPersona && (
             <button
               onClick={() => onChoiceChange("original")}
-              className={`sm:px-4 sm:py-2 p-3 rounded-lg font-medium text-sm transition-colors ${
-                choice === "original"
-                  ? "bg-gray-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              className={`btn-selection sm:px-4 sm:py-2 p-3 rounded-lg font-medium transition-all text-sm ${
+                choice === "original" ? "selected" : ""
               }`}
             >
               Keep Original
@@ -443,7 +441,7 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
           </h4>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 min-h-[200px]">
             <div className="text-gray-700 leading-relaxed">
-              {renderChanges()}
+              {renderChanges()}p-6
             </div>
           </div>
         </div>
@@ -493,10 +491,8 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
         <div className="flex flex-wrap gap-3">
           <button
             onClick={() => onChoiceChange("original")}
-            className={`sm:px-6 sm:py-3 p-3 rounded-lg font-medium text-sm transition-colors ${
-              choice === "original"
-                ? "bg-gray-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            className={`btn-selection sm:px-6 sm:py-3 p-3 rounded-lg font-medium text-sm  ${
+              choice === "original" ? "selected" : ""
             }`}
           >
             Keep Original Customer Needs
@@ -960,27 +956,20 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={handleReject}
-                  className="sm:px-6 sm:py-3 p-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
-                >
+                <button onClick={handleReject} className="btn btn-confirm">
                   Keep Current Customer Needs
                 </button>
                 <button
                   onClick={handleReevaluate}
                   disabled={isLoading}
-                  className="sm:px-6 sm:py-3 p-3 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn btn-secondary"
                 >
                   Re-evaluate
                 </button>
                 <button
                   onClick={handleAccept}
                   disabled={!allChoicesMade}
-                  className={`sm:px-6 sm:py-3 p-3 rounded-lg font-medium transition-colors ${
-                    allChoicesMade
-                      ? "bg-primary-600 hover:bg-primary-700 text-white"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}
+                  className={`btn btn-primary`}
                 >
                   Proceed
                 </button>
