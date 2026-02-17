@@ -736,6 +736,14 @@ export const brands = {
     });
   },
 
+  selectPalette: async (brandId: string, variantIndex: number) => {
+    const response = await api.post(
+      apiPath(`/brands/${brandId}/select-palette/`),
+      { variant_index: variantIndex }
+    );
+    return response.data;
+  },
+
   deleteAllAssets: async (brandId: string) => {
     await api.delete(apiPath(`/brands/${brandId}/assets/`));
   },
@@ -921,6 +929,7 @@ export const backendConfig = {
     stripe_publishable_key: string | null;
     google_pay_merchant_id: string | null;
     google_pay_environment: "TEST" | "PRODUCTION";
+    status_sequence: Array<{ status: string; description: string }>;
   }> => {
     // Note: /config endpoint is on health router which has no API prefix
     const response = await api.get("/config");

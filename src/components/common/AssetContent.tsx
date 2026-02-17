@@ -5,12 +5,14 @@ import PaletteSample from "./PaletteSample";
 
 interface AssetContentProps {
   asset: BrandAsset;
+  onPaletteSelect?: (index: number) => void;
+  isPaletteSaving?: boolean;
 }
 
 /**
  * Component to render asset content based on display_as attribute
  */
-const AssetContent: React.FC<AssetContentProps> = ({ asset }) => {
+const AssetContent: React.FC<AssetContentProps> = ({ asset, onPaletteSelect, isPaletteSaving }) => {
   if (!asset.content)
     return <div className="text-red-500">No content available</div>;
 
@@ -50,7 +52,7 @@ const AssetContent: React.FC<AssetContentProps> = ({ asset }) => {
 
   // Render palette sample if type or display_as is 'palette'
   if (String(displayAs) === "palette" || String(asset.type) === "palette") {
-    return <PaletteSample content={asset.content} />;
+    return <PaletteSample content={asset.content} onSelect={onPaletteSelect} isSaving={isPaletteSaving} />;
   }
 
   if (displayAs === "markdown") {

@@ -62,6 +62,7 @@ export interface BrandAssetsListResponse {
 }
 
 export interface BrandAsset {
+  id?: string;
   type: BrandAssetType;
   display_as?: BrandAssetDisplayType;
   description?: string | null;

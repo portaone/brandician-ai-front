@@ -15,7 +15,7 @@ interface BrandColors {
 
 const ColorSchemaPresenter: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const { brandId } = useParams<{ brandId: string }>();
+  const { brandId, variantIndex: variantIndexParam } = useParams<{ brandId: string; variantIndex?: string }>();
   const { currentBrand, selectBrand } = useBrandStore();
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 
@@ -88,8 +88,17 @@ const ColorSchemaPresenter: React.FC = () => {
           if (fullColorAsset.content) {
             try {
               // Try to parse as JSON
-              const colors = JSON.parse(fullColorAsset.content);
-              console.log("Parsed colors:", colors);
+              let parsed = JSON.parse(fullColorAsset.content);
+              console.log("Parsed colors:", parsed);
+
+              // Handle array format (multiple palette variants)
+              const variantIndex = parseInt(variantIndexParam || searchParams.get("v") || "0", 10);
+              let colors: Record<string, string>;
+              if (Array.isArray(parsed)) {
+                colors = parsed[variantIndex] || parsed[0] || {};
+              } else {
+                colors = parsed;
+              }
 
               // Extract colors from the asset content
               setBrandColors({
@@ -118,13 +127,6 @@ const ColorSchemaPresenter: React.FC = () => {
                   colors.text ||
                   colors.foreground ||
                   brandColors.text,
-              });
-              console.log("Setting brand colors to:", {
-                primary: colors["main-color"],
-                supporting: colors["supporting-color"],
-                background: colors["background-color"] || "#F4F2F2",
-                accent: colors["accent-color"],
-                text: colors["body-text-color"],
               });
             } catch (parseError) {
               // If not JSON, try to parse as CSS or text format

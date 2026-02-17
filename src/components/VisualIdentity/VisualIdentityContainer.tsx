@@ -38,6 +38,7 @@ const VisualIdentityContainer: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProgressing, setIsProgressing] = useState(false);
+  const [isSavingSelection, setIsSavingSelection] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -139,6 +140,35 @@ const VisualIdentityContainer: React.FC = () => {
     }
   };
 
+  const handleSelectPalette = async (variantIndex: number) => {
+    if (!brandId || isSavingSelection) return;
+    setIsSavingSelection(true);
+    setError(null);
+    try {
+      await brands.selectPalette(brandId, variantIndex);
+      await loadVisualAssets();
+    } catch (e: any) {
+      console.error("Failed to select palette variant:", e);
+      setError(
+        e?.response?.data?.detail ||
+          "Failed to select palette. Please try again.",
+      );
+    } finally {
+      setIsSavingSelection(false);
+    }
+  };
+
+  // Detect whether palette still needs selection (content is a JSON array)
+  const paletteNeedsSelection = useMemo(() => {
+    if (!visualAssets.palette?.content) return false;
+    try {
+      const parsed = JSON.parse(visualAssets.palette.content);
+      return Array.isArray(parsed);
+    } catch {
+      return false;
+    }
+  }, [visualAssets.palette?.content]);
+
   const hasAnyVisual =
     !!visualAssets.visualStyle || !!visualAssets.palette || !!assetsList;
 
@@ -202,17 +232,24 @@ const VisualIdentityContainer: React.FC = () => {
             </div>
           )}
 
-          {/* Palette Sample */}
+          {/* Palette Variants */}
           {visualAssets.palette && (
             <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
               <h2 className="text-xl font-semibold text-neutral-800 mb-3">
-                2. Color Palette
+                {paletteNeedsSelection
+                  ? "2. Choose Your Color Palette"
+                  : "2. Selected Color Palette"}
               </h2>
               <p className="text-sm text-neutral-500 mb-3">
-                Key colors derived from the visual identity, including main,
-                supporting, accent, and body text colors.
+                {paletteNeedsSelection
+                  ? "Select one of the palette variants below to continue. Each offers a different creative direction while staying true to the brand archetypes."
+                  : "Your chosen color palette for the brand."}
               </p>
-              <AssetContent asset={visualAssets.palette} />
+              <AssetContent
+                asset={visualAssets.palette}
+                onPaletteSelect={paletteNeedsSelection ? handleSelectPalette : undefined}
+                isPaletteSaving={isSavingSelection}
+              />
             </div>
           )}
 
@@ -248,13 +285,19 @@ const VisualIdentityContainer: React.FC = () => {
               <h3 className="text-xl font-semibold text-neutral-800 mb-3">
                 Happy with your visuals?
               </h3>
-              <p className="text-neutral-600 mb-6">
-                Continue to generate the full Brand Hub that brings all strategy
-                and visuals together.
-              </p>
+              {paletteNeedsSelection ? (
+                <p className="text-amber-600 mb-6">
+                  Please select a color palette above before continuing.
+                </p>
+              ) : (
+                <p className="text-neutral-600 mb-6">
+                  Continue to generate the full Brand Hub that brings all
+                  strategy and visuals together.
+                </p>
+              )}
               <Button
                 onClick={handleProceedToNext}
-                disabled={isProgressing}
+                disabled={isProgressing || paletteNeedsSelection}
                 variant="primary"
                 size="lg"
                 loading={isProgressing}

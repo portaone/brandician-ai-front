@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp, Loader, Share2 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands, backendConfig } from "../../lib/api";
@@ -15,11 +15,31 @@ import BrandicianLoader from "../common/BrandicianLoader";
 
 interface HistoryStep {
   number: number;
+  statusKey: string;
   name: string;
   description: string;
   status: "completed" | "current" | "pending";
   dataLoader: () => Promise<any>;
 }
+
+// Route suffix map keyed by status string
+const STATUS_ROUTE_MAP: Record<string, string> = {
+  questionnaire: "/questionnaire",
+  summary: "/summary",
+  jtbd: "/jtbd",
+  create_survey: "/survey",
+  collect_feedback: "/collect-feedback",
+  feedback_review_summary: "/feedback-review/summary",
+  feedback_review_jtbd: "/feedback-review/jtbd",
+  primary_persona_selection: "/feedback-review/primary-persona",
+  feedback_review_archetype: "/feedback-review/archetype",
+  pick_name: "/pick-name",
+  create_visual_identity: "/create-visual-identity",
+  create_hub: "/create-hub",
+  create_assets: "/create-assets",
+  testimonial: "/testimonial",
+  payment: "/payment",
+};
 
 const HistoryContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -41,7 +61,7 @@ const HistoryContainer: React.FC = () => {
   const [revertTargetStep, setRevertTargetStep] = useState<number | null>(null);
   const [isReverting, setIsReverting] = useState(false);
 
-  // State for expandable assets in step 10
+  // State for expandable assets
   const [expandedAssets, setExpandedAssets] = useState<{
     [key: string]: boolean;
   }>({});
@@ -55,8 +75,11 @@ const HistoryContainer: React.FC = () => {
   // State for share modal
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
-  // Dev mode state
+  // Config state
   const [devMode, setDevMode] = useState(false);
+  const [statusSequence, setStatusSequence] = useState<
+    Array<{ status: string; description: string }>
+  >([]);
 
   useEffect(() => {
     // Always reload brand data when entering history page to ensure we have the latest status
@@ -65,12 +88,13 @@ const HistoryContainer: React.FC = () => {
     }
   }, [brandId, selectBrand]);
 
-  // Fetch dev mode config
+  // Fetch config (dev mode + status sequence)
   useEffect(() => {
     const fetchConfig = async () => {
       try {
         const configData = await backendConfig.getConfig();
         setDevMode(configData.dev_mode);
+        setStatusSequence(configData.status_sequence);
       } catch (error) {
         console.error("Failed to fetch config:", error);
       }
@@ -78,257 +102,213 @@ const HistoryContainer: React.FC = () => {
     fetchConfig();
   }, []);
 
-  // Map brand status to current step number (the step being worked on)
+  // Get current step index from the status sequence
   const getCurrentStepNumber = (status: string): number => {
-    const statusMap: { [key: string]: number } = {
-      new_brand: 0,
-      questionnaire: 1,
-      summary: 2,
-      jtbd: 3,
-      create_survey: 4,
-      collect_feedback: 5,
-      feedback_review_summary: 6,
-      feedback_review_jtbd: 7,
-      feedback_review_archetype: 8,
-      pick_name: 9,
-      create_visual_identity: 10,
-      create_hub: 11,
-      create_assets: 12,
-      testimonial: 13,
-      payment: devMode ? 14 : 13, // Show as step 14 in dev mode
-      completed: devMode ? 15 : 13, // After payment in dev mode
-    };
-    return statusMap[status] || 0;
+    const index = statusSequence.findIndex((s) => s.status === status);
+    return index >= 0 ? index : 0;
   };
 
-  // Map step number to brand status
+  // Get status string from step number (sequence index)
   const getStatusFromStepNumber = (stepNumber: number): string => {
-    const stepStatusMap: { [key: number]: string } = {
-      1: "questionnaire",
-      2: "summary",
-      3: "jtbd",
-      4: "create_survey",
-      5: "collect_feedback",
-      6: "feedback_review_summary",
-      7: "feedback_review_jtbd",
-      8: "feedback_review_archetype",
-      9: "pick_name",
-      10: "create_visual_identity",
-      11: "create_hub",
-      12: "create_assets",
-      13: "testimonial",
-      14: "payment",
-    };
-    return stepStatusMap[stepNumber] || "questionnaire";
+    return statusSequence[stepNumber]?.status || "questionnaire";
   };
 
-  // Map step number to route
+  // Get route suffix from step number
   const getRouteFromStepNumber = (stepNumber: number): string => {
-    const routeMap: { [key: number]: string } = {
-      1: "/questionnaire",
-      2: "/summary",
-      3: "/jtbd",
-      4: "/survey",
-      5: "/collect-feedback",
-      6: "/feedback-review/summary",
-      7: "/feedback-review/jtbd",
-      8: "/feedback-review/archetype",
-      9: "/pick-name",
-      10: "/create-visual-identity",
-      11: "/create-hub",
-      12: "/create-assets",
-      13: "/testimonial",
-      14: "/payment",
-    };
-    return routeMap[stepNumber] || "/questionnaire";
+    const status = getStatusFromStepNumber(stepNumber);
+    return STATUS_ROUTE_MAP[status] || "/questionnaire";
   };
+
+  // Step configuration map keyed by status string
+  const STEP_CONFIG: Record<
+    string,
+    { name: string; description: string; dataLoader: () => Promise<any> }
+  > = useMemo(
+    () => ({
+      questionnaire: {
+        name: "Questionnaire",
+        description: "Brand questionnaire responses",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          const questionsResponse = await brands.getQuestions(brandId);
+          const answersResponse = await brands.getAnswers(brandId);
+          const questions = Array.isArray(questionsResponse)
+            ? questionsResponse
+            : questionsResponse?.questions || [];
+          let answers = answersResponse;
+          if (answersResponse?.answers) {
+            answers = answersResponse.answers;
+          }
+          return { type: "questionnaire", questions, answers };
+        },
+      },
+      summary: {
+        name: "Summary Generation",
+        description: "Initial brand summary",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          const summary = await brands.getSummary(brandId);
+          return { type: "summary", data: summary };
+        },
+      },
+      jtbd: {
+        name: "Jobs-to-be-Done",
+        description: "JTBD analysis results",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          const jtbd = await brands.getJTBD(brandId);
+          return { type: "jtbd", data: jtbd };
+        },
+      },
+      create_survey: {
+        name: "Survey Creation",
+        description: "Customer survey questions",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          const survey = await brands.getSurvey(brandId);
+          return { type: "survey", data: survey };
+        },
+      },
+      collect_feedback: {
+        name: "Feedback Collection",
+        description: "Survey responses and feedback",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          const surveyStatus = await brands.getSurveyStatus(brandId);
+          const survey = await brands.getSurvey(brandId);
+          return { type: "feedback", data: surveyStatus, survey };
+        },
+      },
+      feedback_review_summary: {
+        name: "Feedback Review - Summary",
+        description: "Updated summary based on feedback",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          const summary = await brands.getSummary(brandId);
+          return { type: "summary", data: summary };
+        },
+      },
+      feedback_review_jtbd: {
+        name: "Feedback Review - JTBD",
+        description: "Updated JTBD based on feedback",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          const jtbd = await brands.getJTBD(brandId);
+          return { type: "jtbd", data: jtbd };
+        },
+      },
+      primary_persona_selection: {
+        name: "Primary Persona Selection",
+        description: "Selecting and enriching the primary persona",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          const persona = await brands.getPrimaryPersona(brandId);
+          return { type: "jtbd", data: { personas: { primary: persona } } };
+        },
+      },
+      feedback_review_archetype: {
+        name: "Feedback Review - Archetype",
+        description: "Brand archetype determination",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          const archetype = await brands.getArchetype(brandId);
+          return { type: "archetype", data: archetype };
+        },
+      },
+      pick_name: {
+        name: "Name Selection",
+        description: "Brand name selection and domain registration",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          return { type: "name_selection", brandName: currentBrand?.brand_name };
+        },
+      },
+      create_visual_identity: {
+        name: "Visual Identity",
+        description: "Visual Identity section",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          const response = await brands.getBrandHubTab(
+            brandId,
+            "visual_identity",
+          );
+          return { type: "visual_identity", data: response };
+        },
+      },
+      create_hub: {
+        name: "Brand Hub",
+        description: "Brand Hub",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          const response = await brands.getBrandHubTab(brandId, "essence");
+          return { type: "brand_hub", data: response };
+        },
+      },
+      create_assets: {
+        name: "Asset Creation",
+        description: "Brand assets (logos, colors, etc.)",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          const response = await brands.listAssets(brandId);
+          return { type: "assets", data: response };
+        },
+      },
+      testimonial: {
+        name: "Testimonial",
+        description: "User feedback and testimonial",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          return { type: "testimonial", data: currentBrand?.feedback };
+        },
+      },
+      payment: {
+        name: "Payment",
+        description: "Payment processing (Dev Mode)",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          return {
+            type: "payment",
+            data: {
+              payment_complete: currentBrand?.payment_complete,
+            },
+          };
+        },
+      },
+    }),
+    [brandId, currentBrand],
+  );
 
   const currentStepNumber = currentBrand
     ? getCurrentStepNumber(currentBrand.current_status || "")
     : 0;
 
-  const steps: HistoryStep[] = [
-    {
-      number: 1,
-      name: "Questionnaire",
-      description: "Brand questionnaire responses",
-      status: "completed",
-      dataLoader: async () => {
-        if (!brandId) return null;
-        const questionsResponse = await brands.getQuestions(brandId);
-        const answersResponse = await brands.getAnswers(brandId);
-
-        // Handle both array responses and object-wrapped responses
-        const questions = Array.isArray(questionsResponse)
-          ? questionsResponse
-          : questionsResponse?.questions || [];
-
-        // Answers might be returned as an object/dictionary with question IDs as keys
-        let answers = answersResponse;
-        if (answersResponse?.answers) {
-          answers = answersResponse.answers;
-        }
-
-        return { type: "questionnaire", questions, answers };
-      },
-    },
-    {
-      number: 2,
-      name: "Summary Generation",
-      description: "Initial brand summary",
-      status: "completed",
-      dataLoader: async () => {
-        if (!brandId) return null;
-        const summary = await brands.getSummary(brandId);
-        return { type: "summary", data: summary };
-      },
-    },
-    {
-      number: 3,
-      name: "Jobs-to-be-Done",
-      description: "JTBD analysis results",
-      status: "completed",
-      dataLoader: async () => {
-        if (!brandId) return null;
-        const jtbd = await brands.getJTBD(brandId);
-        return { type: "jtbd", data: jtbd };
-      },
-    },
-    {
-      number: 4,
-      name: "Survey Creation",
-      description: "Customer survey questions",
-      status: "completed",
-      dataLoader: async () => {
-        if (!brandId) return null;
-        const survey = await brands.getSurvey(brandId);
-        return { type: "survey", data: survey };
-      },
-    },
-    {
-      number: 5,
-      name: "Feedback Collection",
-      description: "Survey responses and feedback",
-      status: "completed",
-      dataLoader: async () => {
-        if (!brandId) return null;
-        const surveyStatus = await brands.getSurveyStatus(brandId);
-        const survey = await brands.getSurvey(brandId);
-        return { type: "feedback", data: surveyStatus, survey };
-      },
-    },
-    {
-      number: 6,
-      name: "Feedback Review - Summary",
-      description: "Updated summary based on feedback",
-      status: "completed",
-      dataLoader: async () => {
-        if (!brandId) return null;
-        const summary = await brands.getSummary(brandId);
-        return { type: "summary", data: summary };
-      },
-    },
-    {
-      number: 7,
-      name: "Feedback Review - JTBD",
-      description: "Updated JTBD based on feedback",
-      status: "completed",
-      dataLoader: async () => {
-        if (!brandId) return null;
-        const jtbd = await brands.getJTBD(brandId);
-        return { type: "jtbd", data: jtbd };
-      },
-    },
-    {
-      number: 8,
-      name: "Feedback Review - Archetype",
-      description: "Brand archetype determination",
-      status: "completed",
-      dataLoader: async () => {
-        if (!brandId) return null;
-        const archetype = await brands.getArchetype(brandId);
-        return { type: "archetype", data: archetype };
-      },
-    },
-    {
-      number: 9,
-      name: "Name Selection",
-      description: "Brand name selection and domain registration",
-      status: "completed",
-      dataLoader: async () => {
-        if (!brandId) return null;
-        // TODO: Load name selection data and domain registration info
-        return { type: "name_selection", brandName: currentBrand?.brand_name };
-      },
-    },
-    {
-      number: 10,
-      name: "Visual Identity",
-      description: "Visual Identity section",
-      status: "completed",
-      dataLoader: async () => {
-        if (!brandId) return null;
-        const response = await brands.getBrandHubTab(
-          brandId,
-          "visual_identity",
-        );
-        return { type: "visual_identity", data: response };
-      },
-    },
-    {
-      number: 11,
-      name: "Brand Hub",
-      description: "Brand Hub",
-      status: "completed",
-      dataLoader: async () => {
-        if (!brandId) return null;
-        const response = await brands.getBrandHubTab(brandId, "essence");
-        return { type: "brand_hub", data: response };
-      },
-    },
-    {
-      number: 12,
-      name: "Asset Creation",
-      description: "Brand assets (logos, colors, etc.)",
-      status: "completed",
-      dataLoader: async () => {
-        if (!brandId) return null;
-        const response = await brands.listAssets(brandId);
-        return { type: "assets", data: response };
-      },
-    },
-    {
-      number: 13,
-      name: "Testimonial",
-      description: "User feedback and testimonial",
-      status: "completed",
-      dataLoader: async () => {
-        if (!brandId) return null;
-        return { type: "testimonial", data: currentBrand?.feedback };
-      },
-    },
-    // Payment step - only shown in dev mode (filtered below)
-    {
-      number: 14,
-      name: "Payment",
-      description: "Payment processing (Dev Mode)",
-      status: "completed",
-      dataLoader: async () => {
-        if (!brandId) return null;
+  // Build steps dynamically from statusSequence, filtering out new_brand and completed
+  const steps: HistoryStep[] = useMemo(() => {
+    return statusSequence
+      .map((seqItem, index) => ({ ...seqItem, index }))
+      .filter(
+        (seqItem) =>
+          seqItem.status !== "new_brand" && seqItem.status !== "completed",
+      )
+      .map((seqItem) => {
+        const config = STEP_CONFIG[seqItem.status];
         return {
-          type: "payment",
-          data: {
-            payment_complete: currentBrand?.payment_complete,
-          },
+          number: seqItem.index,
+          statusKey: seqItem.status,
+          name: config?.name || seqItem.status.replace(/_/g, " "),
+          description: config?.description || seqItem.description,
+          status: "completed" as const,
+          dataLoader: config?.dataLoader || (async () => null),
         };
-      },
-    },
-  ];
+      });
+  }, [statusSequence, STEP_CONFIG]);
 
-  // Filter steps based on dev mode - hide testimonial and payment steps in production
+  // Filter steps: hide testimonial and payment in production mode
   const visibleSteps = devMode
     ? steps
-    : steps.filter((s) => s.number !== 13 && s.number !== 14);
+    : steps.filter(
+        (s) => s.statusKey !== "testimonial" && s.statusKey !== "payment",
+      );
 
   const toggleStep = async (stepNumber: number) => {
     const isCurrentlyExpanded = expandedSteps[stepNumber];
@@ -370,23 +350,23 @@ const HistoryContainer: React.FC = () => {
 
     setIsReverting(true);
     try {
-      console.log(`🔄 Reverting brand ${brandId} to step ${revertTargetStep}`);
+      console.log(`Reverting brand ${brandId} to step ${revertTargetStep}`);
       const targetStatus = getStatusFromStepNumber(revertTargetStep);
-      console.log(`🔄 Target status: ${targetStatus}`);
+      console.log(`Target status: ${targetStatus}`);
 
       await brands.revertToStatus(brandId, targetStatus as any);
-      console.log(`✅ Brand reverted successfully to ${targetStatus}`);
+      console.log(`Brand reverted successfully to ${targetStatus}`);
 
       // Reload brand data
       await selectBrand(brandId);
-      console.log(`✅ Brand data reloaded`);
+      console.log(`Brand data reloaded`);
 
       // Navigate to the target step
       const route = getRouteFromStepNumber(revertTargetStep);
-      console.log(`🚀 Navigating to ${route}`);
+      console.log(`Navigating to ${route}`);
       navigate(`/brands/${brandId}${route}`);
     } catch (error: any) {
-      console.error("❌ Failed to revert brand:", error);
+      console.error("Failed to revert brand:", error);
       alert(
         `Failed to revert: ${
           error.response?.data?.message || error.message || "Unknown error"
@@ -1019,7 +999,7 @@ const HistoryContainer: React.FC = () => {
     }
   };
 
-  if (brandLoading || !currentBrand) {
+  if (brandLoading || !currentBrand || statusSequence.length === 0) {
     return (
       <div className="loader-container">
         <BrandicianLoader />
@@ -1104,33 +1084,18 @@ const HistoryContainer: React.FC = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               if (currentBrand && brandId) {
-                                console.log(
-                                  "🔵 History Continue button clicked",
-                                );
-                                console.log("Brand ID:", brandId);
-                                console.log(
-                                  "Current status:",
-                                  currentBrand.current_status,
-                                );
                                 let route = getRouteForStatus(
                                   brandId,
                                   currentBrand.current_status as any,
                                 );
                                 // For questionnaire step, navigate directly to summary view
                                 if (
-                                  step.number === 1 &&
                                   currentBrand.current_status ===
-                                    "questionnaire"
+                                  "questionnaire"
                                 ) {
                                   route = `/brands/${brandId}/questionnaire?summary=1`;
                                 }
-                                console.log("Navigating to:", route);
                                 navigate(route);
-                              } else {
-                                console.error(
-                                  "❌ Missing currentBrand or brandId:",
-                                  { currentBrand, brandId },
-                                );
                               }
                             }}
                             className="btn-primary text-xs px-2 py-1 rounded-md font-medium  whitespace-nowrap min-h-[auto]"
