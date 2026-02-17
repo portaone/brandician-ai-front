@@ -8,7 +8,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
+import MarkdownPreviewer from "../common/MarkDownPreviewer";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
@@ -724,7 +724,7 @@ const BrandHubContainer: React.FC = () => {
 
                     {hasContent ? (
                       <div className="prose prose-sm max-w-none text-neutral-700">
-                        <ReactMarkdown>{value as string}</ReactMarkdown>
+                        <MarkdownPreviewer markdown={value as string} />
                       </div>
                     ) : (
                       <p className="text-sm text-neutral-400 italic">

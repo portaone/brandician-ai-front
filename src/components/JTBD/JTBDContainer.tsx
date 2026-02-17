@@ -5,8 +5,20 @@ import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
+
+/** Generate a UUID v4 string using the Web Crypto API */
+function generateUUID(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40; // Set version to 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // Set variant to RFC 4122
+  const hex = Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 import {
-  JTBD,
   SuggestedPersona,
   JTBDImportance,
   JTBD_IMPORTANCE_LABELS,
@@ -18,7 +30,7 @@ import {
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
-import ReactMarkdown from "react-markdown";
+import MarkdownPreviewer from "../common/MarkDownPreviewer";
 import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
@@ -51,11 +63,10 @@ const renderPersonaInfo = (info: PersonaInfo) => {
         <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">
           {label}
         </h4>
-        <div className="prose prose-sm max-w-none text-neutral-700">
-          <ReactMarkdown>
-            {info[key as keyof PersonaInfo] as string}
-          </ReactMarkdown>
-        </div>
+
+        <MarkdownPreviewer
+          markdown={info[key as keyof PersonaInfo] as string}
+        />
       </div>
     ));
   return rendered.length > 0 ? rendered : null;
@@ -109,8 +120,14 @@ interface PersonaItem {
 
 /** Convert a suggested persona (from the backend) to a PersonaItem without id */
 function toSuggestedPersonaItem(data: SuggestedPersona): PersonaItem {
+  let key: string = "";
+  try {
+    key = crypto.randomUUID();
+  } catch (err) {
+    key = generateUUID();
+  }
   return {
-    _key: crypto.randomUUID(),
+    _key: key,
     name: data.name,
     description: data.description,
     info: data.info,
@@ -706,9 +723,7 @@ const JTBDContainer: React.FC = () => {
               ) : (
                 <div className="w-full min-h-[300px] p-4 border border-neutral-200 rounded-lg bg-neutral-50">
                   {drivers && drivers.trim() ? (
-                    <div className="prose prose-sm max-w-none text-neutral-800">
-                      <ReactMarkdown>{drivers}</ReactMarkdown>
-                    </div>
+                    <MarkdownPreviewer markdown={drivers} />
                   ) : (
                     <div className="text-neutral-500 italic">
                       No drivers yet. Click Edit to add them.

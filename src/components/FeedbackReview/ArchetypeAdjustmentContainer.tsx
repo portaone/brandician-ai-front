@@ -5,7 +5,7 @@ import { brands } from "../../lib/api";
 import { scrollToTop } from "../../lib/utils";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
-import ReactMarkdown from "react-markdown";
+import MarkdownPreviewer, { parseMarkdown } from "../common/MarkDownPreviewer";
 import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { useBrandStore } from "../../store/brand";
@@ -42,21 +42,15 @@ const ArchetypeAdjustmentContainer: React.FC<
 
   const MarkdownBlock: React.FC<{ text: string }> = ({ text }) => (
     <div className="prose prose-sm max-w-none text-neutral-700 leading-relaxed">
-      <ReactMarkdown>{text}</ReactMarkdown>
+      <MarkdownPreviewer markdown={text} />
     </div>
   );
 
-  const MarkdownInline: React.FC<{ text: string }> = ({ text }) => (
-    <ReactMarkdown
-      components={{
-        p({ children }) {
-          return <span>{children}</span>;
-        },
-      }}
-    >
-      {text}
-    </ReactMarkdown>
-  );
+  const MarkdownInline: React.FC<{ text: string }> = ({ text }) => {
+    const html = parseMarkdown(text || "");
+    const inlineHtml = html.replace(/^<p>([\s\S]*?)<\/p>$/, "$1");
+    return <span dangerouslySetInnerHTML={{ __html: inlineHtml }} />;
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -225,7 +219,7 @@ const ArchetypeAdjustmentContainer: React.FC<
           };
         }
         return (
-          <span
+          <a
             key={i}
             style={style}
             className={className}
@@ -235,7 +229,7 @@ const ArchetypeAdjustmentContainer: React.FC<
             }
           >
             <MarkdownInline text={seg.content} />
-          </span>
+          </a>
         );
       }
       return null;
@@ -309,7 +303,7 @@ const ArchetypeAdjustmentContainer: React.FC<
               </h3>
               <div className="prose max-w-none">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-2 sm:p-6">
-                  <div className="text-neutral-700 leading-relaxed">
+                  <div className="text-neutral-700 leading-relaxed markdown-preview">
                     {renderChanges()}
                   </div>
                 </div>

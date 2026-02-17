@@ -6,7 +6,7 @@ import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
-import ReactMarkdown from "react-markdown";
+import MarkdownPreviewer from "../common/MarkDownPreviewer";
 import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
@@ -239,9 +239,7 @@ const BrandSummary: React.FC = () => {
               ) : (
                 <div className="w-full min-h-[300px] p-4 border border-neutral-200 rounded-lg bg-neutral-50">
                   {summary && summary.trim() ? (
-                    <div className="prose prose-sm max-w-none text-neutral-800">
-                      <ReactMarkdown>{summary}</ReactMarkdown>
-                    </div>
+                    <MarkdownPreviewer markdown={summary} />
                   ) : (
                     <div className="text-neutral-500 italic">
                       No summary yet. Click Edit to add one.

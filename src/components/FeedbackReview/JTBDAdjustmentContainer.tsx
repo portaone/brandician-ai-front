@@ -16,7 +16,7 @@ import {
 } from "../../types";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
-import ReactMarkdown from "react-markdown";
+import MarkdownPreviewer, { parseMarkdown } from "../common/MarkDownPreviewer";
 import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { useBrandStore } from "../../store/brand";
@@ -62,23 +62,14 @@ interface JTBDAdjustmentContainerProps {
 const MarkdownBlock: React.FC<{ text: string }> = ({ text }) => {
   return (
     <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
-      <ReactMarkdown>{text}</ReactMarkdown>
+      <MarkdownPreviewer markdown={text} />
     </div>
   );
 };
 
 const MarkdownInline: React.FC<{ text: string }> = ({ text }) => {
-  return (
-    <ReactMarkdown
-      components={{
-        p({ children }) {
-          return <span>{children}</span>;
-        },
-      }}
-    >
-      {text}
-    </ReactMarkdown>
-  );
+  const html = parseMarkdown(text || "");
+  return <span dangerouslySetInnerHTML={{ __html: html }} />;
 };
 
 /** Check if a PersonaInfo field value is substantive (not empty or "N/A") */
@@ -123,9 +114,9 @@ const renderPersonaInfoFields = (info: PersonaInfo | undefined) => {
         {label}
       </h5>
       <div className="prose prose-sm max-w-none text-gray-700">
-        <ReactMarkdown>
-          {info[key as keyof PersonaInfo] as string}
-        </ReactMarkdown>
+        <MarkdownPreviewer
+          markdown={info[key as keyof PersonaInfo] as string}
+        />
       </div>
     </div>
   ));
@@ -377,9 +368,19 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
         <em>No changes were suggested.</em>
       );
     }
+
+    // Render changes with proper markdown support for block elements
     return driversAdjustment.changes.map((seg, i) => {
       if (seg.type === "text") {
-        return <MarkdownInline key={i} text={seg.content} />;
+        // Parse text content as markdown to preserve block structure
+        const html = parseMarkdown(seg.content);
+        return (
+          <div
+            key={i}
+            dangerouslySetInnerHTML={{ __html: html }}
+            className="inline-block margin-null"
+          />
+        );
       }
       if (seg.type === "change") {
         let style = {};
@@ -402,15 +403,15 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
             color: "#b26a00",
           };
         return (
-          <span
+          <a
             key={i}
             style={style}
-            className="inline cursor-pointer px-1 rounded transition-colors hover:bg-yellow-100"
+            className="inline-block pl-8 cursor-pointer margin-null rounded transition-colors hover:bg-yellow-100"
             title="Click to see the explanation of the suggestion"
             onClick={() => seg.id && onChangeClick(makeSuggestionKey(seg.id))}
           >
             <MarkdownInline text={seg.content} />
-          </span>
+          </a>
         );
       }
       return null;
@@ -440,8 +441,8 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
             Proposed Drivers
           </h4>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 min-h-[200px]">
-            <div className="text-gray-700 leading-relaxed">
-              {renderChanges()}p-6
+            <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed markdown-preview">
+              {renderChanges()}
             </div>
           </div>
         </div>

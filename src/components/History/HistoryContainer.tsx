@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp, Loader, Share2 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
-import ReactMarkdown from "react-markdown";
+import MarkdownPreviewer from "../common/MarkDownPreviewer";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands, backendConfig } from "../../lib/api";
 import { getRouteForStatus } from "../../lib/navigation";
@@ -220,7 +220,10 @@ const HistoryContainer: React.FC = () => {
         description: "Brand name selection and domain registration",
         dataLoader: async () => {
           if (!brandId) return null;
-          return { type: "name_selection", brandName: currentBrand?.brand_name };
+          return {
+            type: "name_selection",
+            brandName: currentBrand?.brand_name,
+          };
         },
       },
       create_visual_identity: {
@@ -751,7 +754,7 @@ const HistoryContainer: React.FC = () => {
               <CopyButton text={summaryText} />
             </div>
             <div className="bg-gray-50 p-4 rounded prose prose-sm max-w-none text-gray-700">
-              <ReactMarkdown>{summaryText}</ReactMarkdown>
+              <MarkdownPreviewer markdown={summaryText} />
             </div>
           </div>
         );
@@ -766,7 +769,7 @@ const HistoryContainer: React.FC = () => {
               <CopyButton text={archetypeText} />
             </div>
             <div className="bg-gray-50 p-4 rounded prose prose-sm max-w-none text-gray-700">
-              <ReactMarkdown>{archetypeText}</ReactMarkdown>
+              <MarkdownPreviewer markdown={archetypeText} />
             </div>
           </div>
         );

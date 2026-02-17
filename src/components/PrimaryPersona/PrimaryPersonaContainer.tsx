@@ -7,7 +7,7 @@ import { JTBD, JTBDPersonaIn, PersonaInfo } from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
-import ReactMarkdown from "react-markdown";
+import MarkdownPreviewer from "../common/MarkDownPreviewer";
 import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { useBrandStore } from "../../store/brand";
@@ -346,7 +346,7 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
                         </div>
                       ) : (
                         <div className="prose prose-sm max-w-none text-neutral-700">
-                          <ReactMarkdown>{value}</ReactMarkdown>
+                          <MarkdownPreviewer markdown={value} />
                         </div>
                       )}
                     </div>
@@ -354,7 +354,7 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
                 })
               ) : persona.description ? (
                 <div className="prose prose-sm max-w-none text-neutral-700">
-                  <ReactMarkdown>{persona.description}</ReactMarkdown>
+                  <MarkdownPreviewer markdown={persona.description} />
                 </div>
               ) : (
                 <p className="text-neutral-400 italic">No details available</p>

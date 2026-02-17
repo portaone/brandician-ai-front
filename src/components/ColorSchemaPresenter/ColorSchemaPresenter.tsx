@@ -62,7 +62,7 @@ const ColorSchemaPresenter: React.FC = () => {
         console.log("Assets response:", response);
         console.log(
           "Available asset types:",
-          response.assets.map((a: any) => a.type)
+          response.assets.map((a: any) => a.type),
         );
 
         // Find color palette asset
@@ -71,7 +71,7 @@ const ColorSchemaPresenter: React.FC = () => {
             asset.type === "palette" ||
             asset.type === "color_palette" ||
             asset.type === "colors" ||
-            asset.type.includes("color")
+            asset.type.includes("color"),
         );
 
         console.log("Found color asset:", colorAsset);
@@ -81,9 +81,11 @@ const ColorSchemaPresenter: React.FC = () => {
           const fullColorAsset = await brands.getAsset(
             brandId,
             colorAsset.id,
-            guestApi
+            guestApi,
           );
           console.log("Full color asset:", fullColorAsset);
+
+          console.log(fullColorAsset);
 
           if (fullColorAsset.content) {
             try {
@@ -136,7 +138,7 @@ const ColorSchemaPresenter: React.FC = () => {
               lines.forEach((line: string) => {
                 // Match patterns like "primary: #XXXXXX" or "--primary: #XXXXXX"
                 const colorMatch = line.match(
-                  /(primary|main|brand|supporting|secondary|background|accent|cta|action|text|foreground)[:\s]+#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/i
+                  /(primary|main|brand|supporting|secondary|background|accent|cta|action|text|foreground)[:\s]+#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/i,
                 );
                 if (colorMatch) {
                   const key = colorMatch[1].toLowerCase();

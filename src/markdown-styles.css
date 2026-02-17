@@ -1,0 +1,119 @@
+@import url("https://fonts.googleapis.com/css2?family=Bitter:wght@400;600&display=swap");
+
+.markdown-preview {
+  font-family: "Bitter", Georgia, "Times New Roman", Times, serif;
+}
+
+.markdown-preview h3 {
+  font-size: var(--fs-xxl);
+  margin: 0 0 0.25em 0;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.markdown-preview h4 {
+  font-size: var(--fs-xl);
+  margin: 0 0 0.25em 0;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.markdown-preview h5 {
+  font-size: var(--fs-lg);
+  margin: 0 0 0.25em 0;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.markdown-preview h6 {
+  font-size: var(--fs-md);
+  margin: 0 0 0.25em 0;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+}
+.markdown-preview p {
+  font-size: var(--fs-base);
+  margin: 0 0 1em 0;
+  line-height: 1.6;
+}
+.markdown-preview small {
+  font-size: var(--fs-sm);
+}
+.markdown-preview code {
+  background-color: #1e1e1e;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: Consolas, Monaco, "Courier New", monospace;
+  font-size: 0.9em;
+  color: #ce9178;
+}
+.markdown-preview pre {
+  background-color: #1e1e1e;
+  padding: 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 0 0 1em 0;
+}
+.markdown-preview pre code {
+  background: none;
+  padding: 0;
+  color: #d4d4d4;
+  font-family: Consolas, Monaco, "Courier New", monospace;
+}
+.markdown-preview a {
+  color: #fd615e;
+  text-decoration: none;
+}
+.markdown-preview a:hover {
+  text-decoration: underline;
+}
+.markdown-preview ul,
+.markdown-preview ol {
+  margin: 0 0 1em 0;
+  padding-left: 2em;
+}
+.markdown-preview ul {
+  list-style-type: disc;
+}
+.markdown-preview ol {
+  list-style-type: decimal;
+}
+.markdown-preview li {
+  font-size: var(--fs-base);
+  margin: 0.25em 0;
+  line-height: 1.6;
+  display: list-item;
+}
+.markdown-preview li:first-child {
+  margin-top: 0;
+}
+.markdown-preview blockquote {
+  font-size: var(--fs-base);
+  border-left: 4px solid #3e3e3e;
+  padding-left: 16px;
+  margin: 0 0 1em 0;
+  color: #9e9e9e;
+  line-height: 1.6;
+}
+.markdown-preview hr {
+  border: none;
+  border-top: 1px solid #3e3e3e;
+  margin: 2em 0;
+}
+.markdown-preview table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0 0 1em 0;
+}
+.markdown-preview td {
+  font-size: var(--fs-base);
+  border: 1px solid #3e3e3e;
+  padding: 8px 12px;
+}
+.markdown-preview strong {
+  font-weight: 600;
+}
+
+.margin-null {
+  * {
+    margin: 0 !important;
+  }
+}

@@ -6,7 +6,7 @@ import { scrollToTop } from "../../lib/utils";
 import { AdjustObject } from "../../types";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
-import ReactMarkdown from "react-markdown";
+import MarkdownPreviewer, { parseMarkdown } from "../common/MarkDownPreviewer";
 import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { useBrandStore } from "../../store/brand";
@@ -166,23 +166,15 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
   const MarkdownBlock: React.FC<{ text: string }> = ({ text }) => {
     return (
       <div className="prose prose-sm max-w-none text-neutral-700 leading-relaxed">
-        <ReactMarkdown>{text}</ReactMarkdown>
+        <MarkdownPreviewer markdown={text} />
       </div>
     );
   };
 
   const MarkdownInline: React.FC<{ text: string }> = ({ text }) => {
-    return (
-      <ReactMarkdown
-        components={{
-          p({ children }) {
-            return <span>{children}</span>;
-          },
-        }}
-      >
-        {text}
-      </ReactMarkdown>
-    );
+    const html = parseMarkdown(text || "");
+    const inlineHtml = html.replace(/^<p>([\s\S]*?)<\/p>$/, "$1");
+    return <span dangerouslySetInnerHTML={{ __html: inlineHtml }} />;
   };
 
   function renderChanges() {
@@ -288,7 +280,7 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
         ) : (
           <div className="prose max-w-none">
             <div className="bg-green-50 border border-green-200 rounded-lg p-2 sm:p-6">
-              <div className="text-neutral-700 leading-relaxed">
+              <div className="text-neutral-700 leading-relaxed markdown-preview">
                 {renderChanges()}
               </div>
             </div>

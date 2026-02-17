@@ -1,6 +1,6 @@
 import { AlertCircle } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
+import MarkdownPreviewer from "./common/MarkDownPreviewer";
 import BrandicianLoader from "./common/BrandicianLoader";
 
 interface MarkdownPageProps {
@@ -51,7 +51,7 @@ const MarkdownPage: React.FC<MarkdownPageProps> = ({ filePath, className }) => {
 
   return (
     <div className={className || "prose mx-auto max-w-3xl py-8"}>
-      <ReactMarkdown>{content}</ReactMarkdown>
+      <MarkdownPreviewer markdown={content} />
     </div>
   );
 };
