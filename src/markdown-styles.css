@@ -2,6 +2,7 @@
 
 .markdown-preview {
   font-family: "Bitter", Georgia, "Times New Roman", Times, serif;
+  word-break: break-word;
 }
 
 .markdown-preview h3 {
