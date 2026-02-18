@@ -12,6 +12,7 @@ import HistoryButton from "../common/HistoryButton";
 import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
+import { scrollToTop } from "../../lib/utils";
 
 type VisualAssetsState = {
   visualStyle: BrandAsset | null;
@@ -137,6 +138,7 @@ const VisualIdentityContainer: React.FC = () => {
       );
     } finally {
       setIsProgressing(false);
+      scrollToTop();
     }
   };
 
@@ -160,6 +162,7 @@ const VisualIdentityContainer: React.FC = () => {
 
   // Detect whether palette still needs selection (content is a JSON array)
   const paletteNeedsSelection = useMemo(() => {
+    console.log(visualAssets.palette?.content);
     if (!visualAssets.palette?.content) return false;
     try {
       const parsed = JSON.parse(visualAssets.palette.content);
@@ -247,7 +250,7 @@ const VisualIdentityContainer: React.FC = () => {
               </p>
               <AssetContent
                 asset={visualAssets.palette}
-                onPaletteSelect={paletteNeedsSelection ? handleSelectPalette : undefined}
+                onPaletteSelect={handleSelectPalette}
                 isPaletteSaving={isSavingSelection}
               />
             </div>

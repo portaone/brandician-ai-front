@@ -95,8 +95,21 @@ export const LOADER_CONFIGS: Record<string, LoaderConfig> = {
 
   primaryPersona: {
     loadingText: "Generating your primary persona...",
+    steps: [
+      "Analyzing customer needs and survey insights",
+      "Identifying your primary target persona",
+      "Defining motivations, goals, and pain points",
+      "Mapping behaviors and decision triggers",
+      "Building your primary persona profile",
+    ],
   },
   visualIdentity: {
     loadingText: "Creating your visual identity...",
+    steps: [
+      "Defining your brand’s visual strategy",
+      "Translating your archetype into design direction",
+      "Optimizing typography and visual clarity",
+      "Building your precision-focused visual identity",
+    ],
   },
 };

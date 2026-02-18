@@ -32,7 +32,12 @@ function normalisePalettes(raw: unknown): PaletteColors[] {
  * PaletteSample component for 'palette' asset type
  * Shows scaled-down color schema presenter with clickable preview
  */
-const PaletteSample: React.FC<PaletteSampleProps> = ({ content, brandId, onSelect, isSaving }) => {
+const PaletteSample: React.FC<PaletteSampleProps> = ({
+  content,
+  brandId,
+  onSelect,
+  isSaving,
+}) => {
   const { currentBrand } = useBrandStore();
   const params = useParams();
 
@@ -109,13 +114,11 @@ const PaletteSample: React.FC<PaletteSampleProps> = ({ content, brandId, onSelec
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = "scale(1.05)";
-                e.currentTarget.style.boxShadow =
-                  "0 8px 24px rgba(0,0,0,0.2)";
+                e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow =
-                  "0 2px 8px rgba(0,0,0,0.1)";
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
               }}
             >
               <div
@@ -400,7 +403,7 @@ const PaletteSample: React.FC<PaletteSampleProps> = ({ content, brandId, onSelec
             </div>
 
             {/* Select button (only when multiple palettes and onSelect provided) */}
-            {onSelect && palettes.length > 1 && (
+            {onSelect && (
               <div style={{ marginTop: 16, paddingLeft: 8 }}>
                 <Button
                   onClick={(e) => {
