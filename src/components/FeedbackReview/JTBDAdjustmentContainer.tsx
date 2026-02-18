@@ -428,7 +428,7 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
         {/* Current Drivers */}
         <div>
           <h4 className="text-lg font-medium text-gray-800 mb-4">
-            Current Drivers
+            Current
           </h4>
           <div className="bg-gray-50 border border-gray-200 rounded-lg sm:p-4 min-h-[200px]">
             <MarkdownBlock text={driversAdjustment.old_text} />
@@ -438,7 +438,7 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
         {/* Proposed Drivers */}
         <div>
           <h4 className="text-lg font-medium text-gray-800 mb-4">
-            Proposed Drivers
+            Proposed
           </h4>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 min-h-[200px]">
             <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed markdown-preview">
