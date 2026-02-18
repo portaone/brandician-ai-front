@@ -6,17 +6,26 @@ import {
   Copy,
   Loader,
   RefreshCw,
+  Download,
+  Linkedin,
+  Share2,
+  Star,
+  Twitter,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import axios, { AxiosInstance } from "axios";
+import { useSearchParams } from "react-router-dom";
 import MarkdownPreviewer from "../common/MarkDownPreviewer";
 import { useNavigate, useParams } from "react-router-dom";
-import { brands } from "../../lib/api";
+import { API_URL, brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
 import BrandicianLoader from "../common/BrandicianLoader";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import DownloadAllButton from "../common/DownloadAllButton";
+import ShareLinkModal from "../common/ShareLinkModal";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
 type UiTabKey =
@@ -260,7 +269,9 @@ function countGapsForProperty(
   }).length;
 }
 
-const BrandHubContainer: React.FC = () => {
+const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
+  isComplete = false,
+}) => {
   const { brandId } = useParams<{ brandId: string }>();
   const navigate = useNavigate();
   const {
@@ -301,6 +312,121 @@ const BrandHubContainer: React.FC = () => {
   >({});
   const [gapsLoading, setGapsLoading] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  // --- Download card state (copied from CompletedContainer) ---
+  const [searchParams] = useSearchParams();
+  const [assets, setAssets] = useState<any[]>([]);
+  const [assetContents, setAssetContents] = useState<{ [key: string]: any }>(
+    {},
+  );
+  const [downloadLinks, setDownloadLinks] = useState<{ [key: string]: string }>(
+    {},
+  );
+  const [testimonialData, setTestimonialData] = useState<any>(null);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+
+  const token = searchParams.get("token") ?? "";
+
+  let guestApi: AxiosInstance | undefined;
+
+  const extractBrandIdFromToken = (jwtToken: string): string | null => {
+    try {
+      const parts = jwtToken.split(".");
+      if (parts.length !== 3) return null;
+
+      const payload = JSON.parse(atob(parts[1]));
+      return payload.brand_id || null;
+    } catch {
+      return null;
+    }
+  };
+
+  if (token) {
+    guestApi = axios.create({
+      baseURL: API_URL,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+
+  useEffect(() => {
+    // Load testimonial data from localStorage if available
+    if (brandId) {
+      const storedTestimonial = localStorage.getItem(`testimonial_${brandId}`);
+      if (storedTestimonial) {
+        try {
+          setTestimonialData(JSON.parse(storedTestimonial));
+        } catch (error) {
+          console.error("Failed to parse testimonial data:", error);
+        }
+      }
+    }
+  }, [brandId]);
+
+  useEffect(() => {
+    const loadAssets = async () => {
+      if (!brandId) return;
+
+      try {
+        setIsLoadingAssets(true);
+        const response = token
+          ? await brands.listAssets(brandId, guestApi)
+          : await brands.produceAssets(brandId);
+        setAssets(response.assets);
+
+        const contents: { [key: string]: any } = {};
+        const links: { [key: string]: string } = {};
+
+        for (const asset of response.assets) {
+          try {
+            const fullAsset = await brands.getAsset(
+              brandId,
+              asset.id,
+              guestApi,
+            );
+            contents[asset.type] = fullAsset;
+
+            if (fullAsset.content) {
+              const blob = new Blob([fullAsset.content], {
+                type: "text/plain",
+              });
+              links[asset.type] = URL.createObjectURL(blob);
+            }
+          } catch (error) {
+            console.error(`Failed to load asset ${asset.type}:`, error);
+          }
+        }
+
+        setAssetContents(contents);
+        setDownloadLinks(links);
+      } catch (error) {
+        console.error("Failed to load assets:", error);
+      } finally {
+        setIsLoadingAssets(false);
+      }
+    };
+
+    if (brandId) {
+      loadAssets();
+    }
+
+    return () => {
+      Object.values(downloadLinks).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [brandId]);
+
+  const handleDownload = (assetType: string, content: string) => {
+    const element = document.createElement("a");
+    const file = new Blob([content], { type: "text/plain" });
+    element.href = URL.createObjectURL(file);
+    element.download = `${currentBrand?.name || "brand"}-${assetType}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
 
   const handleCopy = async (text: string, key: string) => {
     try {
@@ -757,27 +883,114 @@ const BrandHubContainer: React.FC = () => {
           )}
 
           {/* Proceed to next workflow step (testimonial / payment) */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="text-center">
-              <h3 className="text-xl font-semibold text-neutral-800 mb-3">
-                Ready for the next step?
-              </h3>
-              <p className="text-neutral-600 mb-6">
-                Once you’re happy with your Brand Hub, continue to share
-                feedback and complete the journey.
-              </p>
-              <Button
-                onClick={handleProceedToNext}
-                disabled={isProgressing}
-                variant="primary"
-                size="lg"
-                loading={isProgressing}
-                rightIcon={!isProgressing && <ArrowRight className="h-5 w-5" />}
-              >
-                {isProgressing ? "Processing..." : "Continue to Next Step"}
-              </Button>
+          {!isComplete && (
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="text-center">
+                <h3 className="text-xl font-semibold text-neutral-800 mb-3">
+                  Ready for the next step?
+                </h3>
+                <p className="text-neutral-600 mb-6">
+                  Once you’re happy with your Brand Hub, continue to share
+                  feedback and complete the journey.
+                </p>
+                <Button
+                  onClick={handleProceedToNext}
+                  disabled={isProgressing}
+                  variant="primary"
+                  size="lg"
+                  loading={isProgressing}
+                  rightIcon={
+                    !isProgressing && <ArrowRight className="h-5 w-5" />
+                  }
+                >
+                  {isProgressing ? "Processing..." : "Continue to Next Step"}
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {isComplete && (
+            <div className="bg-white rounded-lg shadow-lg p-4 mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-semibold text-neutral-800">
+                  Download Your Brand Assets
+                </h2>
+                <div className="flex items-center flex-wrap gap-3">
+                  {!token && null}
+                  {!token && null}
+                  <button
+                    onClick={() => setShareModalOpen(true)}
+                    className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-700"
+                  >
+                    <Share2 className="h-4 w-4 mr-1" />
+                    Share
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {assets.map((asset, index) => {
+                  const fullAsset = assetContents[asset.type];
+                  return (
+                    <div
+                      key={index}
+                      className="border border-gray-200 rounded-lg p-4"
+                    >
+                      <h3 className="font-medium text-gray-900 mb-2 capitalize">
+                        {asset.type.replace(/_/g, " ")}
+                      </h3>
+                      {fullAsset?.description && (
+                        <p className="text-sm text-gray-600 mb-3">
+                          {fullAsset.description}
+                        </p>
+                      )}
+                      {fullAsset?.content && (
+                        <button
+                          onClick={() =>
+                            handleDownload(asset.type, fullAsset.content)
+                          }
+                          className="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium"
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Download
+                        </button>
+                      )}
+                      {fullAsset?.url && (
+                        <a
+                          href={fullAsset.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium ml-4"
+                        >
+                          View Online
+                        </a>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+                {brandId && (
+                  <DownloadAllButton
+                    brandId={brandId}
+                    brandName={currentBrand?.name || "brand"}
+                    variant="button"
+                    guestApi={guestApi}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+          {brandId && (
+            <ShareLinkModal
+              isOpen={shareModalOpen}
+              onClose={() => setShareModalOpen(false)}
+              brandId={brandId}
+              brandName={currentBrand?.brand_name || currentBrand?.name}
+            />
+          )}
         </div>
       </div>
     </div>

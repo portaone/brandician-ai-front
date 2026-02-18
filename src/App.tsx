@@ -217,14 +217,6 @@ const App: React.FC = () => {
               }
             />
             <Route
-              path="/brands/:brandId/create-assets"
-              element={
-                <AuthGuard>
-                  <BrandAssetsWrapper />
-                </AuthGuard>
-              }
-            />
-            <Route
               path="/brands/:brandId/testimonial"
               element={
                 <AuthGuard>
@@ -260,7 +252,7 @@ const App: React.FC = () => {
               path="/brands/:brandId/completed"
               element={
                 <AuthGuard>
-                  <CompletedContainer />
+                  <BrandHubContainer isComplete={true} />
                 </AuthGuard>
               }
             />

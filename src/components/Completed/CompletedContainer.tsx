@@ -4,7 +4,6 @@ import {
   Download,
   Linkedin,
   Lock,
-  Palette,
   Share2,
   Star,
   Twitter,
@@ -15,8 +14,6 @@ import { API_URL, brands } from "../../lib/api";
 import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
 import DownloadAllButton from "../common/DownloadAllButton";
-import GetHelpButton from "../common/GetHelpButton";
-import HistoryButton from "../common/HistoryButton";
 import ShareLinkModal from "../common/ShareLinkModal";
 import BrandicianLoader from "../common/BrandicianLoader";
 
@@ -28,10 +25,10 @@ const CompletedContainer: React.FC<{ readonlyMode?: boolean }> = ({
   const { currentBrand, selectBrand, isLoading } = useBrandStore();
   const [assets, setAssets] = useState<any[]>([]);
   const [assetContents, setAssetContents] = useState<{ [key: string]: any }>(
-    {}
+    {},
   );
   const [downloadLinks, setDownloadLinks] = useState<{ [key: string]: string }>(
-    {}
+    {},
   );
   const [testimonialData, setTestimonialData] = useState<any>(null);
   const [isLoadingAssets, setIsLoadingAssets] = useState(false);
@@ -97,7 +94,7 @@ const CompletedContainer: React.FC<{ readonlyMode?: boolean }> = ({
         console.log("CompletedContainer - Assets response:", response);
         console.log(
           "CompletedContainer - Asset types:",
-          response.assets.map((a: any) => a.type)
+          response.assets.map((a: any) => a.type),
         );
         setAssets(response.assets);
 
@@ -110,12 +107,12 @@ const CompletedContainer: React.FC<{ readonlyMode?: boolean }> = ({
             const fullAsset = await brands.getAsset(
               brandId,
               asset.id,
-              guestApi
+              guestApi,
             );
             if (asset.type.includes("color")) {
               console.log(
                 `CompletedContainer - Color asset (${asset.type}):`,
-                fullAsset
+                fullAsset,
               );
             }
             contents[asset.type] = fullAsset;
@@ -216,10 +213,6 @@ const CompletedContainer: React.FC<{ readonlyMode?: boolean }> = ({
                 Download Your Brand Assets
               </h2>
               <div className="flex items-center flex-wrap gap-3">
-                {brandId && !readonlyMode && (
-                  <HistoryButton brandId={brandId} />
-                )}
-                <GetHelpButton variant="secondary" size="md" />
                 {!readonlyMode && (
                   <button
                     onClick={() => setShareModalOpen(true)}
@@ -276,26 +269,7 @@ const CompletedContainer: React.FC<{ readonlyMode?: boolean }> = ({
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-              <Button
-                size="lg"
-                onClick={() => {
-                  // Open Color Schema Presenter in a popup window
-                  const width = 1500;
-                  const height = 1100;
-                  const left = (window.screen.width - width) / 2;
-                  const top = (window.screen.height - height) / 2;
-                  window.open(
-                    `/brands/${brandId}/color-schema${
-                      token && readonlyMode ? "?token=" + token : ""
-                    }`,
-                    "ColorSchemaPresenter",
-                    `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,`
-                  );
-                }}
-              >
-                <Palette className="h-5 w-5 mr-2 inline" />
-                View Color Schema Presenter
-              </Button>
+              {/* Color Schema presenter removed as requested */}
 
               {brandId && (
                 <DownloadAllButton
@@ -355,7 +329,7 @@ const CompletedContainer: React.FC<{ readonlyMode?: boolean }> = ({
                 <div className="flex flex-wrap gap-4">
                   <a
                     href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                      shareText
+                      shareText,
                     )}&url=${encodeURIComponent(shareUrl)}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -367,7 +341,7 @@ const CompletedContainer: React.FC<{ readonlyMode?: boolean }> = ({
 
                   <a
                     href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
-                      shareUrl
+                      shareUrl,
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
