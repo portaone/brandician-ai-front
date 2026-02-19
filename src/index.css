@@ -17,12 +17,12 @@
     --color-white: #ffffff;
 
     /* Fluid typography scale */
-    --fs-sm: clamp(0.8rem, 0.17vi + 0.76rem, 0.89rem);
-    --fs-base: clamp(1rem, 0.34vi + 0.91rem, 1.19rem);
-    --fs-md: clamp(1.25rem, 0.61vi + 1.1rem, 1.58rem);
-    --fs-lg: clamp(1.56rem, 1vi + 1.31rem, 2.11rem);
-    --fs-xl: clamp(1.95rem, 1.56vi + 1.56rem, 2.81rem);
-    --fs-xxl: clamp(2.44rem, 2.38vi + 1.85rem, 3.75rem);
+    --fs-sm: clamp(0.53rem, 0.17vi + 0.51rem, 0.59rem);
+    --fs-base: clamp(0.67rem, 0.34vi + 0.61rem, 0.79rem);
+    --fs-md: clamp(0.83rem, 0.61vi + 0.73rem, 1.05rem);
+    --fs-lg: clamp(1.04rem, 1vi + 0.87rem, 1.41rem);
+    --fs-xl: clamp(1.3rem, 1.56vi + 1.04rem, 1.87rem);
+    --fs-xxl: clamp(1.63rem, 2.38vi + 1.23rem, 2.5rem);
 
     /* Title font properties */
     --title-font-family: "Bitter", sans-serif;
