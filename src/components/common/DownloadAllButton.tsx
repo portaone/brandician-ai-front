@@ -4,6 +4,7 @@ import JSZip from "jszip";
 import { Download } from "lucide-react";
 import React, { useState } from "react";
 import { brands } from "../../lib/api";
+import { TAB_CONFIGS, BACKEND_TAB_FOR_UI } from "../BrandHub/hub-tab-config";
 import Button from "./Button";
 
 interface DownloadAllButtonProps {
@@ -101,7 +102,45 @@ const DownloadAllButton: React.FC<DownloadAllButtonProps> = ({
         }
       }
 
+      // --- Brand Hub tabs ---
+      const hubFolder = brandFolder.folder("Brand Hub");
+      const hubFileNames: string[] = [];
+
+      // Skip "gaps" — not useful as a downloaded text file
+      const downloadableTabs = TAB_CONFIGS.filter((t) => t.key !== "gaps");
+
+      for (const tab of downloadableTabs) {
+        const backendKey = BACKEND_TAB_FOR_UI[tab.key];
+        try {
+          const tabResponse = await brands.getBrandHubTab(brandId, backendKey, guestApi);
+          const props = tabResponse?.properties || {};
+          const sections: string[] = [];
+
+          for (const prop of tab.properties) {
+            const value = props[prop.key];
+            if (typeof value === "string" && value.trim().length > 0) {
+              const header = prop.helper
+                ? `# ${prop.title}\n\n*${prop.helper}*\n\n${value.trim()}`
+                : `# ${prop.title}\n\n${value.trim()}`;
+              sections.push(header);
+            }
+          }
+
+          if (sections.length > 0 && hubFolder) {
+            const fileName = `${tab.label}.md`;
+            hubFolder.file(fileName, sections.join("\n\n---\n\n") + "\n");
+            hubFileNames.push(tab.label);
+          }
+        } catch (error) {
+          console.error(`Failed to load hub tab ${backendKey}:`, error);
+        }
+      }
+
       // Add README file
+      const hubSection = hubFileNames.length > 0
+        ? `\nBrand Hub:\n${hubFileNames.map((n) => `- ${n}`).join("\n")}\n`
+        : "";
+
       const readme = `${brandName} - Brand Package
 ${"=".repeat(50)}
 
@@ -114,7 +153,7 @@ Contents:
 ${assets
   .map((asset: { type: string }) => `- ${asset.type.replace(/_/g, " ")}`)
   .join("\n")}
-
+${hubSection}
 Thank you for using Brandician AI!
 Visit https://brandician.ai for more information.
 `;

@@ -274,7 +274,7 @@ const CompletedContainer: React.FC<{ readonlyMode?: boolean }> = ({
               {brandId && (
                 <DownloadAllButton
                   brandId={brandId}
-                  brandName={currentBrand?.name || "brand"}
+                  brandName={currentBrand?.brand_name || currentBrand?.name || "brand"}
                   variant="button"
                   guestApi={guestApi}
                 />
