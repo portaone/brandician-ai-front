@@ -770,6 +770,27 @@ export const brands = {
     await api.delete(apiPath(`/brands/${brandId}/assets/`));
   },
 
+  // Visual identity (hub-based) endpoints
+  suggestVisualIdentity: async (brandId: string) => {
+    const key = createRequestKey("POST", apiPath(`/brands/${brandId}/visual-identity/suggest`));
+    return deduplicate(key, async () => {
+      const response = await api.post(apiPath(`/brands/${brandId}/visual-identity/suggest`));
+      return response.data;
+    });
+  },
+
+  getVisualIdentityOptions: async (brandId: string) => {
+    const response = await api.get(apiPath(`/brands/${brandId}/visual-identity/suggest`));
+    return response.data;
+  },
+
+  saveVisualIdentitySelection: async (brandId: string, paletteIndex: number, fontIndex: number) => {
+    await api.post(apiPath(`/brands/${brandId}/visual-identity/save`), {
+      palette_index: paletteIndex,
+      font_index: fontIndex,
+    });
+  },
+
   // Brand Hub (strategy hub) endpoints
   getBrandHub: async (brandId: string, currentApi: AxiosInstance = api) => {
     const key = createRequestKey("GET", apiPath(`/brands/${brandId}/hub`));

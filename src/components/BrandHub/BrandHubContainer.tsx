@@ -95,6 +95,97 @@ function countGapsForProperty(
   }).length;
 }
 
+// ── Visual color palette renderer ─────────────────────────────────
+const COLOR_ROLE_LABELS: Record<string, string> = {
+  "main-color": "Main color",
+  "supporting-color": "Supporting color",
+  "accent-color": "Accent color",
+  "body-text-color": "Body text color",
+  "light-color": "Light / Background",
+};
+
+const ColorPaletteDisplay: React.FC<{ json: string }> = ({ json }) => {
+  let data: Record<string, string>;
+  try {
+    data = JSON.parse(json);
+  } catch {
+    return <span className="text-sm text-neutral-500 italic">Invalid palette data</span>;
+  }
+
+  const entries = Object.entries(COLOR_ROLE_LABELS)
+    .map(([key, label]) => ({ key, label, hex: data[key] }))
+    .filter((e) => e.hex);
+
+  if (entries.length === 0) {
+    return <span className="text-sm text-neutral-500 italic">No colours found</span>;
+  }
+
+  return (
+    <div>
+      {data.rationale && (
+        <div className="prose prose-sm max-w-none text-neutral-600 mb-4">
+          <MarkdownPreviewer markdown={data.rationale} />
+        </div>
+      )}
+      <div className="flex flex-wrap gap-x-8 gap-y-3">
+        {entries.map((e) => (
+          <div key={e.key} className="flex items-center gap-2">
+            <div
+              className="w-6 h-6 rounded-full border border-black/10 flex-shrink-0"
+              style={{ backgroundColor: e.hex }}
+            />
+            <span className="text-sm text-neutral-700">
+              {e.label}: <span className="font-mono text-xs text-neutral-500">{e.hex}</span>
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ── Typography renderer ───────────────────────────────────────────
+function tryParseTypography(json: string): Record<string, any> | null {
+  try {
+    const data = JSON.parse(json);
+    const roles = ["heading", "body", "accent"].filter((r) => data[r]);
+    return roles.length > 0 ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+const TypographyDisplay: React.FC<{ data: Record<string, any> }> = ({ data }) => {
+  const roles = ["heading", "body", "accent"].filter((r) => data[r]);
+
+  return (
+    <div className="space-y-3">
+      {data.label && (
+        <p className="text-sm font-medium text-neutral-600">
+          Font pairing: <span className="text-neutral-800">{data.label}</span>
+        </p>
+      )}
+      {data.rationale && (
+        <div className="prose prose-sm max-w-none text-neutral-600">
+          <MarkdownPreviewer markdown={data.rationale} />
+        </div>
+      )}
+      {roles.map((role) => {
+        const font = data[role];
+        return (
+          <div key={role} className="flex items-baseline gap-3">
+            <span className="text-xs uppercase tracking-wider text-neutral-400 w-16 flex-shrink-0">
+              {role}
+            </span>
+            <span className="text-sm text-neutral-800 font-medium">{font.name}</span>
+            <span className="text-xs text-neutral-500">{font.style}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
   isComplete = false,
 }) => {
@@ -303,6 +394,7 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
 
       if (
         opts?.allowGenerate &&
+        !hasAnyContent &&
         (!properties || Object.keys(properties).length === 0)
       ) {
         await generateHub();
@@ -681,9 +773,15 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
                     {prop.key === "palette" && hasContent ? (
                       <PaletteSample content={JSON.stringify([value])} brandId={brandId} mode="draft" />
                     ) : hasContent ? (
-                      <div className="prose prose-sm max-w-none text-neutral-700">
-                        <MarkdownPreviewer markdown={value as string} />
-                      </div>
+                      prop.key === "color_palette" ? (
+                        <ColorPaletteDisplay json={value as string} />
+                      ) : prop.key === "typography" && tryParseTypography(value as string) ? (
+                        <TypographyDisplay data={tryParseTypography(value as string)!} />
+                      ) : (
+                        <div className="prose prose-sm max-w-none text-neutral-700">
+                          <MarkdownPreviewer markdown={value as string} />
+                        </div>
+                      )
                     ) : (
                       <p className="text-sm text-neutral-400 italic">
                         This section hasn't been populated yet.
