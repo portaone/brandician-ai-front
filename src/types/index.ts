@@ -239,3 +239,15 @@ export interface BrandNameSuggestion {
   domains_available: string[];
   score: number | null;
 }
+
+export interface VisualIdentityVariant {
+  description: string;
+  palette: Record<string, string>;
+}
+
+export interface VisualIdentityDraft {
+  overview: string;
+  variants: VisualIdentityVariant[];
+  summary: string;
+  selected_variant_index?: number | null;
+}

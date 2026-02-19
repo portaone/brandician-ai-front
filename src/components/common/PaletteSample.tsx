@@ -17,6 +17,9 @@ interface PaletteColors {
 interface PaletteSampleProps {
   content: string;
   brandId?: string;
+  mode?: "draft" | "final";
+  /** Base index offset — added to the local palette idx when building URLs. */
+  variantIndexOffset?: number;
   onSelect?: (index: number) => void;
   isSaving?: boolean;
 }
@@ -35,6 +38,8 @@ function normalisePalettes(raw: unknown): PaletteColors[] {
 const PaletteSample: React.FC<PaletteSampleProps> = ({
   content,
   brandId,
+  mode,
+  variantIndexOffset = 0,
   onSelect,
   isSaving,
 }) => {
@@ -52,11 +57,18 @@ const PaletteSample: React.FC<PaletteSampleProps> = ({
     return <div className="text-red-500">No palette data found</div>;
   }
 
-  const handleOpenColorSchema = (variantIndex?: number) => {
+  const handleOpenColorSchema = (localIndex?: number) => {
     const targetBrandId = brandId || currentBrand?.id || params?.brandId;
     if (targetBrandId) {
-      const suffix = variantIndex != null ? `/${variantIndex}` : "";
-      window.open(`/brands/${targetBrandId}/color-schema${suffix}`, "_blank");
+      const resolvedIndex = (localIndex ?? 0) + variantIndexOffset;
+      let url: string;
+      if (mode === "draft") {
+        url = `/brands/${targetBrandId}/color-schema/draft/${resolvedIndex}`;
+      } else {
+        const suffix = localIndex != null || variantIndexOffset ? `/${resolvedIndex}` : "";
+        url = `/brands/${targetBrandId}/color-schema${suffix}`;
+      }
+      window.open(url, "_blank");
     }
   };
 

@@ -16,6 +16,7 @@ import React, { useEffect, useState } from "react";
 import axios, { AxiosInstance } from "axios";
 import { useSearchParams } from "react-router-dom";
 import MarkdownPreviewer from "../common/MarkDownPreviewer";
+import PaletteSample from "../common/PaletteSample";
 import { useNavigate, useParams } from "react-router-dom";
 import { API_URL, brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
@@ -35,7 +36,7 @@ type UiTabKey =
   | "voice_content"
   | "gaps";
 
-type HubMap = Record<string, string | null | undefined>;
+type HubMap = Record<string, string | Record<string, string> | null | undefined>;
 
 const BACKEND_TAB_FOR_UI: Record<UiTabKey, string> = {
   strategy: "essence",
@@ -132,6 +133,18 @@ const TAB_CONFIGS: UiTabConfig[] = [
     description:
       "Make the brand recognisable, coherent, and emotionally aligned across all visual touchpoints.",
     properties: [
+      {
+        key: "visual_identity",
+        title: "Visual Identity",
+        helper:
+          "The selected visual direction — overview, description, and strategic summary.",
+      },
+      {
+        key: "palette",
+        title: "Colour Palette",
+        helper:
+          "The colour palette from your selected visual identity variant.",
+      },
       {
         key: "logo_and_mark_system",
         title: "Logo & Mark System",
@@ -487,7 +500,9 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
         const updated = { ...prev, [tabKey]: properties || {} };
         const anyContent = Object.values(updated).some((map) =>
           Object.values(map || {}).some(
-            (v) => typeof v === "string" && v.trim().length > 0,
+            (v) =>
+              (typeof v === "string" && v.trim().length > 0) ||
+              (v && typeof v === "object" && Object.keys(v).length > 0),
           ),
         );
         setHasAnyContent(anyContent);
@@ -781,9 +796,11 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
             ) : (
               /* ── Other tabs: properties with confidence & gap badges ── */
               currentTabConfig.properties.map((prop) => {
-                const value = (currentHub && currentHub[prop.key]) || "";
+                const value = currentHub && currentHub[prop.key];
                 const hasContent =
-                  typeof value === "string" && value.trim().length > 0;
+                  prop.key === "palette"
+                    ? value && typeof value === "object" && Object.keys(value).length > 0
+                    : typeof value === "string" && value.trim().length > 0;
                 const conf = findConfidence(
                   prop.key,
                   prop.title,
@@ -827,7 +844,7 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
                           </p>
                         )}
                       </div>
-                      {hasContent && (
+                      {hasContent && prop.key !== "palette" && (
                         <button
                           onClick={() => handleCopy(value as string, prop.key)}
                           className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-neutral-200 bg-neutral-50 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800 transition-colors flex-shrink-0"
@@ -848,7 +865,9 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
                       )}
                     </div>
 
-                    {hasContent ? (
+                    {prop.key === "palette" && hasContent ? (
+                      <PaletteSample content={JSON.stringify([value])} brandId={brandId} mode="draft" />
+                    ) : hasContent ? (
                       <div className="prose prose-sm max-w-none text-neutral-700">
                         <MarkdownPreviewer markdown={value as string} />
                       </div>

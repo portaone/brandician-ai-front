@@ -269,6 +269,10 @@ const App: React.FC = () => {
               }
             />
             <Route
+              path="/brands/:brandId/color-schema/draft/:variantIndex"
+              element={<ColorSchemaPresenter />}
+            />
+            <Route
               path="/brands/:brandId/color-schema/:variantIndex?"
               element={<ColorSchemaPresenter />}
             />

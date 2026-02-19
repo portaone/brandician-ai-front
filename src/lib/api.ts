@@ -744,6 +744,28 @@ export const brands = {
     return response.data;
   },
 
+  getOrGenerateVisualIdentityDraft: async (brandId: string) => {
+    const response = await api.post(
+      apiPath(`/brands/${brandId}/visual-identity-draft/`)
+    );
+    return response.data;
+  },
+
+  regenerateVisualIdentityDraft: async (brandId: string) => {
+    const response = await api.post(
+      apiPath(`/brands/${brandId}/visual-identity-draft/?regenerate=true`)
+    );
+    return response.data;
+  },
+
+  selectVisualIdentityVariant: async (brandId: string, variantIndex: number) => {
+    const response = await api.post(
+      apiPath(`/brands/${brandId}/visual-identity-draft/select`),
+      { variant_index: variantIndex }
+    );
+    return response.data;
+  },
+
   deleteAllAssets: async (brandId: string) => {
     await api.delete(apiPath(`/brands/${brandId}/assets/`));
   },

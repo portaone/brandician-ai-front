@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import BrandicianLoader from "../common/BrandicianLoader";
 import React, { useEffect, useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useMatch, useParams, useSearchParams } from "react-router-dom";
 import { API_URL, brands } from "../../lib/api";
 import { useBrandStore } from "../../store/brand";
 
@@ -13,26 +13,173 @@ interface BrandColors {
   text: string;
 }
 
+const DEFAULT_BRAND_COLORS: BrandColors = {
+  primary: "#6B6B6B",
+  supporting: "#E0E0E0",
+  background: "#F5F5F5",
+  accent: "#000000",
+  text: "#000000",
+};
+
+/** Map a raw palette record (draft or asset) to BrandColors. */
+function mapPaletteToBrandColors(
+  colors: Record<string, string>,
+  fallback: BrandColors,
+): BrandColors {
+  return {
+    primary:
+      colors["main-color"] ||
+      colors.primary ||
+      colors.main ||
+      fallback.primary,
+    supporting:
+      colors["supporting-color"] ||
+      colors.supporting ||
+      colors.secondary ||
+      fallback.supporting,
+    background:
+      colors["background-color"] ||
+      colors.background ||
+      colors.neutral ||
+      fallback.background,
+    accent:
+      colors["accent-color"] ||
+      colors.accent ||
+      colors.cta ||
+      fallback.accent,
+    text:
+      colors["body-text-color"] ||
+      colors.text ||
+      colors.foreground ||
+      fallback.text,
+  };
+}
+
+/** Load palette from the visual-identity draft endpoint (auth-only). */
+async function loadDraftPalette(
+  brandId: string,
+  variantIndex: number,
+): Promise<BrandColors> {
+  const draft = await brands.getOrGenerateVisualIdentityDraft(brandId);
+  const variant = draft.variants[variantIndex] || draft.variants[0];
+  if (!variant) {
+    throw new Error("No variants found in visual identity draft");
+  }
+  return mapPaletteToBrandColors(variant.palette, DEFAULT_BRAND_COLORS);
+}
+
+/** Load palette from the legacy BrandAssets API. */
+async function loadAssetPalette(
+  brandId: string,
+  variantIndex: number,
+  fallback: BrandColors,
+  guestApi?: AxiosInstance,
+): Promise<BrandColors> {
+  try {
+    const response = await brands.listAssets(brandId, guestApi);
+
+    const colorAsset = response.assets.find(
+      (asset: any) =>
+        asset.type === "palette" ||
+        asset.type === "color_palette" ||
+        asset.type === "colors" ||
+        asset.type.includes("color"),
+    );
+
+    if (colorAsset) {
+      const fullColorAsset = await brands.getAsset(
+        brandId,
+        colorAsset.id,
+        guestApi,
+      );
+
+      if (fullColorAsset.content) {
+        try {
+          const parsed = JSON.parse(fullColorAsset.content);
+
+          let colors: Record<string, string>;
+          if (Array.isArray(parsed)) {
+            colors = parsed[variantIndex] || parsed[0] || {};
+          } else {
+            colors = parsed;
+          }
+
+          return mapPaletteToBrandColors(colors, fallback);
+        } catch {
+          // If not JSON, try to parse as CSS or text format
+          const lines = fullColorAsset.content.split("\n");
+          const extractedColors: Record<string, string> = {};
+
+          lines.forEach((line: string) => {
+            const colorMatch = line.match(
+              /(primary|main|brand|supporting|secondary|background|accent|cta|action|text|foreground)[:\s]+#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/i,
+            );
+            if (colorMatch) {
+              extractedColors[colorMatch[1].toLowerCase()] = `#${colorMatch[2]}`;
+            }
+          });
+
+          return {
+            primary:
+              extractedColors.primary ||
+              extractedColors.main ||
+              extractedColors.brand ||
+              fallback.primary,
+            supporting:
+              extractedColors.supporting ||
+              extractedColors.secondary ||
+              fallback.supporting,
+            background: extractedColors.background || fallback.background,
+            accent:
+              extractedColors.accent ||
+              extractedColors.cta ||
+              extractedColors.action ||
+              fallback.accent,
+            text:
+              extractedColors.text ||
+              extractedColors.foreground ||
+              fallback.text,
+          };
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Failed to load brand colors from assets:", error);
+    // Fall back to localStorage if available
+    const storedColors = localStorage.getItem(`brand_colors_${brandId}`);
+    if (storedColors) {
+      try {
+        const colors = JSON.parse(storedColors);
+        return {
+          primary: colors.primary || fallback.primary,
+          supporting: colors.supporting || fallback.supporting,
+          background: colors.background || fallback.background,
+          accent: colors.accent || fallback.accent,
+          text: colors.text || fallback.text,
+        };
+      } catch (parseError) {
+        console.error("Failed to parse stored colors:", parseError);
+      }
+    }
+  }
+
+  return fallback;
+}
+
 const ColorSchemaPresenter: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { brandId, variantIndex: variantIndexParam } = useParams<{ brandId: string; variantIndex?: string }>();
+  const draftMatch = useMatch("/brands/:brandId/color-schema/draft/:variantIndex");
+  const isDraft = !!draftMatch;
+  const variantIndex = parseInt(
+    draftMatch?.params.variantIndex || variantIndexParam || searchParams.get("v") || "0",
+    10,
+  );
+
   const { currentBrand, selectBrand } = useBrandStore();
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
-
-  // Default brand colors - using black and white theme
-  // Previous Figma theme (purple):
-  // primary: '#7F5971',    // Main Color (dark purple)
-  // supporting: '#E5D7CD', // Supporting Color (light beige)
-  // background: '#F4F2F2', // Light Background Color
-  // accent: '#FC5258',     // Accent color for CTA (coral red)
-  // text: '#383236'        // Text color
-  const [brandColors, setBrandColors] = useState<BrandColors>({
-    primary: "#6B6B6B", // Main Color (medium grey)
-    supporting: "#E0E0E0", // Supporting Color (light grey)
-    background: "#F5F5F5", // Light Background Color (light gray)
-    accent: "#000000", // Accent color for CTA (black)
-    text: "#000000", // Text color (black)
-  });
+  const [error, setError] = useState<string | null>(null);
+  const [brandColors, setBrandColors] = useState<BrandColors>(DEFAULT_BRAND_COLORS);
 
   const token = searchParams.get("token") ?? "";
   let guestApi: AxiosInstance | undefined;
@@ -53,157 +200,56 @@ const ColorSchemaPresenter: React.FC = () => {
     }
   }, [brandId, currentBrand, selectBrand]);
 
-  // Load brand-specific colors from assets
-  const loadBrandColors = async () => {
-    if (currentBrand && brandId) {
+  useEffect(() => {
+    if (!currentBrand || !brandId) return;
+
+    let cancelled = false;
+    const load = async () => {
+      setIsLoadingStatus(true);
+      setError(null);
       try {
-        // First, produce/get the list of assets
-        const response = await brands.listAssets(brandId, guestApi);
-        console.log("Assets response:", response);
-        console.log(
-          "Available asset types:",
-          response.assets.map((a: any) => a.type),
-        );
-
-        // Find color palette asset
-        const colorAsset = response.assets.find(
-          (asset: any) =>
-            asset.type === "palette" ||
-            asset.type === "color_palette" ||
-            asset.type === "colors" ||
-            asset.type.includes("color"),
-        );
-
-        console.log("Found color asset:", colorAsset);
-
-        if (colorAsset) {
-          // Fetch the full color asset content
-          const fullColorAsset = await brands.getAsset(
-            brandId,
-            colorAsset.id,
-            guestApi,
-          );
-          console.log("Full color asset:", fullColorAsset);
-
-          console.log(fullColorAsset);
-
-          if (fullColorAsset.content) {
-            try {
-              // Try to parse as JSON
-              let parsed = JSON.parse(fullColorAsset.content);
-              console.log("Parsed colors:", parsed);
-
-              // Handle array format (multiple palette variants)
-              const variantIndex = parseInt(variantIndexParam || searchParams.get("v") || "0", 10);
-              let colors: Record<string, string>;
-              if (Array.isArray(parsed)) {
-                colors = parsed[variantIndex] || parsed[0] || {};
-              } else {
-                colors = parsed;
-              }
-
-              // Extract colors from the asset content
-              setBrandColors({
-                primary:
-                  colors["main-color"] ||
-                  colors.primary ||
-                  colors.main ||
-                  brandColors.primary,
-                supporting:
-                  colors["supporting-color"] ||
-                  colors.supporting ||
-                  colors.secondary ||
-                  brandColors.supporting,
-                background:
-                  colors["background-color"] ||
-                  colors.background ||
-                  colors.neutral ||
-                  "#F4F2F2",
-                accent:
-                  colors["accent-color"] ||
-                  colors.accent ||
-                  colors.cta ||
-                  brandColors.accent,
-                text:
-                  colors["body-text-color"] ||
-                  colors.text ||
-                  colors.foreground ||
-                  brandColors.text,
-              });
-            } catch (parseError) {
-              // If not JSON, try to parse as CSS or text format
-              const lines = fullColorAsset.content.split("\n");
-              const extractedColors: any = {};
-
-              lines.forEach((line: string) => {
-                // Match patterns like "primary: #XXXXXX" or "--primary: #XXXXXX"
-                const colorMatch = line.match(
-                  /(primary|main|brand|supporting|secondary|background|accent|cta|action|text|foreground)[:\s]+#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/i,
-                );
-                if (colorMatch) {
-                  const key = colorMatch[1].toLowerCase();
-                  const value = `#${colorMatch[2]}`;
-                  extractedColors[key] = value;
-                }
-              });
-
-              setBrandColors({
-                primary:
-                  extractedColors.primary ||
-                  extractedColors.main ||
-                  extractedColors.brand ||
-                  brandColors.primary,
-                supporting:
-                  extractedColors.supporting ||
-                  extractedColors.secondary ||
-                  brandColors.supporting,
-                background:
-                  extractedColors.background || brandColors.background,
-                accent:
-                  extractedColors.accent ||
-                  extractedColors.cta ||
-                  extractedColors.action ||
-                  brandColors.accent,
-                text:
-                  extractedColors.text ||
-                  extractedColors.foreground ||
-                  brandColors.text,
-              });
-            }
-          }
+        let colors: BrandColors;
+        if (isDraft) {
+          colors = await loadDraftPalette(brandId, variantIndex);
+        } else {
+          colors = await loadAssetPalette(brandId, variantIndex, DEFAULT_BRAND_COLORS, guestApi);
         }
-      } catch (error) {
-        console.error("Failed to load brand colors from assets:", error);
-        // Fall back to localStorage if available
-        const storedColors = localStorage.getItem(`brand_colors_${brandId}`);
-        if (storedColors) {
-          try {
-            const colors = JSON.parse(storedColors);
-            setBrandColors({
-              primary: colors.primary || brandColors.primary,
-              supporting: colors.supporting || brandColors.supporting,
-              background: colors.background || brandColors.background,
-              accent: colors.accent || brandColors.accent,
-              text: colors.text || brandColors.text,
-            });
-          } catch (parseError) {
-            console.error("Failed to parse stored colors:", parseError);
+        if (!cancelled) setBrandColors(colors);
+      } catch (err: any) {
+        console.error("Failed to load brand colors:", err);
+        if (!cancelled) {
+          if (isDraft) {
+            setError(
+              err?.response?.data?.detail ||
+                "Failed to load draft palette. Please try again.",
+            );
           }
+          // Asset mode: keep default colors silently (existing behavior)
         }
       } finally {
-        setIsLoadingStatus(false);
+        if (!cancelled) setIsLoadingStatus(false);
       }
-    }
-  };
+    };
 
-  useEffect(() => {
-    loadBrandColors();
-  }, [currentBrand, brandId]);
+    load();
+    return () => { cancelled = true; };
+  }, [currentBrand, brandId, isDraft, variantIndex]);
 
   if (isLoadingStatus) {
     return (
       <div className="loader-container">
         <BrandicianLoader />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center p-8">
+          <p className="text-red-600 text-lg mb-2">Error loading palette</p>
+          <p className="text-neutral-600">{error}</p>
+        </div>
       </div>
     );
   }
