@@ -277,20 +277,17 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
             <div className="flex flex-wrap gap-2 mb-4 text-xs">
               {persona.confidence && (
                 <span
-                  className={`px-2 py-1 rounded-full font-medium ${
-                    persona.confidence === "HIGH"
-                      ? "bg-green-100 text-green-800"
-                      : persona.confidence === "MEDIUM"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : "bg-red-100 text-red-800"
-                  }`}
+                  className={`px-2 py-1 rounded-full font-medium bg-purple-100 text-purple-800`}
                 >
                   Confidence: {persona.confidence}
                 </span>
               )}
               {persona.survey_prevalence !== undefined &&
                 persona.survey_prevalence !== null && (
-                  <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">
+                  <span
+                    className="px-2 py-1 rounded-full font-medium"
+                    style={{ backgroundColor: "#7f5971", color: "#ffffff" }}
+                  >
                     Matches {persona.survey_prevalence}% of survey responders
                   </span>
                 )}

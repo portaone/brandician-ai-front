@@ -36,9 +36,19 @@ const ArchetypeAdjustmentContainer: React.FC<
   const [error, setError] = useState<string | null>(null);
   const explanationRefs = useRef<{ [id: string]: HTMLDivElement | null }>({});
   const [reloadFlag, setReloadFlag] = useState(false);
+  const [expandedExplanations, setExpandedExplanations] = useState<
+    Record<string, boolean>
+  >({});
   const isLoadingRef = useRef(false);
   const scope = "archetype";
   const makeSuggestionKey = (id: string) => `${scope}-${id}`;
+
+  const toggleExplanation = (id: string) => {
+    setExpandedExplanations((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   const MarkdownBlock: React.FC<{ text: string }> = ({ text }) => (
     <div className="prose prose-sm max-w-none text-neutral-700 leading-relaxed">
@@ -49,7 +59,12 @@ const ArchetypeAdjustmentContainer: React.FC<
   const MarkdownInline: React.FC<{ text: string }> = ({ text }) => {
     const html = parseMarkdown(text || "");
     const inlineHtml = html.replace(/^<p>([\s\S]*?)<\/p>$/, "$1");
-    return <span dangerouslySetInnerHTML={{ __html: inlineHtml }} />;
+    return (
+      <span
+        className="markdown-preview"
+        dangerouslySetInnerHTML={{ __html: inlineHtml }}
+      />
+    );
   };
 
   useEffect(() => {
@@ -113,6 +128,7 @@ const ArchetypeAdjustmentContainer: React.FC<
     setAdjustment(null);
     setError(null);
     setIsLoading(true);
+    setExpandedExplanations({});
     setReloadFlag((flag) => !flag);
     scrollToTop();
   };
@@ -168,18 +184,6 @@ const ArchetypeAdjustmentContainer: React.FC<
     scrollToTop();
   };
 
-  const handleChangeClick = (id: string) => {
-    const ref = explanationRefs.current[id];
-    if (ref) {
-      ref.scrollIntoView({ behavior: "smooth", block: "center" });
-      ref.classList.add("ring-2", "ring-primary-500");
-      setTimeout(
-        () => ref.classList.remove("ring-2", "ring-primary-500"),
-        1200,
-      );
-    }
-  };
-
   function renderChanges() {
     if (!adjustment?.changes || adjustment.changes.length === 0) {
       return adjustment?.new_text ? (
@@ -188,48 +192,130 @@ const ArchetypeAdjustmentContainer: React.FC<
         <em>No changes were suggested.</em>
       );
     }
+
+    // Build a map of footnotes for quick lookup
+    const footnotesMap: Record<
+      string,
+      { id: string; text: string; url?: string | null }
+    > = {};
+    if (adjustment.footnotes) {
+      adjustment.footnotes.forEach((note) => {
+        footnotesMap[note.id] = note;
+      });
+    }
+
     return adjustment.changes.map((seg, i) => {
       if (seg.type === "text") {
         return <MarkdownInline key={i} text={seg.content} />;
       }
-      if (seg.type === "change") {
-        let style = {};
-        let className =
-          "inline cursor-pointer px-1 rounded transition-colors hover:bg-yellow-100";
-        if (seg.t === "mod") {
-          style = {
-            fontWeight: "bold",
-            background: "#f0f6ff",
-            color: "#1d4ed8",
-          };
-        }
-        if (seg.t === "del") {
-          style = {
-            textDecoration: "line-through",
-            background: "#fef2f2",
-            color: "#b91c1c",
-          };
-        }
-        if (seg.t === "ref") {
-          style = {
-            fontWeight: "bold",
-            fontStyle: "italic",
-            background: "#f3f8ff",
-            color: "#2563eb",
-          };
-        }
+      if (seg.type === "change" && seg.id) {
+        const footnote = footnotesMap[seg.id];
+        const explanationId = `explanation-archetype-${seg.id}`;
+        const isExpanded = expandedExplanations[explanationId];
+
         return (
-          <a
+          <div
             key={i}
-            style={style}
-            className={className}
-            title="Click to see the explanation of the suggestion"
-            onClick={() =>
-              seg.id && handleChangeClick(makeSuggestionKey(seg.id))
-            }
+            className="highlight-change inline-block"
+            style={{
+              background: "rgba(244, 195, 67, 0.15)",
+              borderRadius: "6px",
+              padding: "12px",
+              margin: "0 -12px 12px -12px",
+              position: "relative",
+            }}
           >
             <MarkdownInline text={seg.content} />
-          </a>
+
+            {footnote && (
+              <div>
+                <button
+                  onClick={() => toggleExplanation(explanationId)}
+                  className="inline-explanation-toggle"
+                  style={{
+                    fontFamily: "'Source Sans 3', sans-serif",
+                    fontSize: "0.8rem",
+                    color: "#7f5971",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "4px 0",
+                    marginTop: "8px",
+                    fontWeight: 500,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    textDecoration: "none",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.color = "#fd615e")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.color = "#7f5971")
+                  }
+                >
+                  {isExpanded ? "Hide explanation" : "Show explanation"}
+                  <span
+                    className="arrow"
+                    style={{
+                      fontSize: "0.75em",
+                      transition: "transform 0.2s",
+                      transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                      display: "inline-block",
+                    }}
+                  >
+                    ▼
+                  </span>
+                </button>
+                {isExpanded && (
+                  <div
+                    ref={(el) =>
+                      (explanationRefs.current[makeSuggestionKey(seg.id!)] = el)
+                    }
+                    className="inline-explanation"
+                    style={{
+                      display: "block",
+                      marginTop: "12px",
+                      paddingTop: "12px",
+                      borderTop: "1px solid rgba(127, 89, 113, 0.2)",
+                      fontSize: "0.95rem",
+                      lineHeight: "1.6",
+                      color: "#7f5971",
+                    }}
+                  >
+                    <p style={{ marginBottom: "8px" }}>
+                      <strong>Explanation:</strong>
+                    </p>
+                    <p style={{ marginBottom: 0 }}>
+                      <MarkdownInline text={footnote.text} />
+                    </p>
+                    {footnote.url && (
+                      <a
+                        href={footnote.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "#7d70d5",
+                          textDecoration: "none",
+                          marginTop: "8px",
+                          display: "inline-block",
+                          fontSize: "0.9rem",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.textDecoration = "underline")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.textDecoration = "none")
+                        }
+                      >
+                        View source →
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         );
       }
       return null;
@@ -291,7 +377,10 @@ const ArchetypeAdjustmentContainer: React.FC<
                 Current Archetype
               </h3>
               <div className="prose max-w-none">
-                <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-2 sm:p-6">
+                <div
+                  className="border border-gray-200 rounded-lg p-2 sm:p-6"
+                  style={{ backgroundColor: "#f4f2f2" }}
+                >
                   <MarkdownBlock text={adjustment.old_archetype} />
                 </div>
               </div>
@@ -302,43 +391,14 @@ const ArchetypeAdjustmentContainer: React.FC<
                 Proposed Archetype
               </h3>
               <div className="prose max-w-none">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-2 sm:p-6">
+                <div
+                  className="border border-gray-200 rounded-lg p-2 sm:p-6"
+                  style={{ backgroundColor: "rgba(244, 195, 67, 0.08)" }}
+                >
                   <div className="text-neutral-700 leading-relaxed markdown-preview">
                     {renderChanges()}
                   </div>
                 </div>
-              </div>
-            </div>
-            {/* Footnotes */}
-            <div className="mb-8">
-              <h3 className="text-lg font-medium text-neutral-800 mb-4">
-                Changes Explained
-              </h3>
-              <div className="space-y-4">
-                {(adjustment.footnotes ?? []).map((note) => (
-                  <div
-                    key={note.id}
-                    ref={(el) =>
-                      (explanationRefs.current[makeSuggestionKey(note.id)] = el)
-                    }
-                    className="bg-neutral-50 border border-neutral-200 rounded-lg p-2 sm:p-4 transition-all"
-                  >
-                    <p className="text-neutral-700 font-semibold">
-                      Suggestion {note.id}
-                    </p>
-                    <MarkdownBlock text={note.text} />
-                    {note.url && (
-                      <a
-                        href={note.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary-600 hover:text-primary-700 text-sm mt-2 inline-block"
-                      >
-                        View source →
-                      </a>
-                    )}
-                  </div>
-                ))}
               </div>
             </div>
             {/* Action Buttons */}
