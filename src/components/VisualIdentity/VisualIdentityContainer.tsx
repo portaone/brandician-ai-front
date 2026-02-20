@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronDown, RefreshCw } from "lucide-react";
+import { ArrowRight, RefreshCw } from "lucide-react";
 import React, {
   useCallback,
   useEffect,
@@ -115,7 +115,7 @@ const VisualIdentityContainer: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProgressing, setIsProgressing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [strategyOpen, setStrategyOpen] = useState(false);
+
 
   // Track current selector indices so "Save and proceed" can read them
   const selectionRef = useRef({ paletteIndex: 0, fontIndex: 0 });
@@ -302,27 +302,12 @@ const VisualIdentityContainer: React.FC = () => {
             </div>
           )}
 
-          {/* Strategy Details — collapsible, shows only Overview section */}
+          {/* Strategy Details — always visible */}
           {overviewAsset && (
             <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
-              <button
-                onClick={() => setStrategyOpen((prev) => !prev)}
-                className="w-full px-4 sm:px-6 py-4 flex justify-between items-center text-left bg-transparent border-none cursor-pointer"
-              >
-                <span className="text-base font-semibold text-neutral-700">
-                  Visual Identity Strategy Details
-                </span>
-                <ChevronDown
-                  className={`h-4 w-4 text-neutral-400 transition-transform duration-200 ${
-                    strategyOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-              {strategyOpen && (
-                <div className="px-4 sm:px-6 pb-6 prose prose-sm max-w-none text-neutral-700">
-                  <AssetContent asset={overviewAsset} />
-                </div>
-              )}
+              <div className="px-4 sm:px-6 py-6 prose prose-sm max-w-none text-neutral-700">
+                <AssetContent asset={overviewAsset} />
+              </div>
             </div>
           )}
 
