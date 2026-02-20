@@ -101,16 +101,10 @@ export const TAB_CONFIGS: UiTabConfig[] = [
       "Make the brand recognisable, coherent, and emotionally aligned across all visual touchpoints.",
     properties: [
       {
-        key: "visual_identity",
-        title: "Visual Identity",
+        key: "visual_style_summary",
+        title: "Visual Style Summary",
         helper:
-          "The selected visual direction — overview, description, and strategic summary.",
-      },
-      {
-        key: "palette",
-        title: "Colour Palette",
-        helper:
-          "The colour palette from your selected visual identity variant.",
+          "The overall visual tone, aesthetic approach, and art direction for all brand touchpoints.",
       },
       {
         key: "logo_and_mark_system",

@@ -36,7 +36,7 @@ const REVIEW_STEPS: ReviewStep[] = [
   {
     id: "jtbd",
     component: JTBDAdjustmentContainer,
-    title: "Review Jobs-to-be-Done",
+    title: "Review CJobs-to-be-Done",
     status: BRAND_STATUS_FEEDBACK_REVIEW_JTBD,
   },
   {

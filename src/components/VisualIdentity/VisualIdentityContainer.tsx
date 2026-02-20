@@ -1,12 +1,16 @@
-import { ArrowRight, Check, RefreshCw } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import { ArrowRight, RefreshCw } from "lucide-react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
-import { VisualIdentityDraft } from "../../types";
-import { parseMarkdown } from "../common/MarkDownPreviewer";
-import PaletteSample from "../common/PaletteSample";
+import AssetContent from "../common/AssetContent";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
@@ -14,21 +18,85 @@ import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
 import { scrollToTop } from "../../lib/utils";
+import VisualSystemSelector, {
+  type BackendPaletteColors,
+  type FontSet,
+  type Palette,
+  transformPalette,
+} from "./VisualSystemSelector";
 
-/** Render a markdown string with inline color-swatch highlighting. */
-function renderMarkdownWithSwatches(md: string) {
-  const html = parseMarkdown(md);
-  const htmlWithSwatches = html.replace(
-    /#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})/g,
-    (m) =>
-      `<span style="background:${m};color:#fff;padding:0 0.5em;border-radius:4px;margin-left:0.2em;margin-right:0.2em;font-weight:bold;display:inline-block">${m}</span>`,
-  );
-  return (
-    <div className="brand-markdown prose max-w-none markdown-preview">
-      <div dangerouslySetInnerHTML={{ __html: htmlWithSwatches }} />
-    </div>
-  );
-}
+// Default font sets — used when the backend returns no font data
+const DEFAULT_FONT_SETS: FontSet[] = [
+  {
+    id: "A",
+    label: "Editorial",
+    heading: {
+      name: "Bitter",
+      family: "'Bitter', Georgia, serif",
+      style: "Sturdy serif",
+    },
+    body: {
+      name: "Source Sans Pro",
+      family: "'Source Sans Pro', sans-serif",
+      style: "Humanist sans",
+    },
+    accent: {
+      name: "Playfair Display",
+      family: "'Playfair Display', serif",
+      style: "Display serif",
+    },
+    googleUrl:
+      "https://fonts.googleapis.com/css2?family=Bitter:wght@400;700&family=Source+Sans+Pro:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,700;1,400&display=swap",
+  },
+  {
+    id: "B",
+    label: "Modern",
+    heading: {
+      name: "DM Serif Display",
+      family: "'DM Serif Display', serif",
+      style: "High-contrast serif",
+    },
+    body: {
+      name: "DM Sans",
+      family: "'DM Sans', sans-serif",
+      style: "Geometric sans",
+    },
+    accent: {
+      name: "DM Serif Display",
+      family: "'DM Serif Display', serif",
+      style: "Italic display",
+    },
+    googleUrl:
+      "https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;700&display=swap",
+  },
+  {
+    id: "C",
+    label: "Premium",
+    heading: {
+      name: "Cormorant Garamond",
+      family: "'Cormorant Garamond', serif",
+      style: "Classical serif",
+    },
+    body: {
+      name: "Karla",
+      family: "'Karla', sans-serif",
+      style: "Clean grotesque",
+    },
+    accent: {
+      name: "Cormorant Infant",
+      family: "'Cormorant Infant', serif",
+      style: "Companion italic",
+    },
+    googleUrl:
+      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=Cormorant+Infant:ital,wght@0,400;1,400&family=Karla:wght@400;700&display=swap",
+  },
+];
+
+type VisualOptions = {
+  rawMarkdown: string;
+  palettes: BackendPaletteColors[];
+  fontSets: FontSet[];
+};
 
 const VisualIdentityContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -40,12 +108,17 @@ const VisualIdentityContainer: React.FC = () => {
     progressBrandStatus,
   } = useBrandStore();
 
-  const [draft, setDraft] = useState<VisualIdentityDraft | null>(null);
+  const [visualOptions, setVisualOptions] = useState<VisualOptions | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProgressing, setIsProgressing] = useState(false);
-  const [isSavingSelection, setIsSavingSelection] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+
+  // Track current selector indices so "Save and proceed" can read them
+  const selectionRef = useRef({ paletteIndex: 0, fontIndex: 0 });
 
   useEffect(() => {
     if (!brandId) return;
@@ -54,27 +127,54 @@ const VisualIdentityContainer: React.FC = () => {
     }
   }, [brandId, currentBrand, selectBrand]);
 
-  const loadDraft = async () => {
+  const applyResponse = (data: {
+    raw_markdown: string;
+    palettes: BackendPaletteColors[];
+    font_sets: FontSet[];
+  }) => {
+    setVisualOptions({
+      rawMarkdown: data.raw_markdown,
+      palettes: data.palettes || [],
+      fontSets: data.font_sets?.length ? data.font_sets : DEFAULT_FONT_SETS,
+    });
+  };
+
+  const loadVisualIdentity = async (opts?: { allowGenerate?: boolean }) => {
     if (!brandId) return;
     setIsLoading(true);
     setError(null);
     try {
-      const data = await brands.getOrGenerateVisualIdentityDraft(brandId);
-      setDraft(data);
+      // Try to get existing options first
+      try {
+        const existing = await brands.getVisualIdentityOptions(brandId);
+        applyResponse(existing);
+        return;
+      } catch (e: any) {
+        // 404 means no options generated yet
+        if (e?.response?.status !== 404) throw e;
+      }
+
+      // Auto-generate if allowed
+      if (opts?.allowGenerate) {
+        setIsGenerating(true);
+        const generated = await brands.suggestVisualIdentity(brandId);
+        applyResponse(generated);
+      }
     } catch (e: any) {
-      console.error("Failed to load visual identity draft:", e);
+      console.error("Failed to load visual identity:", e);
       setError(
         e?.response?.data?.detail ||
           "Failed to load visual identity. Please try again.",
       );
     } finally {
       setIsLoading(false);
+      setIsGenerating(false);
     }
   };
 
   useEffect(() => {
     if (brandId) {
-      loadDraft();
+      loadVisualIdentity({ allowGenerate: true });
     }
   }, [brandId]);
 
@@ -83,8 +183,8 @@ const VisualIdentityContainer: React.FC = () => {
     setIsGenerating(true);
     setError(null);
     try {
-      const data = await brands.regenerateVisualIdentityDraft(brandId);
-      setDraft(data);
+      const generated = await brands.suggestVisualIdentity(brandId);
+      applyResponse(generated);
     } catch (e: any) {
       console.error("Failed to regenerate visual identity:", e);
       setError(
@@ -96,35 +196,26 @@ const VisualIdentityContainer: React.FC = () => {
     }
   };
 
-  const handleSelectVariant = async (index: number) => {
-    if (!brandId || isSavingSelection) return;
-    setIsSavingSelection(true);
-    setError(null);
-    try {
-      await brands.selectVisualIdentityVariant(brandId, index);
-      await loadDraft();
-    } catch (e: any) {
-      console.error("Failed to select variant:", e);
-      setError(
-        e?.response?.data?.detail ||
-          "Failed to select variant. Please try again.",
-      );
-    } finally {
-      setIsSavingSelection(false);
-    }
-  };
-
-  const handleProceedToNext = async () => {
+  const handleSaveAndProceed = async () => {
     if (!brandId || isProgressing) return;
     setIsProgressing(true);
+    setError(null);
     try {
+      // Save palette & font selection to hub
+      if (paletteNeedsSelection) {
+        await brands.saveVisualIdentitySelection(
+          brandId,
+          selectionRef.current.paletteIndex,
+          selectionRef.current.fontIndex,
+        );
+      }
       const statusUpdate = await progressBrandStatus(brandId);
       navigateAfterProgress(navigate, brandId, statusUpdate);
     } catch (e: any) {
-      console.error("Failed to progress from Visual Identity:", e);
+      console.error("Failed to save and progress from Visual Identity:", e);
       setError(
         e?.response?.data?.detail ||
-          "Failed to move to the next step. Please try again.",
+          "Failed to save and proceed. Please try again.",
       );
     } finally {
       setIsProgressing(false);
@@ -132,16 +223,47 @@ const VisualIdentityContainer: React.FC = () => {
     }
   };
 
-  const needsSelection = draft
-    ? draft.variants.length > 1 && draft.selected_variant_index == null
-    : false;
+  const handleSelectionChange = useCallback(
+    (paletteIndex: number, fontIndex: number) => {
+      selectionRef.current = { paletteIndex, fontIndex };
+    },
+    [],
+  );
+
+  // Transform palettes and font sets from visual options
+  const { paletteNeedsSelection, parsedPalettes, fontSets } = useMemo(() => {
+    if (!visualOptions || !visualOptions.palettes.length) {
+      return { paletteNeedsSelection: false, parsedPalettes: [], fontSets: [] };
+    }
+    const palettes: Palette[] = visualOptions.palettes.map(
+      (raw: BackendPaletteColors, i: number) => transformPalette(raw, i),
+    );
+    return {
+      paletteNeedsSelection: palettes.length > 1,
+      parsedPalettes: palettes,
+      fontSets: visualOptions.fontSets,
+    };
+  }, [visualOptions]);
+
+  const hasAnyVisual = !!visualOptions;
 
   const brandLabel = useMemo(
     () => currentBrand?.brand_name || currentBrand?.name || "",
     [currentBrand],
   );
 
-  if (!brandId || brandLoading || !currentBrand || (isLoading && !draft)) {
+  // Extract only the Overview section from raw markdown for the Strategy Details panel
+  const overviewAsset = useMemo(() => {
+    if (!visualOptions?.rawMarkdown) return null;
+    const content = visualOptions.rawMarkdown;
+    // Find where the second ## heading starts (after Overview)
+    const secondHeading = content.indexOf("\n## ", content.indexOf("## ") + 3);
+    const trimmed =
+      secondHeading > 0 ? content.slice(0, secondHeading).trim() : content;
+    return { content: trimmed, type: "visual_style" as const };
+  }, [visualOptions?.rawMarkdown]);
+
+  if (!brandId || brandLoading || !currentBrand || !hasAnyVisual) {
     return (
       <BrandicianLoader
         config={LOADER_CONFIGS.visualIdentity}
@@ -180,115 +302,46 @@ const VisualIdentityContainer: React.FC = () => {
             </div>
           )}
 
-          {draft && (
-            <>
-              {/* 1. Overview section */}
-              {draft.overview && (
-                <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
-                  <h2 className="text-xl font-semibold text-neutral-800 mb-3">
-                    Visual Identity Overview
-                  </h2>
-                  <div className="prose prose-sm max-w-none text-neutral-700">
-                    {renderMarkdownWithSwatches(draft.overview)}
-                  </div>
-                </div>
-              )}
-
-              {/* 2. Variant selection section */}
-              {draft.variants.length > 0 && (
-                <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
-                  <h2 className="text-xl font-semibold text-neutral-800 mb-3">
-                    {needsSelection
-                      ? "Choose Your Visual Identity"
-                      : "Selected Visual Identity"}
-                  </h2>
-                  <p className="text-sm text-neutral-500 mb-4">
-                    {needsSelection
-                      ? "Select one of the visual identity variants below to continue. Each offers a different creative direction while staying true to the brand archetypes."
-                      : "Your chosen visual identity for the brand."}
-                  </p>
-
-                  {(() => {
-                    const displayedVariants = needsSelection
-                      ? draft.variants.map((v, i) => ({ variant: v, originalIndex: i }))
-                      : draft.selected_variant_index != null
-                        ? [{ variant: draft.variants[draft.selected_variant_index], originalIndex: draft.selected_variant_index }]
-                        : draft.variants.map((v, i) => ({ variant: v, originalIndex: i }));
-
-                    return displayedVariants.map(({ variant, originalIndex }, displayIdx) => {
-                      // Extract heading from first line of description, or fall back
-                      const lines = variant.description.split("\n");
-                      const firstLine = lines[0]?.replace(/^#+\s*/, "").trim();
-                      const heading = firstLine || `Variant ${originalIndex + 1}`;
-                      const restDescription = lines.slice(1).join("\n").trim();
-
-                      return (
-                        <div key={originalIndex}>
-                          {displayIdx > 0 && (
-                            <hr className="my-6 border-neutral-200" />
-                          )}
-
-                          <h3 className="text-lg font-semibold text-neutral-700 mb-3">
-                            {heading}
-                          </h3>
-
-                          {/* Palette preview */}
-                          <PaletteSample
-                            content={JSON.stringify([variant.palette])}
-                            mode="draft"
-                            variantIndexOffset={originalIndex}
-                          />
-
-                          {/* Variant description (strategic rationale + typography) */}
-                          {restDescription && (
-                            <div className="mt-4 prose prose-sm max-w-none text-neutral-700">
-                              {renderMarkdownWithSwatches(restDescription)}
-                            </div>
-                          )}
-
-                          {/* Select button */}
-                          {needsSelection && (
-                            <div className="mt-4">
-                              <Button
-                                onClick={() => handleSelectVariant(originalIndex)}
-                                disabled={isSavingSelection}
-                                variant="secondary"
-                                size="lg"
-                                loading={isSavingSelection}
-                                leftIcon={
-                                  !isSavingSelection && (
-                                    <Check className="h-5 w-5" />
-                                  )
-                                }
-                              >
-                                {isSavingSelection
-                                  ? "Saving..."
-                                  : "Select this variant"}
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              )}
-
-              {/* 3. Summary section */}
-              {draft.summary && (
-                <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
-                  <h2 className="text-xl font-semibold text-neutral-800 mb-3">
-                    Visual Style Summary
-                  </h2>
-                  <div className="prose prose-sm max-w-none text-neutral-700">
-                    {renderMarkdownWithSwatches(draft.summary)}
-                  </div>
-                </div>
-              )}
-            </>
+          {/* Strategy Details — always visible */}
+          {overviewAsset && (
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+              <div className="px-4 sm:px-6 py-6 prose prose-sm max-w-none text-neutral-700">
+                <AssetContent asset={overviewAsset} />
+              </div>
+            </div>
           )}
 
-          {!draft && !isLoading && (
+          {/* Visual System Selector — shown when palette has multiple variants */}
+          {paletteNeedsSelection &&
+            parsedPalettes.length > 0 &&
+            fontSets.length > 0 && (
+              <VisualSystemSelector
+                palettes={parsedPalettes}
+                fontSets={fontSets}
+                brandName={brandLabel}
+                onSelectionChange={handleSelectionChange}
+              />
+            )}
+
+          {/* Selected palette — shown after selection is confirmed (single variant) */}
+          {!paletteNeedsSelection && parsedPalettes.length === 1 && (
+            <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
+              <h2 className="text-xl font-semibold text-neutral-800 mb-3">
+                Selected Color Palette
+              </h2>
+              <p className="text-sm text-neutral-500 mb-3">
+                Your chosen color palette for the brand.
+              </p>
+              <VisualSystemSelector
+                palettes={parsedPalettes}
+                fontSets={fontSets}
+                brandName={brandLabel}
+                onSelectionChange={handleSelectionChange}
+              />
+            </div>
+          )}
+
+          {!visualOptions && (
             <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
               <p className="text-neutral-600">
                 Visual identity content is not available yet. You can regenerate
@@ -314,32 +367,24 @@ const VisualIdentityContainer: React.FC = () => {
             </Button>
           </div>
 
-          {/* Proceed to next step (Brand Hub) */}
+          {/* Save and proceed */}
           <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="text-center">
               <h3 className="text-xl font-semibold text-neutral-800 mb-3">
                 Happy with your visuals?
               </h3>
-              {needsSelection ? (
-                <p className="text-amber-600 mb-6">
-                  Please select a visual identity variant above before
-                  continuing.
-                </p>
-              ) : (
-                <p className="text-neutral-600 mb-6">
-                  Continue to generate the full Brand Hub that brings all
-                  strategy and visuals together.
-                </p>
-              )}
+              <p className="text-neutral-600 mb-6">
+                Save your selection and continue to generate the full Brand Hub.
+              </p>
               <Button
-                onClick={handleProceedToNext}
-                disabled={isProgressing || needsSelection}
+                onClick={handleSaveAndProceed}
+                disabled={isProgressing}
                 variant="primary"
                 size="lg"
                 loading={isProgressing}
                 rightIcon={!isProgressing && <ArrowRight className="h-5 w-5" />}
               >
-                {isProgressing ? "Processing..." : "Continue to Brand Hub"}
+                {isProgressing ? "Saving..." : "Save and Proceed"}
               </Button>
             </div>
           </div>
