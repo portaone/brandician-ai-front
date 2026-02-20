@@ -150,6 +150,7 @@ interface PersonaWidgetProps {
   onChoiceChange: (choice: PersonaChoice) => void;
   rankingOverride?: number;
   onRankingChange: (ranking: number) => void;
+  onRemove: (index: number) => void;
 }
 
 const PersonaWidget: React.FC<PersonaWidgetProps> = ({
@@ -159,18 +160,26 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
   onChoiceChange,
   rankingOverride,
   onRankingChange,
+  onRemove,
 }) => {
   const [oldPersona, newPersona] = adjustment;
   const isNewPersona = oldPersona === null;
   const effectiveRanking = rankingOverride ?? newPersona.ranking;
+  const [showRemovalConfirmation, setShowRemovalConfirmation] = useState(false);
 
   return (
     <div
       className={`border rounded-lg p-2 sm:p-6 ${
-        isNewPersona
-          ? "border-green-300 bg-green-50"
-          : "border-gray-200 bg-white"
+        isNewPersona ? "border-gray-200 bg-white" : "border-gray-200 bg-white"
       }`}
+      style={
+        isNewPersona
+          ? {
+              borderColor: "rgba(244, 195, 67, 0.3)",
+              backgroundColor: "rgba(244, 195, 67, 0.08)",
+            }
+          : {}
+      }
     >
       <div className="flex items-center gap-2 mb-4">
         <h3 className="text-lg font-semibold text-gray-900 p-2 sm:p-0">
@@ -179,7 +188,13 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
             : `Persona: ${oldPersona?.name || `#${index + 1}`}`}
         </h3>
         {isNewPersona && (
-          <div className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+          <div
+            className="flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full"
+            style={{
+              backgroundColor: "rgba(244, 195, 67, 0.15)",
+              color: "#b26a00",
+            }}
+          >
             <Plus className="h-3 w-3" />
             New
           </div>
@@ -192,7 +207,10 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
           <h4 className="text-sm font-medium text-gray-700 px-2 sm:px-0 mb-2">
             {isNewPersona ? "Additional Persona" : "Current"}
           </h4>
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-h-[120px]">
+          <div
+            className="border rounded-lg p-4 min-h-[120px]"
+            style={{ backgroundColor: "#f4f2f2" }}
+          >
             {isNewPersona ? (
               <p className="text-gray-500 italic text-sm">
                 This is a newly suggested persona based on feedback analysis.
@@ -215,10 +233,13 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
           </h4>
           <div
             className={`border rounded-lg p-2 sm:p-4 min-h-[120px] ${
-              isNewPersona
-                ? "bg-green-50 border-green-200"
-                : "bg-blue-50 border-blue-200"
+              isNewPersona ? "bg-green-50 border-green-200" : "border-gray-200"
             }`}
+            style={
+              isNewPersona
+                ? {}
+                : { backgroundColor: "rgba(244, 195, 67, 0.08)" }
+            }
           >
             <h5 className="font-medium text-gray-800 mb-2">
               {newPersona.name}
@@ -248,7 +269,10 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
           )}
           {newPersona.survey_prevalence !== undefined &&
             newPersona.survey_prevalence !== null && (
-              <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 font-medium">
+              <span
+                className="px-2 py-1 rounded-full font-medium text-xs"
+                style={{ backgroundColor: "#7f5971", color: "#ffffff" }}
+              >
                 Matches {newPersona.survey_prevalence}% of survey responders
               </span>
             )}
@@ -275,90 +299,131 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
             ? "What would you like to do with this new persona?"
             : "Which version do you prefer?"}
         </h4>
-        <div className="flex flex-wrap gap-3">
-          {!isNewPersona && (
-            <button
-              onClick={() => onChoiceChange("original")}
-              className={`btn-selection sm:px-4 sm:py-2 p-3 rounded-lg font-medium transition-all text-sm ${
-                choice === "original" ? "selected" : ""
-              }`}
-            >
-              Keep Original
-            </button>
-          )}
-          {isNewPersona ? (
-            <>
-              <button
-                onClick={() => onChoiceChange("include")}
-                className={`sm:px-4 sm:py-2 p-3 rounded-lg font-medium text-sm transition-colors ${
-                  choice === "include"
-                    ? "bg-green-600 text-white"
-                    : "bg-green-100 text-green-700 hover:bg-green-200"
-                }`}
-              >
-                Add the new persona
-              </button>
+        {!showRemovalConfirmation ? (
+          <div className="flex flex-wrap gap-3">
+            {!isNewPersona && (
               <button
                 onClick={() => onChoiceChange("original")}
-                className={`sm:px-4 sm:py-2 p-3 rounded-lg font-medium text-sm transition-colors ${
-                  choice === "original"
-                    ? "bg-red-600 text-white"
-                    : "bg-red-100 text-red-700 hover:bg-red-200"
+                className={`btn-selection sm:px-4 sm:py-2 p-3 rounded-lg font-medium transition-all text-sm ${
+                  choice === "original" ? "selected" : ""
                 }`}
               >
-                Discard the new persona
+                Keep Original
+                {choice === "original" && <span className="ml-2">✓</span>}
               </button>
-            </>
-          ) : (
-            <>
+            )}
+            {isNewPersona ? (
+              <>
+                <button
+                  onClick={() => onChoiceChange("include")}
+                  className={`sm:px-4 sm:py-2 p-3 rounded-lg font-medium text-sm transition-colors ${
+                    choice === "include"
+                      ? "btn-primary selected"
+                      : "btn-primary"
+                  }`}
+                >
+                  Add the new persona
+                </button>
+                <button
+                  onClick={() => onChoiceChange("original")}
+                  className={`btn-selection sm:px-4 sm:py-2 p-3 rounded-lg font-medium text-sm transition-colors ${
+                    choice === "original" ? "selected" : ""
+                  }`}
+                >
+                  Discard the new persona
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => onChoiceChange("adjusted")}
+                  className={`sm:px-4 sm:py-2 p-3 rounded-lg font-medium text-sm  ${
+                    choice === "adjusted"
+                      ? "btn-primary selected"
+                      : "btn-primary"
+                  }`}
+                >
+                  Accept Adjusted
+                  {choice === "adjusted" && <span className="ml-2">✓</span>}
+                </button>
+                <button
+                  onClick={() => setShowRemovalConfirmation(true)}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 hover:text-red-600"
+                  title="Remove persona"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M3 5h14M8 5V3h4v2m-5 0v10m4-10v10M7 5h6l1 10H6l1-10z"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-4">
+            <span className="text-2xl">⚠️</span>
+            <div className="flex-1">
+              <p className="text-gray-800 font-medium">
+                Remove this persona? This cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-3">
               <button
-                onClick={() => onChoiceChange("adjusted")}
-                className={`sm:px-4 sm:py-2 p-3 rounded-lg font-medium text-sm transition-colors ${
-                  choice === "adjusted"
-                    ? "bg-blue-600 text-white"
-                    : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                }`}
+                onClick={() => setShowRemovalConfirmation(false)}
+                className="px-4 py-2 rounded-lg font-medium text-sm transition-colors bg-white border border-gray-300 text-gray-700 hover:bg-gray-100"
               >
-                Accept Adjusted
+                Cancel
               </button>
               <button
-                onClick={() => onChoiceChange("remove")}
-                className={`sm:px-4 sm:py-2 p-3 rounded-lg font-medium text-sm transition-colors ${
-                  choice === "remove"
-                    ? "bg-red-600 text-white"
-                    : "bg-red-100 text-red-700 hover:bg-red-200"
-                }`}
+                onClick={() => {
+                  onRemove(index);
+                  setShowRemovalConfirmation(false);
+                }}
+                className="px-4 py-2 rounded-lg font-medium text-sm transition-colors bg-red-600 text-white hover:bg-red-700"
               >
                 Remove Persona
               </button>
-            </>
-          )}
-        </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-// Drivers diff component (unchanged from old format - drivers still use AdjustObject)
+// Drivers diff component (updated with inline explanations design)
 interface DriversDiffProps {
   driversAdjustment: AdjustObject;
-  onChangeClick: (id: string) => void;
-  explanationRefs: React.MutableRefObject<{
-    [id: string]: HTMLDivElement | null;
-  }>;
   choice: "original" | "adjusted" | null;
   onChoiceChange: (choice: "original" | "adjusted") => void;
 }
 
 const DriversDiff: React.FC<DriversDiffProps> = ({
   driversAdjustment,
-  onChangeClick,
-  explanationRefs,
   choice,
   onChoiceChange,
 }) => {
-  const driversScope = "drivers";
-  const makeSuggestionKey = (id: string) => `${driversScope}-${id}`;
+  const [expandedExplanations, setExpandedExplanations] = useState<
+    Record<string, boolean>
+  >({});
+
+  const toggleExplanation = (id: string) => {
+    setExpandedExplanations((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
 
   function renderChanges() {
     if (!driversAdjustment.changes || driversAdjustment.changes.length === 0) {
@@ -367,6 +432,17 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
       ) : (
         <em>No changes were suggested.</em>
       );
+    }
+
+    // Build a map of footnotes for quick lookup
+    const footnotesMap: Record<
+      string,
+      { id: string; text: string; url?: string }
+    > = {};
+    if (driversAdjustment.footnotes) {
+      driversAdjustment.footnotes.forEach((note) => {
+        footnotesMap[note.id] = note;
+      });
     }
 
     // Render changes with proper markdown support for block elements
@@ -382,36 +458,96 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
           />
         );
       }
-      if (seg.type === "change") {
-        let style = {};
-        if (seg.t === "mod")
-          style = {
-            fontWeight: "bold",
-            background: "#f0f6ff",
-            color: "#1d4ed8",
-          };
-        if (seg.t === "del")
-          style = {
-            textDecoration: "line-through",
-            background: "#fef2f2",
-            color: "#b91c1c",
-          };
-        if (seg.t === "ref")
-          style = {
-            fontStyle: "italic",
-            background: "#fef9e7",
-            color: "#b26a00",
-          };
+      if (seg.type === "change" && seg.id) {
+        const footnote = footnotesMap[seg.id];
+        const explanationId = `explanation-drivers-${seg.id}`;
+        const isExpanded = expandedExplanations[explanationId];
+
         return (
-          <a
+          <div
             key={i}
-            style={style}
-            className="inline-block cursor-pointer margin-null rounded transition-colors hover:bg-yellow-100"
-            title="Click to see the explanation of the suggestion"
-            onClick={() => seg.id && onChangeClick(makeSuggestionKey(seg.id))}
+            className="highlight-change"
+            style={{
+              background: "rgba(244, 195, 67, 0.15)",
+              borderRadius: "6px",
+              padding: "12px",
+              margin: "0 -12px 12px -12px",
+              position: "relative",
+            }}
           >
-            <MarkdownInline text={seg.content} />
-          </a>
+            <div className="inline-block margin-null">
+              <MarkdownInline text={seg.content} />
+            </div>
+
+            {footnote && (
+              <>
+                <button
+                  onClick={() => toggleExplanation(explanationId)}
+                  className="inline-explanation-toggle"
+                  style={{
+                    fontFamily: "'Source Sans 3', sans-serif",
+                    fontSize: "0.8rem",
+                    color: "#7f5971",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "4px 0",
+                    marginTop: "8px",
+                    fontWeight: 500,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    textDecoration: "none",
+                  }}
+                  onMouseEnter={(e) =>
+                    ((e.target as HTMLElement).style.color = "#fd615e")
+                  }
+                  onMouseLeave={(e) =>
+                    ((e.target as HTMLElement).style.color = "#7f5971")
+                  }
+                >
+                  Why this change?{" "}
+                  <span
+                    style={{
+                      fontSize: "0.75em",
+                      transition: "transform 0.2s",
+                      transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                      display: "inline-block",
+                    }}
+                  >
+                    ▼
+                  </span>
+                </button>
+
+                {isExpanded && (
+                  <div
+                    className="inline-explanation"
+                    style={{
+                      display: "block",
+                      marginTop: "12px",
+                      paddingTop: "12px",
+                      borderTop: "1px solid rgba(127, 89, 113, 0.2)",
+                      fontSize: "0.95rem",
+                      lineHeight: 1.6,
+                      color: "#7f5971",
+                    }}
+                  >
+                    <MarkdownBlock text={footnote.text} />
+                    {footnote.url && (
+                      <a
+                        href={footnote.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-700 text-sm mt-2 inline-block"
+                      >
+                        View source
+                      </a>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         );
       }
       return null;
@@ -428,7 +564,10 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
         {/* Current Drivers */}
         <div>
           <h4 className="text-lg font-medium text-gray-800 mb-4">Current</h4>
-          <div className="bg-gray-50 border border-gray-200 rounded-lg sm:p-4 min-h-[200px]">
+          <div
+            className="border border-gray-200 rounded-lg sm:p-4 min-h-[200px]"
+            style={{ backgroundColor: "#f4f2f2" }}
+          >
             <MarkdownBlock text={driversAdjustment.old_text} />
           </div>
         </div>
@@ -436,49 +575,16 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
         {/* Proposed Drivers */}
         <div>
           <h4 className="text-lg font-medium text-gray-800 mb-4">Proposed</h4>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 min-h-[200px]">
+          <div
+            className="border border-gray-200 rounded-lg p-4 min-h-[200px]"
+            style={{ backgroundColor: "rgba(244, 195, 67, 0.08)" }}
+          >
             <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed markdown-preview">
               {renderChanges()}
             </div>
           </div>
         </div>
       </div>
-
-      {/* Footnotes for drivers */}
-      {driversAdjustment.footnotes &&
-        driversAdjustment.footnotes.length > 0 && (
-          <div className="pt-4 border-t border-gray-200">
-            <h4 className="text-lg font-medium text-gray-800 mb-4">
-              Drivers Changes Explained
-            </h4>
-            <div className="space-y-3">
-              {driversAdjustment.footnotes.map((note) => (
-                <div
-                  key={note.id}
-                  ref={(el) =>
-                    (explanationRefs.current[makeSuggestionKey(note.id)] = el)
-                  }
-                  className="bg-gray-50 border border-gray-200 rounded-lg p-4 transition-all"
-                >
-                  <p className="text-gray-700 font-semibold">
-                    Suggestion {note.id}
-                  </p>
-                  <MarkdownBlock text={note.text} />
-                  {note.url && (
-                    <a
-                      href={note.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-700 text-sm mt-2 inline-block"
-                    >
-                      View source
-                    </a>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
       {/* Choice Controls for Drivers */}
       <div className="mt-6 pt-4 border-t border-gray-200">
@@ -493,16 +599,16 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
             }`}
           >
             Keep Original Customer Needs
+            {choice === "original" && <span className="ml-2">✓</span>}
           </button>
           <button
             onClick={() => onChoiceChange("adjusted")}
             className={`sm:px-6 sm:py-3 p-3 rounded-lg font-medium text-sm transition-colors ${
-              choice === "adjusted"
-                ? "bg-blue-600 text-white"
-                : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+              choice === "adjusted" ? "btn-primary selected" : "btn-primary"
             }`}
           >
             Accept Adjusted Customer Needs
+            {choice === "adjusted" && <span className="ml-2">✓</span>}
           </button>
         </div>
       </div>
@@ -539,7 +645,6 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
   // Prevent duplicate API calls
   const isLoadingRef = useRef(false);
   const hasLoadedRef = useRef(false);
-  const explanationRefs = useRef<{ [id: string]: HTMLDivElement | null }>({});
 
   // Helper to clear cache and refs for this brand
   const clearAdjustmentCache = () => {
@@ -575,6 +680,43 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
     setPersonaChoices({});
     setRankingOverrides({});
     setDriversChoice(null);
+  };
+
+  // Handle persona removal
+  const handlePersonaRemove = (indexToRemove: number) => {
+    if (personasAdjustments) {
+      const updatedAdjustments = personasAdjustments.filter(
+        (_, idx) => idx !== indexToRemove,
+      );
+      setPersonasAdjustments(updatedAdjustments);
+
+      // Clean up choices and ranking overrides for removed persona and adjust indices
+      setPersonaChoices((prev) => {
+        const newChoices: Record<number, PersonaChoice> = {};
+        Object.entries(prev).forEach(([idx, choice]) => {
+          const numIdx = Number(idx);
+          if (numIdx < indexToRemove) {
+            newChoices[numIdx] = choice;
+          } else if (numIdx > indexToRemove) {
+            newChoices[numIdx - 1] = choice;
+          }
+        });
+        return newChoices;
+      });
+
+      setRankingOverrides((prev) => {
+        const newOverrides: Record<number, number> = {};
+        Object.entries(prev).forEach(([idx, ranking]) => {
+          const numIdx = Number(idx);
+          if (numIdx < indexToRemove) {
+            newOverrides[numIdx] = ranking;
+          } else if (numIdx > indexToRemove) {
+            newOverrides[numIdx - 1] = ranking;
+          }
+        });
+        return newOverrides;
+      });
+    }
   };
 
   // Retry handler
@@ -782,18 +924,6 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
     scrollToTop();
   };
 
-  const handleChangeClick = (id: string) => {
-    const ref = explanationRefs.current[id];
-    if (ref) {
-      ref.scrollIntoView({ behavior: "smooth", block: "center" });
-      ref.classList.add("ring-2", "ring-primary-500");
-      setTimeout(
-        () => ref.classList.remove("ring-2", "ring-primary-500"),
-        1200,
-      );
-    }
-  };
-
   if (isLoading) {
     return (
       <BrandicianLoader
@@ -877,6 +1007,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
                     onRankingChange={(ranking) =>
                       handleRankingChange(index, ranking)
                     }
+                    onRemove={handlePersonaRemove}
                   />
                 ))}
               </div>
@@ -886,7 +1017,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
             {newPersonas.length > 0 && (
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                  <Plus className="h-5 w-5 text-green-600" />
+                  <Plus className="h-5 w-5" style={{ color: "#F4C343" }} />
                   Newly Suggested Personas
                 </h3>
                 {newPersonas.map((adjustment, index) => {
@@ -904,6 +1035,7 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
                       onRankingChange={(ranking) =>
                         handleRankingChange(personaIndex, ranking)
                       }
+                      onRemove={handlePersonaRemove}
                     />
                   );
                 })}
@@ -915,8 +1047,6 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
           <div className="mb-8">
             <DriversDiff
               driversAdjustment={driversAdjustment}
-              onChangeClick={handleChangeClick}
-              explanationRefs={explanationRefs}
               choice={driversChoice}
               onChoiceChange={handleDriversChoiceChange}
             />
