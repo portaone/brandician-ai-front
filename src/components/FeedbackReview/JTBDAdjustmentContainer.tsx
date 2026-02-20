@@ -471,13 +471,12 @@ const DriversDiff: React.FC<DriversDiffProps> = ({
               background: "rgba(244, 195, 67, 0.15)",
               borderRadius: "6px",
               padding: "12px",
-              margin: "0 -12px 12px -12px",
+              margin: "12px 0",
               position: "relative",
+              display: "block",
             }}
           >
-            <div className="inline-block margin-null">
-              <MarkdownInline text={seg.content} />
-            </div>
+            <MarkdownInline text={seg.content} />
 
             {footnote && (
               <>

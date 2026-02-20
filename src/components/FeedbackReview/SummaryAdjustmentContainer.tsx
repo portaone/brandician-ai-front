@@ -222,13 +222,14 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
         return (
           <div
             key={i}
-            className="highlight-change inline-block"
+            className="highlight-change"
             style={{
               background: "rgba(244, 195, 67, 0.15)",
               borderRadius: "6px",
               padding: "12px",
-              margin: "0 -12px 12px -12px",
+              margin: "12px 0",
               position: "relative",
+              display: "block",
             }}
           >
             <MarkdownInline text={seg.content} />
