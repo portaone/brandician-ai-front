@@ -29,7 +29,6 @@ interface ChangeReviewFormProps {
   newText: string;
   changes: { type: string; content: string; id?: string; t?: string }[];
   footnotes: { id: string; text: string; url?: string | null }[];
-  onChangeClick: (id: string) => void;
   explanationRefs: React.MutableRefObject<{
     [id: string]: HTMLDivElement | null;
   }>;
@@ -154,7 +153,6 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
   newText,
   changes,
   footnotes,
-  onChangeClick,
   explanationRefs,
   isEditing,
   editedText,
@@ -163,6 +161,17 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
   onEditChange,
   onEditSave,
 }) => {
+  const [expandedExplanations, setExpandedExplanations] = useState<
+    Record<string, boolean>
+  >({});
+
+  const toggleExplanation = (id: string) => {
+    setExpandedExplanations((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
   const MarkdownBlock: React.FC<{ text: string }> = ({ text }) => {
     return (
       <div className="prose prose-sm max-w-none text-neutral-700 leading-relaxed">
@@ -174,8 +183,24 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
   const MarkdownInline: React.FC<{ text: string }> = ({ text }) => {
     const html = parseMarkdown(text || "");
     const inlineHtml = html.replace(/^<p>([\s\S]*?)<\/p>$/, "$1");
-    return <span dangerouslySetInnerHTML={{ __html: inlineHtml }} />;
+    return (
+      <span
+        className="markdown-preview"
+        dangerouslySetInnerHTML={{ __html: inlineHtml }}
+      />
+    );
   };
+
+  // Build a map of footnotes for quick lookup
+  const footnotesMap: Record<
+    string,
+    { id: string; text: string; url?: string | null }
+  > = {};
+  if (footnotes) {
+    footnotes.forEach((note) => {
+      footnotesMap[note.id] = note;
+    });
+  }
 
   function renderChanges() {
     if (!changes || changes.length === 0) {
@@ -189,36 +214,112 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
       if (seg.type === "text") {
         return <MarkdownInline key={i} text={seg.content} />;
       }
-      if (seg.type === "change") {
-        let style = {};
-        if (seg.t === "mod")
-          style = {
-            fontWeight: "bold",
-            background: "#f0f6ff",
-            color: "#1d4ed8",
-          };
-        if (seg.t === "del")
-          style = {
-            textDecoration: "line-through",
-            background: "#fef2f2",
-            color: "#b91c1c",
-          };
-        if (seg.t === "ref")
-          style = {
-            fontStyle: "italic",
-            background: "#fef9e7",
-            color: "#b26a00",
-          };
+      if (seg.type === "change" && seg.id) {
+        const footnote = footnotesMap[seg.id];
+        const explanationId = `explanation-summary-${seg.id}`;
+        const isExpanded = expandedExplanations[explanationId];
+
         return (
-          <span
+          <div
             key={i}
-            style={style}
-            className="inline cursor-pointer px-1 rounded transition-colors hover:bg-yellow-100"
-            title="Click to see the explanation of the suggestion"
-            onClick={() => seg.id && onChangeClick(seg.id)}
+            className="highlight-change inline-block"
+            style={{
+              background: "rgba(244, 195, 67, 0.15)",
+              borderRadius: "6px",
+              padding: "12px",
+              margin: "0 -12px 12px -12px",
+              position: "relative",
+            }}
           >
             <MarkdownInline text={seg.content} />
-          </span>
+
+            {footnote && (
+              <div>
+                <button
+                  onClick={() => toggleExplanation(explanationId)}
+                  className="inline-explanation-toggle"
+                  style={{
+                    fontFamily: "'Source Sans 3', sans-serif",
+                    fontSize: "0.8rem",
+                    color: "#7f5971",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "4px 0",
+                    marginTop: "8px",
+                    fontWeight: 500,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    textDecoration: "none",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.color = "#fd615e")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.color = "#7f5971")
+                  }
+                >
+                  {isExpanded ? "Hide explanation" : "Show explanation"}
+                  <span
+                    className="arrow"
+                    style={{
+                      fontSize: "0.75em",
+                      transition: "transform 0.2s",
+                      transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                      display: "inline-block",
+                    }}
+                  >
+                    ▼
+                  </span>
+                </button>
+                {isExpanded && (
+                  <div
+                    ref={(el) => (explanationRefs.current[seg.id!] = el)}
+                    className="inline-explanation"
+                    style={{
+                      display: "block",
+                      marginTop: "12px",
+                      paddingTop: "12px",
+                      borderTop: "1px solid rgba(127, 89, 113, 0.2)",
+                      fontSize: "0.95rem",
+                      lineHeight: "1.6",
+                      color: "#7f5971",
+                    }}
+                  >
+                    <p style={{ marginBottom: "8px" }}>
+                      <strong>Explanation:</strong>
+                    </p>
+                    <p style={{ marginBottom: 0 }}>
+                      <MarkdownInline text={footnote.text} />
+                    </p>
+                    {footnote.url && (
+                      <a
+                        href={footnote.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "#7d70d5",
+                          textDecoration: "none",
+                          marginTop: "8px",
+                          display: "inline-block",
+                          fontSize: "0.9rem",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.textDecoration = "underline")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.textDecoration = "none")
+                        }
+                      >
+                        View source →
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         );
       }
       return null;
@@ -233,7 +334,10 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
           Current Summary
         </h3>
         <div className="prose max-w-none">
-          <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-2 sm:p-6">
+          <div
+            className="border border-gray-200 rounded-lg p-2 sm:p-6"
+            style={{ backgroundColor: "#f4f2f2" }}
+          >
             <MarkdownBlock text={oldText} />
           </div>
         </div>
@@ -279,7 +383,10 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
           </div>
         ) : (
           <div className="prose max-w-none">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-2 sm:p-6">
+            <div
+              className="border border-gray-200 rounded-lg p-2 sm:p-6"
+              style={{ backgroundColor: "rgba(244, 195, 67, 0.08)" }}
+            >
               <div className="text-neutral-700 leading-relaxed markdown-preview">
                 {renderChanges()}
               </div>
@@ -287,38 +394,6 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
           </div>
         )}
       </div>
-      {/* Footnotes */}
-      {!!footnotes.length && (
-        <div className="mb-8">
-          <h3 className="text-lg font-medium text-neutral-800 mb-4">
-            Changes Explained
-          </h3>
-          <div className="space-y-4">
-            {footnotes.map((note, index) => (
-              <div
-                key={note.id}
-                ref={(el) => (explanationRefs.current[note.id] = el)}
-                className="bg-neutral-50 border border-neutral-200 rounded-lg p-4 transition-all"
-              >
-                <p className="text-neutral-700 font-semibold">
-                  Suggestion {index + 1}
-                </p>
-                <p className="text-neutral-700">{note.text}</p>
-                {note.url && (
-                  <a
-                    href={note.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary-600 hover:text-primary-700 text-sm mt-2 inline-block"
-                  >
-                    View source →
-                  </a>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </>
   );
 };
@@ -499,18 +574,6 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
     scrollToTop();
   };
 
-  const handleChangeClick = (id: string) => {
-    const ref = explanationRefs.current[id];
-    if (ref) {
-      ref.scrollIntoView({ behavior: "smooth", block: "center" });
-      ref.classList.add("ring-2", "ring-primary-500");
-      setTimeout(
-        () => ref.classList.remove("ring-2", "ring-primary-500"),
-        1200,
-      );
-    }
-  };
-
   const handleStartEditing = () => {
     if (!adjustment) return;
     setEditedSummary(adjustment.new_text || "");
@@ -629,7 +692,6 @@ const SummaryAdjustmentContainer: React.FC<SummaryAdjustmentContainerProps> = ({
               newText={adjustment.new_text}
               changes={adjustment.changes ?? []}
               footnotes={adjustment.footnotes ?? []}
-              onChangeClick={handleChangeClick}
               explanationRefs={explanationRefs}
               isEditing={isEditingSummary}
               editedText={editedSummary}
