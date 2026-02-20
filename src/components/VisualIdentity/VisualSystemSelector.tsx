@@ -125,6 +125,9 @@ const cardBase: React.CSSProperties = {
   borderRadius: "16px",
   overflow: "hidden",
   boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+  height: "100%",
+  display: "grid",
+  alignItems: "center",
 };
 
 const UI_FONT_STACK = "'Inter', 'Segoe UI', Roboto, Arial, sans-serif";
