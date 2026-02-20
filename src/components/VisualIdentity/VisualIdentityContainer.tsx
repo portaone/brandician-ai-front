@@ -1,5 +1,11 @@
 import { ArrowRight, ChevronDown, RefreshCw } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
@@ -24,27 +30,63 @@ const DEFAULT_FONT_SETS: FontSet[] = [
   {
     id: "A",
     label: "Editorial",
-    heading: { name: "Bitter", family: "'Bitter', Georgia, serif", style: "Sturdy serif" },
-    body: { name: "Source Sans Pro", family: "'Source Sans Pro', sans-serif", style: "Humanist sans" },
-    accent: { name: "Playfair Display", family: "'Playfair Display', serif", style: "Display serif" },
+    heading: {
+      name: "Bitter",
+      family: "'Bitter', Georgia, serif",
+      style: "Sturdy serif",
+    },
+    body: {
+      name: "Source Sans Pro",
+      family: "'Source Sans Pro', sans-serif",
+      style: "Humanist sans",
+    },
+    accent: {
+      name: "Playfair Display",
+      family: "'Playfair Display', serif",
+      style: "Display serif",
+    },
     googleUrl:
       "https://fonts.googleapis.com/css2?family=Bitter:wght@400;700&family=Source+Sans+Pro:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,700;1,400&display=swap",
   },
   {
     id: "B",
     label: "Modern",
-    heading: { name: "DM Serif Display", family: "'DM Serif Display', serif", style: "High-contrast serif" },
-    body: { name: "DM Sans", family: "'DM Sans', sans-serif", style: "Geometric sans" },
-    accent: { name: "DM Serif Display", family: "'DM Serif Display', serif", style: "Italic display" },
+    heading: {
+      name: "DM Serif Display",
+      family: "'DM Serif Display', serif",
+      style: "High-contrast serif",
+    },
+    body: {
+      name: "DM Sans",
+      family: "'DM Sans', sans-serif",
+      style: "Geometric sans",
+    },
+    accent: {
+      name: "DM Serif Display",
+      family: "'DM Serif Display', serif",
+      style: "Italic display",
+    },
     googleUrl:
       "https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;700&display=swap",
   },
   {
     id: "C",
     label: "Premium",
-    heading: { name: "Cormorant Garamond", family: "'Cormorant Garamond', serif", style: "Classical serif" },
-    body: { name: "Karla", family: "'Karla', sans-serif", style: "Clean grotesque" },
-    accent: { name: "Cormorant Infant", family: "'Cormorant Infant', serif", style: "Companion italic" },
+    heading: {
+      name: "Cormorant Garamond",
+      family: "'Cormorant Garamond', serif",
+      style: "Classical serif",
+    },
+    body: {
+      name: "Karla",
+      family: "'Karla', sans-serif",
+      style: "Clean grotesque",
+    },
+    accent: {
+      name: "Cormorant Infant",
+      family: "'Cormorant Infant', serif",
+      style: "Companion italic",
+    },
     googleUrl:
       "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=Cormorant+Infant:ital,wght@0,400;1,400&family=Karla:wght@400;700&display=swap",
   },
@@ -66,7 +108,9 @@ const VisualIdentityContainer: React.FC = () => {
     progressBrandStatus,
   } = useBrandStore();
 
-  const [visualOptions, setVisualOptions] = useState<VisualOptions | null>(null);
+  const [visualOptions, setVisualOptions] = useState<VisualOptions | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProgressing, setIsProgressing] = useState(false);
@@ -83,7 +127,11 @@ const VisualIdentityContainer: React.FC = () => {
     }
   }, [brandId, currentBrand, selectBrand]);
 
-  const applyResponse = (data: { raw_markdown: string; palettes: BackendPaletteColors[]; font_sets: FontSet[] }) => {
+  const applyResponse = (data: {
+    raw_markdown: string;
+    palettes: BackendPaletteColors[];
+    font_sets: FontSet[];
+  }) => {
     setVisualOptions({
       rawMarkdown: data.raw_markdown,
       palettes: data.palettes || [],
@@ -120,6 +168,7 @@ const VisualIdentityContainer: React.FC = () => {
       );
     } finally {
       setIsLoading(false);
+      setIsGenerating(false);
     }
   };
 
@@ -209,7 +258,8 @@ const VisualIdentityContainer: React.FC = () => {
     const content = visualOptions.rawMarkdown;
     // Find where the second ## heading starts (after Overview)
     const secondHeading = content.indexOf("\n## ", content.indexOf("## ") + 3);
-    const trimmed = secondHeading > 0 ? content.slice(0, secondHeading).trim() : content;
+    const trimmed =
+      secondHeading > 0 ? content.slice(0, secondHeading).trim() : content;
     return { content: trimmed, type: "visual_style" as const };
   }, [visualOptions?.rawMarkdown]);
 
