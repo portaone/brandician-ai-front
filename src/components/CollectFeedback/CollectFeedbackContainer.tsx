@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
-import { scrollToTop } from "../../lib/utils";
+import { hasEnoughResponses, scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
 import { SurveyQuestion, SurveyStatus } from "../../types";
 import {
@@ -398,9 +398,7 @@ const CollectFeedbackContainer: React.FC = () => {
         )}
 
         <div className="text-center">
-          {surveyStatus &&
-            surveyStatus.number_of_responses <
-              (surveyStatus.min_responses_required || 20) && (
+          {!hasEnoughResponses(surveyStatus) && surveyStatus && (
               <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-yellow-800 text-sm font-medium mb-2">
                   Minimum responses required
@@ -439,21 +437,18 @@ const CollectFeedbackContainer: React.FC = () => {
           )}
 
           <div className="flex justify-center gap-3">
-            <Button
-              onClick={() => setShowSkipWarning(true)}
-              variant="secondary"
-              size="lg"
-            >
-              Skip Survey
-            </Button>
+            {surveyStatus && !hasEnoughResponses(surveyStatus) && (
+              <Button
+                onClick={() => setShowSkipWarning(true)}
+                variant="secondary"
+                size="lg"
+              >
+                Proceed without survey results
+              </Button>
+            )}
             <Button
               onClick={handleProceed}
-              disabled={
-                isLoading ||
-                !surveyStatus ||
-                surveyStatus.number_of_responses <
-                  (surveyStatus.min_responses_required || 20)
-              }
+              disabled={isLoading || !hasEnoughResponses(surveyStatus)}
               size="lg"
             >
               {isLoading

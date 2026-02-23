@@ -1,7 +1,14 @@
 import { clsx, type ClassValue } from "clsx";
+import { SurveyStatus } from "../types";
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
+}
+
+export function hasEnoughResponses(surveyStatus: SurveyStatus | null): boolean {
+  if (!surveyStatus) return false;
+  const minRequired = surveyStatus.min_responses_required || 0;
+  return (surveyStatus.number_of_responses || 0) >= minRequired;
 }
 
 export function scrollToTop(): void {

@@ -13,16 +13,17 @@ import {
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
+import { navigateAfterProgress } from "../../lib/navigation";
 import { scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
-import { Survey, SurveyQuestion, SurveyStatus } from "../../types";
+import { Survey, SurveyQuestion } from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
-import SkipSurveyWarning from "../common/SkipSurveyWarning";
+
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
 const SurveyContainer: React.FC = () => {
@@ -37,20 +38,19 @@ const SurveyContainer: React.FC = () => {
   } = useBrandStore();
 
   const [survey, setSurvey] = useState<Survey | null>(null);
-  const [surveyStatus, setSurveyStatus] = useState<SurveyStatus | null>(null);
   const [editingQuestion, setEditingQuestion] = useState<SurveyQuestion | null>(
     null,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingSurvey, setIsLoadingSurvey] = useState(false);
-  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
+
   const [surveyError, setSurveyError] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<"load" | "save" | null>(null);
   const [surveyUrl, setSurveyUrl] = useState<string>("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string>("");
   const [draggedQuestion, setDraggedQuestion] = useState<number | null>(null);
-  const [showSkipWarning, setShowSkipWarning] = useState(false);
+
 
   useEffect(() => {
     let isMounted = true;
@@ -117,28 +117,6 @@ const SurveyContainer: React.FC = () => {
       isMounted = false;
     };
   }, [brandId]);
-
-  const loadSurveyStatus = async () => {
-    if (!brandId || isLoadingStatus) return;
-
-    try {
-      setIsLoadingStatus(true);
-      const status = await brands.getSurveyStatus(brandId);
-      setSurveyStatus(status);
-    } catch (error: any) {
-      console.error("Failed to load survey status:", error);
-      // Don't set error for status loading as it's not critical
-    } finally {
-      setIsLoadingStatus(false);
-    }
-  };
-
-  // Load survey status when showing success screen
-  useEffect(() => {
-    if (showSuccess && brandId) {
-      loadSurveyStatus();
-    }
-  }, [showSuccess, brandId]);
 
   useAutoFocus([editingQuestion]);
 
@@ -260,13 +238,6 @@ const SurveyContainer: React.FC = () => {
     setDraggedQuestion(null);
   };
 
-  const hasEnoughResponses = () => {
-    if (!surveyStatus) return false;
-    const minRequired = surveyStatus.min_responses_required || 0;
-    const currentResponses = surveyStatus.number_of_responses || 0;
-    return currentResponses >= minRequired;
-  };
-
   const handleSaveSurvey = async () => {
     if (!survey || !brandId) return;
 
@@ -317,20 +288,14 @@ const SurveyContainer: React.FC = () => {
     }
   };
 
-  const handleDone = async () => {
-    if (brandId) {
-      // Use proper progress endpoint instead of manual status setting
-      try {
-        await progressBrandStatus(brandId);
-      } catch (e) {
-        console.error("Failed to progress brand status:", e);
-      }
-      navigate(`/brands/${brandId}/collect-feedback`);
-    }
-  };
-
-  const handleCheckStatus = () => {
-    if (brandId) {
+  const handleCheckStatus = async () => {
+    if (!brandId) return;
+    try {
+      const statusUpdate = await progressBrandStatus(brandId);
+      navigateAfterProgress(navigate, brandId, statusUpdate);
+    } catch (e) {
+      console.error("Failed to progress brand status:", e);
+      // Fallback: navigate directly
       navigate(`/brands/${brandId}/collect-feedback`);
     }
   };
@@ -566,76 +531,6 @@ const SurveyContainer: React.FC = () => {
                 Survey Created Successfully!
               </h2>
 
-              {/* Survey Status Section */}
-              {isLoadingStatus ? (
-                <div className="mb-6 p-4 bg-neutral-50 border border-neutral-200 rounded-lg">
-                  <div className="flex items-center">
-                    <Loader className="animate-spin h-5 w-5 mr-2 text-primary-600" />
-                    <span className="text-neutral-600">
-                      Loading survey status...
-                    </span>
-                  </div>
-                </div>
-              ) : surveyStatus ? (
-                <div
-                  className={`mb-6 p-4 rounded-lg border ${
-                    hasEnoughResponses()
-                      ? "bg-green-50 border-green-200"
-                      : "bg-yellow-50 border-yellow-200"
-                  }`}
-                >
-                  <h3
-                    className={`text-lg font-medium mb-2 ${
-                      hasEnoughResponses()
-                        ? "text-green-800"
-                        : "text-yellow-800"
-                    }`}
-                  >
-                    Survey Status
-                  </h3>
-                  <div className="space-y-2">
-                    <p
-                      className={
-                        hasEnoughResponses()
-                          ? "text-green-700"
-                          : "text-yellow-700"
-                      }
-                    >
-                      <span className="font-semibold">
-                        {surveyStatus.number_of_responses || 0}
-                      </span>{" "}
-                      of{" "}
-                      <span className="font-semibold">
-                        {surveyStatus.min_responses_required || 0}
-                      </span>{" "}
-                      required responses completed
-                    </p>
-                    {!hasEnoughResponses() && (
-                      <p className="text-yellow-600 text-sm">
-                        You need{" "}
-                        {(surveyStatus.min_responses_required || 0) -
-                          (surveyStatus.number_of_responses || 0)}{" "}
-                        more responses to proceed
-                      </p>
-                    )}
-                    {surveyStatus.last_response_date && (
-                      <p
-                        className={`text-sm ${
-                          hasEnoughResponses()
-                            ? "text-green-600"
-                            : "text-yellow-600"
-                        }`}
-                      >
-                        Last response:{" "}
-                        {new Date(
-                          surveyStatus.last_response_date,
-                        ).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ) : null}
-
               <div className="mb-6">
                 <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Survey URL
@@ -672,36 +567,12 @@ const SurveyContainer: React.FC = () => {
                 </p>
               </div>
 
-              {showSkipWarning && (
-                <SkipSurveyWarning
-                  onConfirm={handleDone}
-                  onCancel={() => setShowSkipWarning(false)}
-                />
-              )}
-
-              <div className="flex justify-end gap-3">
+              <div className="flex justify-end">
                 <Button
-                  onClick={() => setShowSkipWarning(true)}
-                  variant="secondary"
+                  onClick={handleCheckStatus}
                   size="lg"
                 >
-                  Skip Survey
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-                <Button
-                  onClick={
-                    surveyStatus && hasEnoughResponses()
-                      ? handleDone
-                      : handleCheckStatus
-                  }
-                  disabled={surveyStatus ? !hasEnoughResponses() : false}
-                  size="lg"
-                >
-                  {surveyStatus && hasEnoughResponses()
-                    ? "Close the survey and analyze the results"
-                    : surveyStatus && !hasEnoughResponses()
-                      ? `Need at least ${surveyStatus.min_responses_required} responses to proceed`
-                      : "Check survey status"}
+                  Wait for survey results
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
