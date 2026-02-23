@@ -22,6 +22,7 @@ import HistoryButton from "../common/HistoryButton";
 import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
+import SkipSurveyWarning from "../common/SkipSurveyWarning";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
 const SurveyContainer: React.FC = () => {
@@ -49,6 +50,7 @@ const SurveyContainer: React.FC = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string>("");
   const [draggedQuestion, setDraggedQuestion] = useState<number | null>(null);
+  const [showSkipWarning, setShowSkipWarning] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -670,7 +672,22 @@ const SurveyContainer: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex justify-end">
+              {showSkipWarning && (
+                <SkipSurveyWarning
+                  onConfirm={handleDone}
+                  onCancel={() => setShowSkipWarning(false)}
+                />
+              )}
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  onClick={() => setShowSkipWarning(true)}
+                  variant="secondary"
+                  size="lg"
+                >
+                  Skip Survey
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
                 <Button
                   onClick={
                     surveyStatus && hasEnoughResponses()

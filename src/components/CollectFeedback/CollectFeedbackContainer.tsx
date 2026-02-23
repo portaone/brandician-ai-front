@@ -15,6 +15,7 @@ import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
+import SkipSurveyWarning from "../common/SkipSurveyWarning";
 
 const CollectFeedbackContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -25,6 +26,7 @@ const CollectFeedbackContainer: React.FC = () => {
   const [surveyUrl, setSurveyUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [copyFeedback, setCopyFeedback] = useState<string>("");
+  const [showSkipWarning, setShowSkipWarning] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
   const [archetype, setArchetype] = useState<string | null>(null);
   const [jtbd, setJtbd] = useState<any | null>(null);
@@ -429,20 +431,36 @@ const CollectFeedbackContainer: React.FC = () => {
             </Button>
           </div>
 
-          <Button
-            onClick={handleProceed}
-            disabled={
-              isLoading ||
-              !surveyStatus ||
-              surveyStatus.number_of_responses <
-                (surveyStatus.min_responses_required || 20)
-            }
-            size="lg"
-          >
-            {isLoading
-              ? "Loading survey status..."
-              : "Close the survey and analyze the results"}
-          </Button>
+          {showSkipWarning && (
+            <SkipSurveyWarning
+              onConfirm={handleProceed}
+              onCancel={() => setShowSkipWarning(false)}
+            />
+          )}
+
+          <div className="flex justify-center gap-3">
+            <Button
+              onClick={() => setShowSkipWarning(true)}
+              variant="secondary"
+              size="lg"
+            >
+              Skip Survey
+            </Button>
+            <Button
+              onClick={handleProceed}
+              disabled={
+                isLoading ||
+                !surveyStatus ||
+                surveyStatus.number_of_responses <
+                  (surveyStatus.min_responses_required || 20)
+              }
+              size="lg"
+            >
+              {isLoading
+                ? "Loading survey status..."
+                : "Close the survey and analyze the results"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
