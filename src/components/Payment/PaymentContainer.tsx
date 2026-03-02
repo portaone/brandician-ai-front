@@ -15,6 +15,8 @@ import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import BrandicianLoader from "../common/BrandicianLoader";
+import GooglePayMark from "../icons/GooglePayMark";
+import GooglePayButton from "./GooglePayButton";
 
 interface PaymentMethod {
   id: string;
@@ -44,22 +46,34 @@ const PaymentContainer: React.FC = () => {
   >([]);
   const [isLoadingMethods, setIsLoadingMethods] = useState(true);
 
-  // Config state for Google Pay
+  // ---------------------------------------------------------------------------
+  // Google Pay configuration
+  //
+  // These values are fetched from the backend /config endpoint on mount.
+  // They configure the useGooglePay hook which manages the entire GPay lifecycle:
+  //   - Checking availability (isReadyToPay)
+  //   - Processing payments (loadPaymentData → Stripe token)
+  //   - Rendering Google's native branded button (createButton)
+  //
+  // See useGooglePay.ts for the full flow documentation.
+  // ---------------------------------------------------------------------------
   const [stripePublishableKey, setStripePublishableKey] = useState<
     string | null
   >(null);
-  const [googlePayMerchantId, setGooglePayMerchantId] = useState<string | null>(
-    null,
-  );
+  const [googlePayMerchantId, setGooglePayMerchantId] = useState<
+    string | null
+  >(null);
   const [googlePayEnvironment, setGooglePayEnvironment] = useState<
     "TEST" | "PRODUCTION"
   >("PRODUCTION");
 
-  // Initialize Google Pay hook
+  // Initialize the Google Pay hook. This creates a single PaymentsClient
+  // that handles availability checks, payment processing, AND button rendering.
   const {
     isAvailable: isGooglePayAvailable,
     isLoading: isGooglePayLoading,
     requestPayment: requestGooglePayPayment,
+    createGooglePayButton,
   } = useGooglePay({
     stripePublishableKey,
     merchantId: googlePayMerchantId,
@@ -156,11 +170,7 @@ const PaymentContainer: React.FC = () => {
           {
             id: "google_pay",
             name: "Google Pay",
-            icon: (
-              <div className="h-5 w-5 bg-green-500 rounded text-white text-xs flex items-center justify-center font-bold">
-                G
-              </div>
-            ),
+            icon: <GooglePayMark className="h-5 w-auto" />,
             enabled: response.payment_methods.includes("google_pay"),
           },
         ];
@@ -200,7 +210,15 @@ const PaymentContainer: React.FC = () => {
     loadPaymentMethods();
   }, []);
 
-  // Update Google Pay availability when the hook finishes checking
+  // ---------------------------------------------------------------------------
+  // Google Pay availability sync
+  //
+  // The payment method list is initially loaded from the backend (which says
+  // "google_pay is available as a processor"). But the CLIENT might not support
+  // Google Pay (e.g., browser without GPay, no saved cards). The useGooglePay
+  // hook checks this via isReadyToPay(). Once the check completes, we update
+  // the payment method list to reflect actual client-side availability.
+  // ---------------------------------------------------------------------------
   useEffect(() => {
     if (!isGooglePayLoading) {
       setAvailablePaymentMethods((prev) =>
@@ -246,25 +264,37 @@ const PaymentContainer: React.FC = () => {
         return;
       }
 
-      // Handle Google Pay separately using Google Pay JS API
+      // -----------------------------------------------------------------------
+      // Google Pay flow:
+      //
+      // 1. requestGooglePayPayment(amount) opens Google's payment sheet
+      //    (handled by useGooglePay hook → PaymentsClient.loadPaymentData)
+      // 2. User selects card and confirms inside Google's popup
+      // 3. Google returns a Stripe token (JSON string with tok_xxx)
+      // 4. We send the token to POST /api/v1.0/payments/google-pay
+      //    (backend parses the token, creates a Stripe PaymentIntent)
+      // 5. Navigate to the payment success page for verification UI
+      //
+      // Note: In TEST mode, the first attempt may fail with OR_BIBED_08
+      // (known flaky behavior of Google's test sandbox). This does not
+      // occur in PRODUCTION with a properly registered merchant.
+      // -----------------------------------------------------------------------
       if (selectedPaymentMethod === "google_pay") {
         const amount = parseFloat(paymentAmount);
         const token = await requestGooglePayPayment(amount);
 
         if (!token) {
-          // User cancelled Google Pay
+          // User clicked "Cancel" in Google's payment sheet — not an error
           setIsProcessingPayment(false);
           return;
         }
 
-        // Process the Google Pay token on backend
-        const updatedBrand = await brands.processGooglePay(
-          brandId,
-          token,
-          amount,
-          "USD",
-        );
-        navigateAfterProgress(navigate, brandId, updatedBrand);
+        // Send the Stripe token to the backend for payment processing
+        await brands.processGooglePay(brandId, token, amount, "USD");
+
+        // Navigate to the success page (same flow as Stripe/PayPal).
+        // PaymentSuccess component will verify payment and show confirmation.
+        navigate(`/brands/${brandId}/payment/google_pay/success`);
         return;
       }
 
@@ -688,21 +718,39 @@ const PaymentContainer: React.FC = () => {
                         Back to Amount
                       </Button>
 
-                      <Button
-                        onClick={handlePaymentSubmit}
-                        disabled={isProcessingPayment || !selectedPaymentMethod}
-                        loading={isProcessingPayment}
-                        leftIcon={
-                          !isProcessingPayment ? (
-                            <CreditCard className="h-5 w-5" />
-                          ) : undefined
-                        }
-                        className="flex-1"
-                      >
-                        {isProcessingPayment
-                          ? "Processing..."
-                          : `Pay $${parseFloat(paymentAmount).toFixed(2)}`}
-                      </Button>
+                      {/* -----------------------------------------------------------
+                          Google Pay: render the native GPay button via the
+                          GooglePayButton component. It mounts Google's official
+                          branded button (with card info in PRODUCTION) using
+                          PaymentsClient.createButton(). See GooglePayButton.tsx
+                          and useGooglePay.ts for implementation details.
+                          ----------------------------------------------------------- */}
+                      {selectedPaymentMethod === "google_pay" &&
+                      isGooglePayAvailable ? (
+                        <GooglePayButton
+                          createButton={createGooglePayButton}
+                          onPaymentSubmit={handlePaymentSubmit}
+                          isAvailable={isGooglePayAvailable}
+                        />
+                      ) : (
+                        <Button
+                          onClick={handlePaymentSubmit}
+                          disabled={
+                            isProcessingPayment || !selectedPaymentMethod
+                          }
+                          loading={isProcessingPayment}
+                          leftIcon={
+                            !isProcessingPayment ? (
+                              <CreditCard className="h-5 w-5" />
+                            ) : undefined
+                          }
+                          className="flex-1"
+                        >
+                          {isProcessingPayment
+                            ? "Processing..."
+                            : `Pay $${parseFloat(paymentAmount).toFixed(2)}`}
+                        </Button>
+                      )}
                     </div>
 
                     <p className="text-xs text-gray-500 text-center">
