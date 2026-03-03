@@ -482,6 +482,13 @@ export const brands = {
     });
   },
 
+  regenerateSurveyDraft: async (brandId: string) => {
+    const response = await api.post(
+      apiPath(`/brands/${brandId}/survey/?regenerate=true`)
+    );
+    return response.data;
+  },
+
   getSurvey: async (brandId: string) => {
     const response = await api.get(apiPath(`/brands/${brandId}/survey`));
     return response.data;
@@ -500,6 +507,14 @@ export const brands = {
       {
         responseType: "blob",
       }
+    );
+    return response.data;
+  },
+
+  saveSurveyDraft: async (brandId: string, survey: Survey) => {
+    const response = await api.patch(
+      apiPath(`/brands/${brandId}/survey/`),
+      survey
     );
     return response.data;
   },

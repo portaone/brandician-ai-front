@@ -2,7 +2,6 @@ import {
   ArrowRight,
   ChevronDown,
   ChevronUp,
-  Copy,
   Edit2,
   GripVertical,
   Loader,
@@ -10,10 +9,9 @@ import {
   RefreshCw,
   Trash2,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
-import { navigateAfterProgress } from "../../lib/navigation";
 import { scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
 import { Survey, SurveyQuestion } from "../../types";
@@ -23,6 +21,7 @@ import HistoryButton from "../common/HistoryButton";
 import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
+import SurveyUrlBar from "../common/SurveyUrlBar";
 
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
@@ -34,7 +33,6 @@ const SurveyContainer: React.FC = () => {
     selectBrand,
     isLoading: isBrandLoading,
     error: brandError,
-    progressBrandStatus,
   } = useBrandStore();
 
   const [survey, setSurvey] = useState<Survey | null>(null);
@@ -43,13 +41,18 @@ const SurveyContainer: React.FC = () => {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingSurvey, setIsLoadingSurvey] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
 
   const [surveyError, setSurveyError] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<"load" | "save" | null>(null);
   const [surveyUrl, setSurveyUrl] = useState<string>("");
   const [showSuccess, setShowSuccess] = useState(false);
-  const [copyFeedback, setCopyFeedback] = useState<string>("");
   const [draggedQuestion, setDraggedQuestion] = useState<number | null>(null);
+  const [draftSaveStatus, setDraftSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  const initialLoadDone = useRef(false);
 
 
   useEffect(() => {
@@ -132,6 +135,41 @@ const SurveyContainer: React.FC = () => {
       window.scrollTo(0, scrolledFromTop);
     };
   }, [editingQuestion]);
+
+  // Auto-save draft on every edit (debounced)
+  useEffect(() => {
+    if (!initialLoadDone.current) {
+      // Mark initial load done once we have a survey loaded
+      if (survey && !isLoadingSurvey && !isRegenerating) {
+        initialLoadDone.current = true;
+      }
+      return;
+    }
+
+    if (!survey || !brandId || isLoadingSurvey || isRegenerating || showSuccess) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        setDraftSaveStatus("saving");
+        await brands.saveSurveyDraft(brandId, survey);
+        setDraftSaveStatus("saved");
+        setTimeout(() => setDraftSaveStatus((s) => (s === "saved" ? "idle" : s)), 2000);
+      } catch (err) {
+        console.error("Auto-save draft failed:", err);
+        setDraftSaveStatus("error");
+        setTimeout(() => setDraftSaveStatus((s) => (s === "error" ? "idle" : s)), 3000);
+      }
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [survey]);
+
+  // Reset initialLoadDone when regenerating so we skip the auto-save on new data
+  useEffect(() => {
+    if (isRegenerating) {
+      initialLoadDone.current = false;
+    }
+  }, [isRegenerating]);
 
   const handleAddQuestion = () => {
     // Get the next sequential ID
@@ -276,28 +314,9 @@ const SurveyContainer: React.FC = () => {
     }
   };
 
-  const handleCopyUrl = async () => {
-    try {
-      await navigator.clipboard.writeText(surveyUrl);
-      setCopyFeedback("Copied!");
-      setTimeout(() => setCopyFeedback(""), 2000);
-    } catch (error) {
-      console.error("Failed to copy URL:", error);
-      setCopyFeedback("Failed to copy");
-      setTimeout(() => setCopyFeedback(""), 2000);
-    }
-  };
-
-  const handleCheckStatus = async () => {
+  const handleCheckStatus = () => {
     if (!brandId) return;
-    try {
-      const statusUpdate = await progressBrandStatus(brandId);
-      navigateAfterProgress(navigate, brandId, statusUpdate);
-    } catch (e) {
-      console.error("Failed to progress brand status:", e);
-      // Fallback: navigate directly
-      navigate(`/brands/${brandId}/collect-feedback`);
-    }
+    navigate(`/brands/${brandId}/collect-feedback`);
   };
 
   const handleRetry = () => {
@@ -343,9 +362,48 @@ const SurveyContainer: React.FC = () => {
     }
   };
 
+  const handleRegenerate = async () => {
+    if (!brandId || isRegenerating) return;
+    setShowRegenerateConfirm(false);
+    setIsRegenerating(true);
+    setIsLoadingSurvey(true);
+    setSurvey(null);
+    setSurveyError(null);
+    setErrorType(null);
+    try {
+      const draftSurvey = await brands.regenerateSurveyDraft(brandId);
+      if (draftSurvey?.questions) {
+        draftSurvey.questions = draftSurvey.questions.map(
+          (question: SurveyQuestion, index: number) => ({
+            ...question,
+            id: question.id || String(index + 1),
+          }),
+        );
+      }
+      setSurvey(draftSurvey);
+      scrollToTop();
+    } catch (error: any) {
+      console.error("Failed to regenerate survey:", error);
+      setSurveyError(
+        error?.response?.data?.detail ||
+          "Failed to regenerate survey. Please try again.",
+      );
+      setErrorType("load");
+    } finally {
+      setIsRegenerating(false);
+      setIsLoadingSurvey(false);
+    }
+  };
+
   if (isBrandLoading || (isLoadingSurvey && !surveyError)) {
     return (
       <BrandicianLoader config={LOADER_CONFIGS.survey} isComplete={false} />
+    );
+  }
+
+  if (isSubmitting) {
+    return (
+      <BrandicianLoader config={LOADER_CONFIGS.surveySubmit} isComplete={false} />
     );
   }
 
@@ -403,6 +461,15 @@ const SurveyContainer: React.FC = () => {
               Create Customer Survey
             </h1>
             <div className="flex items-center gap-3 flex-wrap">
+              {draftSaveStatus === "saving" && (
+                <span className="text-sm text-neutral-400 animate-pulse">Saving...</span>
+              )}
+              {draftSaveStatus === "saved" && (
+                <span className="text-sm text-green-500">Draft saved</span>
+              )}
+              {draftSaveStatus === "error" && (
+                <span className="text-sm text-red-400">Save failed</span>
+              )}
               {brandId && <HistoryButton brandId={brandId} size="md" />}
               <GetHelpButton variant="secondary" size="md" />
             </div>
@@ -410,6 +477,22 @@ const SurveyContainer: React.FC = () => {
 
           {!showSuccess ? (
             <>
+              {/* Opening message */}
+              <div className="bg-white rounded-lg shadow-lg p-2 sm:p-6 mb-4">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Opening Message
+                </label>
+                <textarea
+                  value={survey?.opening_message || ""}
+                  onChange={(e) => {
+                    if (!survey) return;
+                    setSurvey({ ...survey, opening_message: e.target.value });
+                  }}
+                  className="w-full p-3 border border-neutral-300 rounded-md min-h-[140px] text-neutral-700 leading-relaxed"
+                  placeholder="Write an introductory message for your survey respondents..."
+                />
+              </div>
+
               <div className="bg-white rounded-lg shadow-lg p-2 sm:p-6 mb-8">
                 <div className="space-y-6">
                   {survey?.questions.map((question, index) => (
@@ -511,15 +594,25 @@ const SurveyContainer: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex justify-between items-center">
+                <Button
+                  onClick={() => setShowRegenerateConfirm(true)}
+                  disabled={isRegenerating || isSubmitting}
+                  variant="secondary"
+                  size="lg"
+                  loading={isRegenerating}
+                  leftIcon={!isRegenerating && <RefreshCw className="h-5 w-5" />}
+                >
+                  {isRegenerating
+                    ? "Regenerating survey..."
+                    : "Regenerate Survey"}
+                </Button>
                 <Button
                   onClick={handleSaveSurvey}
-                  disabled={isSubmitting || !survey?.questions.length}
+                  disabled={isSubmitting || isRegenerating || !survey?.questions.length}
                   size="lg"
+                  loading={isSubmitting}
                 >
-                  {isSubmitting && (
-                    <Loader className="animate-spin h-5 w-5 mr-2" />
-                  )}
                   Save Survey
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
@@ -532,29 +625,7 @@ const SurveyContainer: React.FC = () => {
               </h2>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium text-neutral-700 mb-2">
-                  Survey URL
-                </label>
-                <div className="flex">
-                  <input
-                    type="text"
-                    readOnly
-                    value={surveyUrl}
-                    className="flex-1 w-full p-2 border border-r-0 border-neutral-300 rounded-l-md bg-neutral-50"
-                  />
-                  <button
-                    onClick={handleCopyUrl}
-                    className="px-4 py-2 bg-neutral-100 border border-l-0 border-neutral-300 rounded-r-md hover:bg-neutral-200 relative"
-                  >
-                    {copyFeedback ? (
-                      <span className="text-xs font-medium text-green-600">
-                        {copyFeedback}
-                      </span>
-                    ) : (
-                      <Copy className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
+                <SurveyUrlBar url={surveyUrl} />
               </div>
 
               <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -669,6 +740,35 @@ const SurveyContainer: React.FC = () => {
             </div>
           )}
         </div>
+
+          {showRegenerateConfirm && (
+            <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+                <h3 className="text-lg font-medium text-neutral-800 mb-3">
+                  Regenerate Survey?
+                </h3>
+                <p className="text-neutral-600 mb-6">
+                  This will discard your current survey questions and generate a
+                  completely new set using AI. This action cannot be undone.
+                </p>
+                <div className="flex justify-end gap-3">
+                  <Button
+                    onClick={() => setShowRegenerateConfirm(false)}
+                    variant="secondary"
+                    size="md"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleRegenerate}
+                    size="md"
+                  >
+                    Regenerate
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );

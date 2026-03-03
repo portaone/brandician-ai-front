@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Copy, RefreshCw, Loader } from "lucide-react";
+import { ChevronDown, ChevronUp, RefreshCw, Loader } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
@@ -16,6 +16,7 @@ import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import SkipSurveyWarning from "../common/SkipSurveyWarning";
+import SurveyUrlBar from "../common/SurveyUrlBar";
 
 const CollectFeedbackContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -25,7 +26,6 @@ const CollectFeedbackContainer: React.FC = () => {
   const [surveyStatus, setSurveyStatus] = useState<SurveyStatus | null>(null);
   const [surveyUrl, setSurveyUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const [copyFeedback, setCopyFeedback] = useState<string>("");
   const [showSkipWarning, setShowSkipWarning] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
   const [archetype, setArchetype] = useState<string | null>(null);
@@ -155,20 +155,6 @@ const CollectFeedbackContainer: React.FC = () => {
   useEffect(() => {
     loadSurveyData();
   }, [brandId]);
-
-  const handleCopyUrl = async () => {
-    if (!surveyUrl) return;
-
-    try {
-      await navigator.clipboard.writeText(surveyUrl);
-      setCopyFeedback("Copied!");
-      setTimeout(() => setCopyFeedback(""), 2000);
-    } catch (error) {
-      console.error("Failed to copy URL:", error);
-      setCopyFeedback("Failed to copy");
-      setTimeout(() => setCopyFeedback(""), 2000);
-    }
-  };
 
   const handleProceed = async () => {
     if (!brandId) return;
@@ -371,29 +357,7 @@ const CollectFeedbackContainer: React.FC = () => {
         {/* Survey URL */}
         {surveyUrl && (
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Survey URL
-            </label>
-            <div className="flex">
-              <input
-                type="text"
-                readOnly
-                value={surveyUrl}
-                className="flex-1 w-full p-3 border border-r-0 border-gray-300 rounded-l-md bg-gray-50 text-sm"
-              />
-              <button
-                onClick={handleCopyUrl}
-                className="px-4 py-3 bg-gray-100 border border-l-0 border-gray-300 rounded-r-md hover:bg-gray-200 transition-colors"
-              >
-                {copyFeedback ? (
-                  <span className="text-xs font-medium text-green-600">
-                    {copyFeedback}
-                  </span>
-                ) : (
-                  <Copy className="h-5 w-5" />
-                )}
-              </button>
-            </div>
+            <SurveyUrlBar url={surveyUrl} />
           </div>
         )}
 

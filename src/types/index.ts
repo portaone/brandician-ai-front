@@ -194,6 +194,7 @@ export interface Survey {
   id: string;
   brand_id: string;
   questions: SurveyQuestion[];
+  opening_message?: string;
   created_at?: string;
   updated_at?: string;
 }

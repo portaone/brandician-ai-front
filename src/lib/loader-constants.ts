@@ -38,6 +38,17 @@ export const LOADER_CONFIGS: Record<string, LoaderConfig> = {
     ],
   },
 
+  // Step 4b: Survey Submission (creating Google Form)
+  surveySubmit: {
+    loadingText: "Creating your Google Form...",
+    steps: [
+      "Setting up form structure",
+      "Adding your questions",
+      "Configuring survey sections",
+      "Generating shareable link",
+    ],
+  },
+
   // Step 6: Feedback Review - Summary
   feedbackSummary: {
     loadingText: "Analyzing customer feedback...",
