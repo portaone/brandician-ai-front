@@ -269,6 +269,18 @@
   .bg-main {
     background-color: var(--color-secondary);
   }
+
+  .brand-label {
+    font-family: 'Bitter', serif;
+    font-size: var(--fs-base);
+    color: var(--color-text);
+    margin-bottom: 8px;
+  }
+
+  .brand-label .brand-name {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
 }
 
 .container {

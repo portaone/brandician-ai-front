@@ -16,14 +16,14 @@ const BrandNameDisplay: React.FC<{ brand: Brand }> = ({ brand }) => {
   }, []);
 
   return (
-    <div className="text-xl font-display">
+    <p className="brand-label">
       Brand:{" "}
-      <span className="text-primary-700 font-bold text-xl">
+      <span className="brand-name">
         {selectedBrand?.brand_name ||
           selectedBrand?.name ||
           "Unknown (error loading brand)"}
       </span>
-    </div>
+    </p>
   );
 };
 
