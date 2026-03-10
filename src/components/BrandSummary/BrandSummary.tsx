@@ -189,7 +189,7 @@ const BrandSummary: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
+    <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
           <div className="flex justify-between items-center flex-wrap gap-2 mb-6">
@@ -237,7 +237,7 @@ const BrandSummary: React.FC = () => {
                   placeholder="Write your brand summary (Markdown supported)..."
                 />
               ) : (
-                <div className="w-full min-h-[300px] p-4 border border-neutral-200 rounded-lg bg-neutral-50">
+                <div className="w-full min-h-[300px] p-4 border border-neutral-200 rounded-lg">
                   {summary && summary.trim() ? (
                     <MarkdownPreviewer markdown={summary} />
                   ) : (

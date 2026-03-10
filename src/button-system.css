@@ -83,29 +83,28 @@
 /* Tertiary */
 .btn-tertiary {
   background: transparent;
-  color: var(--color-text);
-  border: 2px solid transparent;
+  color: var(--color-light);
+  border: 1px solid var(--color-light);
   border-radius: 12px;
-  padding: 10px 16px;
+  padding: 12px 20px 12px 20px;
   height: auto;
-  min-height: 36px;
+  min-height: 44px;
   font-weight: 500;
-  font-size: var(--fs-sm);
-  text-transform: none;
 }
 
 .btn-tertiary:hover:not(:disabled) {
-  background: rgba(127, 89, 113, 0.1);
-  border-color: #ffffff;
+  background: rgba(191, 172, 184, 0.15);
+  border-color: var(--color-secondary);
+  color: var(--color-secondary);
 }
 
 .btn-tertiary:active:not(:disabled) {
-  background: rgba(127, 89, 113, 0.15);
-  border-color: #ffffff;
+  background: rgba(191, 172, 184, 0.25);
 }
 
 .btn-tertiary:disabled {
-  color: rgba(56, 50, 54, 0.4);
+  color: rgba(191, 172, 184, 0.4);
+  border-color: rgba(191, 172, 184, 0.4);
   cursor: not-allowed;
 }
 /* Confirm */

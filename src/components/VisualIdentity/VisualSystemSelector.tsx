@@ -532,7 +532,7 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
     <div
       style={{
         background: UI_CANVAS_BG,
-        padding: wide ? "24px 36px" : "16px 12px 24px",
+        padding: wide ? "24px 36px 32px" : "16px 12px 24px",
         fontFamily: UI_FONT_STACK,
         boxSizing: "border-box",
         marginBottom: "20px",

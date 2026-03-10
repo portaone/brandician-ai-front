@@ -172,7 +172,7 @@ const CollectFeedbackContainer: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="bg-white rounded-lg shadow-lg p-2 sm:p-8 max-w-2xl w-full">
         <div className="flex flex-wrap gap-2 justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-gray-900">

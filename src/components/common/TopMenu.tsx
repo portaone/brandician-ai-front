@@ -14,9 +14,8 @@ const TopMenu: React.FC = () => {
   };
 
   return (
-    <header className="bg-white sticky top-0 z-40">
-      <div className="container mx-auto relative">
-        <div className="flex items-center justify-between py-[14px] ">
+    <header className="bg-white sticky top-0 z-40" style={{ borderBottom: "1px solid #f4f2f2" }}>
+      <div className="header-container relative">
           <a
             href="/"
             onClick={handleLogoClick}
@@ -86,7 +85,6 @@ const TopMenu: React.FC = () => {
               <span className="sr-only">Menu</span>
             </button>
           </div>
-        </div>
 
         {/* Mobile menu */}
         <AnimatePresence>

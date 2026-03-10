@@ -152,7 +152,7 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
 
   if (error && !persona) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
           <h2 className="text-xl font-bold text-gray-900 mb-4">
             Generation Failed
@@ -200,7 +200,7 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
     : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
+    <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
           <div className="flex justify-between flex-wrap gap-3 items-center mb-6">

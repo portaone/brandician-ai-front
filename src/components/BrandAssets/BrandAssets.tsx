@@ -306,7 +306,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
   if (assetSummaries.length === 0) {
     if (isGeneratingAssets) {
       return (
-        <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
+        <div className="min-h-screen py-8">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <div className="bg-white rounded-lg shadow-lg p-8 text-center">
@@ -361,7 +361,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
+    <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           <div className="flex justify-between flex-wrap gap-2 items-center mb-6">

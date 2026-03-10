@@ -452,7 +452,7 @@ const SurveyContainer: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
+    <div className="min-h-screen py-8">
       <div className="container mx-auto sm:px-4">
         <div className="max-w-3xl mx-auto">
           <div className="flex justify-between sm:px-0 px-4 items-center flex-wrap gap-2 mb-6">

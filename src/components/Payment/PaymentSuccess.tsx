@@ -200,7 +200,7 @@ const PaymentSuccess: React.FC = () => {
 
   if (paymentStatus === "success") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
@@ -228,7 +228,7 @@ const PaymentSuccess: React.FC = () => {
 
   // Payment failed or error state
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-neutral-50 to-neutral-100">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
         <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Payment Issue</h2>

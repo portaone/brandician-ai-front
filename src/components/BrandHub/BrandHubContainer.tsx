@@ -18,7 +18,12 @@ import { useSearchParams } from "react-router-dom";
 import MarkdownPreviewer from "../common/MarkDownPreviewer";
 import PaletteSample from "../common/PaletteSample";
 import { useNavigate, useParams } from "react-router-dom";
-import { UiTabKey, BACKEND_TAB_FOR_UI, UiTabConfig, TAB_CONFIGS } from "./hub-tab-config";
+import {
+  UiTabKey,
+  BACKEND_TAB_FOR_UI,
+  UiTabConfig,
+  TAB_CONFIGS,
+} from "./hub-tab-config";
 import { API_URL, brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
@@ -30,7 +35,10 @@ import DownloadAllButton from "../common/DownloadAllButton";
 import ShareLinkModal from "../common/ShareLinkModal";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
-type HubMap = Record<string, string | Record<string, string> | null | undefined>;
+type HubMap = Record<
+  string,
+  string | Record<string, string> | null | undefined
+>;
 
 // --- Gaps support ---
 
@@ -109,7 +117,11 @@ const ColorPaletteDisplay: React.FC<{ json: string }> = ({ json }) => {
   try {
     data = JSON.parse(json);
   } catch {
-    return <span className="text-sm text-neutral-500 italic">Invalid palette data</span>;
+    return (
+      <span className="text-sm text-neutral-500 italic">
+        Invalid palette data
+      </span>
+    );
   }
 
   const entries = Object.entries(COLOR_ROLE_LABELS)
@@ -117,7 +129,9 @@ const ColorPaletteDisplay: React.FC<{ json: string }> = ({ json }) => {
     .filter((e) => e.hex);
 
   if (entries.length === 0) {
-    return <span className="text-sm text-neutral-500 italic">No colours found</span>;
+    return (
+      <span className="text-sm text-neutral-500 italic">No colours found</span>
+    );
   }
 
   return (
@@ -135,7 +149,10 @@ const ColorPaletteDisplay: React.FC<{ json: string }> = ({ json }) => {
               style={{ backgroundColor: e.hex }}
             />
             <span className="text-sm text-neutral-700">
-              {e.label}: <span className="font-mono text-xs text-neutral-500">{e.hex}</span>
+              {e.label}:{" "}
+              <span className="font-mono text-xs text-neutral-500">
+                {e.hex}
+              </span>
             </span>
           </div>
         ))}
@@ -155,7 +172,9 @@ function tryParseTypography(json: string): Record<string, any> | null {
   }
 }
 
-const TypographyDisplay: React.FC<{ data: Record<string, any> }> = ({ data }) => {
+const TypographyDisplay: React.FC<{ data: Record<string, any> }> = ({
+  data,
+}) => {
   const roles = ["heading", "body", "accent"].filter((r) => data[r]);
 
   return (
@@ -177,7 +196,9 @@ const TypographyDisplay: React.FC<{ data: Record<string, any> }> = ({ data }) =>
             <span className="text-xs uppercase tracking-wider text-neutral-400 w-16 flex-shrink-0">
               {role}
             </span>
-            <span className="text-sm text-neutral-800 font-medium">{font.name}</span>
+            <span className="text-sm text-neutral-800 font-medium">
+              {font.name}
+            </span>
             <span className="text-xs text-neutral-500">{font.style}</span>
           </div>
         );
@@ -530,7 +551,7 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
   const currentHub = tabData[activeTab] || {};
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
+    <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
@@ -704,7 +725,9 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
                 const value = currentHub && currentHub[prop.key];
                 const hasContent =
                   prop.key === "palette"
-                    ? value && typeof value === "object" && Object.keys(value).length > 0
+                    ? value &&
+                      typeof value === "object" &&
+                      Object.keys(value).length > 0
                     : typeof value === "string" && value.trim().length > 0;
                 const conf = findConfidence(
                   prop.key,
@@ -771,12 +794,19 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
                     </div>
 
                     {prop.key === "palette" && hasContent ? (
-                      <PaletteSample content={JSON.stringify([value])} brandId={brandId} mode="draft" />
+                      <PaletteSample
+                        content={JSON.stringify([value])}
+                        brandId={brandId}
+                        mode="draft"
+                      />
                     ) : hasContent ? (
                       prop.key === "color_palette" ? (
                         <ColorPaletteDisplay json={value as string} />
-                      ) : prop.key === "typography" && tryParseTypography(value as string) ? (
-                        <TypographyDisplay data={tryParseTypography(value as string)!} />
+                      ) : prop.key === "typography" &&
+                        tryParseTypography(value as string) ? (
+                        <TypographyDisplay
+                          data={tryParseTypography(value as string)!}
+                        />
                       ) : (
                         <div className="prose prose-sm max-w-none text-neutral-700">
                           <MarkdownPreviewer markdown={value as string} />
@@ -794,7 +824,7 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
           </div>
 
           {/* Regenerate Hub Button (always available once there is any content) */}
-          {hasAnyContent && (
+          {hasAnyContent && !isComplete && (
             <div className="mb-6 flex justify-center">
               <Button
                 onClick={generateHub}
@@ -904,7 +934,9 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
                 {brandId && (
                   <DownloadAllButton
                     brandId={brandId}
-                    brandName={currentBrand?.brand_name || currentBrand?.name || "brand"}
+                    brandName={
+                      currentBrand?.brand_name || currentBrand?.name || "brand"
+                    }
                     variant="button"
                     guestApi={guestApi}
                   />

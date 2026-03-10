@@ -67,7 +67,7 @@ const RegisterForm: React.FC = () => {
       error.includes("ERR_CONNECTION_REFUSED"));
 
   return (
-    <div className="bg-gradient-to-b from-neutral-50 to-neutral-100 flex justify-center pt-4 pb-8 px-2 sm:px-6 lg:px-8">
+    <div className="flex justify-center pt-4 pb-8 px-2 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-6 bg-white px-2 pb-4 sm:p-6 rounded-lg shadow-md">
         <div>
           <h2 className="mt-1.5 text-center text-3xl font-extrabold text-gray-900">

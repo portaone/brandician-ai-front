@@ -170,7 +170,7 @@ const CompletedContainer: React.FC<{ readonlyMode?: boolean }> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
+    <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           {/* Success Header */}

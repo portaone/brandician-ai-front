@@ -60,9 +60,9 @@ const PaymentContainer: React.FC = () => {
   const [stripePublishableKey, setStripePublishableKey] = useState<
     string | null
   >(null);
-  const [googlePayMerchantId, setGooglePayMerchantId] = useState<
-    string | null
-  >(null);
+  const [googlePayMerchantId, setGooglePayMerchantId] = useState<string | null>(
+    null,
+  );
   const [googlePayEnvironment, setGooglePayEnvironment] = useState<
     "TEST" | "PRODUCTION"
   >("PRODUCTION");
@@ -368,7 +368,7 @@ const PaymentContainer: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 py-8">
+    <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4 md:p-8">
@@ -523,8 +523,8 @@ const PaymentContainer: React.FC = () => {
                     {isZeroAmount ? (
                       <>
                         {/* Zero amount - show sharing requirement and skip button */}
-                        <div className="mb-6 p-6 bg-blue-50 border-2 border-blue-300 rounded-lg text-center">
-                          <div className="text-lg font-bold text-blue-900 mb-4">
+                        <div className="mb-6 p-6 border-l-4 border-l-[var(--color-secondary)] rounded-lg text-center bg-[#7f59710d]">
+                          <div className="text-lg font-bold text-[var(--color-text)] mb-4">
                             <p>
                               It's ok to pay nothing - sometimes the cash
                               situation is tight. But can you please do a thing
