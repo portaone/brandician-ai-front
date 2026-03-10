@@ -228,7 +228,7 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
     gaps: {},
   });
   const [tabLoading, setTabLoading] = useState<Record<UiTabKey, boolean>>({
-    strategy: false,
+    strategy: true,
     positioning: false,
     visual_identity: false,
     voice_content: false,
@@ -539,7 +539,7 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
     }
   }, [brandId, activeTab]);
 
-  if (brandLoading || !currentBrand || !brandId || isGenerating) {
+  if (brandLoading || !currentBrand || !brandId || isGenerating || (tabLoading[activeTab] && !hasAnyContent)) {
     return (
       <BrandicianLoader config={LOADER_CONFIGS.brandHub} isComplete={false} />
     );
