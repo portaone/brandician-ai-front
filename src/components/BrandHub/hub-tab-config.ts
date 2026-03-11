@@ -29,33 +29,37 @@ export const TAB_CONFIGS: UiTabConfig[] = [
     key: "strategy",
     label: "Strategy",
     description:
-      "Define the brand's foundation, personality, and intent – why it exists and what it stands for.",
+      "The brand's foundation — its purpose, core values, personality, and reason for existing.",
     properties: [
       {
         key: "mission",
-        title: "Mission",
-        helper: "Why the brand exists and the change it aims to create.",
-      },
-      {
-        key: "vision",
-        title: "Vision",
-        helper: "The future the brand is working toward.",
+        title: "Mission, vision & purpose",
+        helper:
+          "Why the brand exists, what change it aims to create, and the future it works toward.",
       },
       {
         key: "core_values",
         title: "Brand Values",
-        helper: "The beliefs that guide decisions, behaviour, and culture.",
+        helper:
+          "The core beliefs that guide decisions, shape culture, and signal what the brand stands for.",
       },
       {
         key: "brand_archetypes",
         title: "Brand Archetypes",
-        helper: "The psychological foundation for your personality and style.",
+        helper:
+          "The psychological foundation for the brand's personality — primary and secondary archetypes define the emotional tone and behavioural style.",
+      },
+      {
+        key: "tone_of_voice",
+        title: "Tone of Voice",
+        helper:
+          "How the brand sounds across different contexts — shaped by archetypes, but applied to writing and speech.",
       },
       {
         key: "jobs_to_be_done",
-        title: "Customer Needs Summary",
+        title: "Jobs-to-be-done summary",
         helper:
-          "The functional, emotional, and social needs your brand helps your audience solve.",
+          "A concise view of the functional, emotional, and social needs the brand helps its audience solve — drawn from multiple user segments.",
       },
     ],
   },
@@ -63,34 +67,37 @@ export const TAB_CONFIGS: UiTabConfig[] = [
     key: "positioning",
     label: "Positioning",
     description:
-      "Clarify who you serve, how you're different, and why your brand is the obvious choice.",
+      "Who the brand is for, what makes it different, and where it stands in the market.",
     properties: [
       {
         key: "target_audience",
-        title: "Target Audience Overview",
-        helper: "Who the brand is designed to serve, with the right context.",
+        title: "Target audience overview",
+        helper:
+          "Who the brand is designed to serve. Contextualises the rest of the strategy.",
       },
       {
         key: "ideal_persona",
-        title: "Ideal Persona",
+        title: "Ideal persona",
         helper:
-          "A composite profile of your most valuable customer based on JTBD segments.",
+          "A composite profile built from shared drivers across JTBD segments, with added weight given to the primary persona.",
       },
       {
         key: "competitive_snapshot",
-        title: "Competitive Snapshot",
+        title: "Competitive snapshot",
         helper:
-          "How competitors talk, look, and behave – and where you should differentiate.",
+          "A brief overview of competitors' brand archetypes, messaging patterns, tone, and visual trends — used to avoid sameness and guide differentiation.",
       },
       {
         key: "unique_value_proposition",
-        title: "Unique Value Proposition (UVP)",
-        helper: "The core promise that clearly sets you apart.",
+        title: "Unique value proposition",
+        helper:
+          "The core promise that sets the brand apart and delivers clear value to the target audience.",
       },
       {
         key: "messaging_pillars",
-        title: "Messaging Pillars",
-        helper: "Core narrative anchors that express your UVP across channels.",
+        title: "Messaging pillars",
+        helper:
+          "Core narrative anchors that express the UVP across channels — used for alignment in marketing, sales, and content.",
       },
     ],
   },
@@ -98,43 +105,30 @@ export const TAB_CONFIGS: UiTabConfig[] = [
     key: "visual_identity",
     label: "Visual Identity",
     description:
-      "Make the brand recognisable, coherent, and emotionally aligned across all visual touchpoints.",
+      "The visual language that makes the brand recognisable, coherent, and emotionally consistent.",
     properties: [
       {
-        key: "visual_style_summary",
-        title: "Visual Style Summary",
-        helper:
-          "The overall visual tone, aesthetic approach, and art direction for all brand touchpoints.",
-      },
-      {
         key: "logo_and_mark_system",
-        title: "Logo & Mark System",
+        title: "Logo & mark system",
         helper:
-          "How your logo family works together and how to use it consistently.",
+          "Alternate marks, usage rules, spacing, and application notes appear here once a logo is uploaded.",
       },
       {
         key: "color_palette",
-        title: "Color Palette",
+        title: "Font & color palette",
         helper:
-          "Core colours, roles, and usage guidelines derived from your archetype and positioning.",
+          "Brand colours and font pairing — derived from archetype and emotional positioning.",
       },
       {
         key: "typography",
         title: "Typography",
-        helper:
-          "Primary and secondary typefaces, hierarchy, and usage recommendations.",
+        helper: "Sizing, use cases, and fallback systems for web and print.",
       },
       {
         key: "imagery_guidelines",
-        title: "Imagery Guidelines",
+        title: "Imagery guidelines & iconography",
         helper:
-          "Photography and illustration styles that match your brand's tone.",
-      },
-      {
-        key: "iconography",
-        title: "Iconography",
-        helper:
-          "Recommended icon style and behaviour so your UI feels coherent.",
+          "Photography style, illustration themes, lighting, contrast, textures, and iconography — aligned with brand archetypes.",
       },
     ],
   },
@@ -142,25 +136,25 @@ export const TAB_CONFIGS: UiTabConfig[] = [
     key: "voice_content",
     label: "Voice & Content",
     description:
-      "Ensure everything you write sounds like you and connects with your audience.",
+      "How the brand sounds — its tone, language style, and the content principles that guide all communication.",
     properties: [
       {
         key: "tone_of_voice",
-        title: "Voice Overview & Tone of Voice",
+        title: "Voice overview & language guidelines",
         helper:
-          "A concise definition of how your brand should sound in different contexts.",
+          "A concise definition of the brand's voice and concrete language guidelines — what to say, what to avoid, and how to stay in character.",
       },
       {
         key: "language_guidelines",
-        title: "Language Do's and Don'ts",
+        title: "Starter phrases & framing examples",
         helper:
-          "Concrete tips on word choice, formality, and style to keep writing on-brand.",
+          "Ready to copy, adapt, or use as inspiration — headlines, email openers, closers, and introductions.",
       },
       {
         key: "messaging_themes",
-        title: "Messaging Themes & Framing",
+        title: "Boilerplate & brand description",
         helper:
-          "Recurring storylines and angles to use in headlines, intros, and calls-to-action.",
+          "Ready-to-use text for email signatures, press intros, directories, social bios, and partnership decks.",
       },
     ],
   },

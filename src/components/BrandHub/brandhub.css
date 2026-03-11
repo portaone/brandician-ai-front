@@ -1,0 +1,596 @@
+/* ============================================================
+   BrandHub — scoped styles
+   All classes prefixed bh- to avoid collisions.
+   Themed via CSS custom properties set by BrandThemeProvider.
+   ============================================================ */
+
+/* ── Type scale (1.25 ratio, adjusted for 24px root) ── */
+.brandhub-themed {
+  --bh-fs-h1:   2.035rem;   /* ≈ 48.8px */
+  --bh-fs-h2:   1.628rem;   /* ≈ 39.1px */
+  --bh-fs-h3:   1.302rem;   /* ≈ 31.3px */
+  --bh-fs-h4:   1.042rem;   /* ≈ 25px   */
+  --bh-fs-h5:   0.833rem;   /* ≈ 20px   */
+  --bh-fs-base: 0.667rem;   /* ≈ 16px   */
+  --bh-fs-sm:   0.533rem;   /* ≈ 12.8px */
+  --bh-fs-xs:   0.427rem;   /* ≈ 10.2px */
+
+  /* Confidence pill colors (constant, not brand-dependent) */
+  --bh-confidence-high-bg: #e8f4ee;
+  --bh-confidence-high-text: #2d7a4f;
+  --bh-confidence-medium-bg: #fef8e7;
+  --bh-confidence-medium-text: #9a6e00;
+  --bh-confidence-low-bg: #fdecea;
+  --bh-confidence-low-text: #c0392b;
+
+  /* Warning / Gaps amber */
+  --bh-warning: #F4C343;
+
+  /* Fallback brand values (overridden by BrandThemeProvider inline style) */
+  --brand-primary: #fd615e;
+  --brand-supporting: #bfacb8;
+  --brand-accent: #7f5971;
+  --brand-text: #383236;
+  --brand-light: #f4f2f2;
+  --brand-heading-font: 'Bitter', Georgia, serif;
+  --brand-body-font: 'Source Sans 3', 'Source Sans Pro', sans-serif;
+}
+
+/* ── Page wrapper ── */
+.brandhub-themed {
+  background: transparent;
+  min-height: 100vh;
+}
+
+/* ── Tab bar ── */
+.bh-tab-bar {
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  padding: 0 32px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border-bottom: 2px solid var(--brand-light);
+}
+
+.bh-tab {
+  font-family: var(--brand-heading-font);
+  font-size: var(--bh-fs-h5);
+  font-weight: 600;
+  color: var(--brand-supporting);
+  padding: 20px 24px 18px;
+  cursor: pointer;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+  letter-spacing: 0.01em;
+  background: none;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.bh-tab:hover {
+  color: var(--brand-accent);
+}
+
+.bh-tab.active {
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
+}
+
+/* Gaps tab — amber, pushed right */
+.bh-tab.bh-gaps-tab {
+  margin-left: auto;
+  color: var(--bh-warning);
+  opacity: 0.75;
+}
+
+.bh-tab.bh-gaps-tab:hover {
+  opacity: 1;
+}
+
+.bh-tab.bh-gaps-tab.active {
+  color: var(--bh-warning);
+  border-bottom-color: var(--bh-warning);
+  opacity: 1;
+}
+
+.bh-gaps-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--bh-warning);
+  margin-right: 6px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+/* ── Tab panel ── */
+.bh-tab-panel {
+  background: #fff;
+  border-radius: 0 0 16px 16px;
+  padding: 32px 32px 40px;
+}
+
+.bh-tab-description {
+  font-family: var(--brand-body-font);
+  font-size: var(--bh-fs-base);
+  color: var(--brand-supporting);
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+/* ── Content cards ── */
+.bh-card {
+  background: #fff;
+  border: 1.5px solid var(--brand-light);
+  border-radius: 14px;
+  padding: 24px 28px;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+}
+
+.bh-card:hover {
+  border-color: var(--brand-supporting);
+}
+
+.bh-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.bh-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.bh-card-title {
+  font-family: var(--brand-heading-font);
+  font-size: var(--bh-fs-h4);
+  font-weight: 600;
+  color: var(--brand-text);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.bh-card-sublabel {
+  font-family: var(--brand-body-font);
+  font-size: var(--bh-fs-sm);
+  color: var(--brand-supporting);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.bh-card-body {
+  font-family: var(--brand-body-font);
+  font-size: var(--bh-fs-base);
+  color: var(--brand-text);
+  line-height: 1.65;
+}
+
+.bh-card-body strong {
+  font-weight: 700;
+  color: var(--brand-text);
+}
+
+/* ── Confidence pills ── */
+.bh-pill {
+  font-family: var(--brand-body-font);
+  font-size: 0.45rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 20px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.bh-pill-high {
+  background: var(--bh-confidence-high-bg);
+  color: var(--bh-confidence-high-text);
+}
+
+.bh-pill-medium {
+  background: var(--bh-confidence-medium-bg);
+  color: var(--bh-confidence-medium-text);
+}
+
+.bh-pill-low {
+  background: var(--bh-confidence-low-bg);
+  color: var(--bh-confidence-low-text);
+}
+
+/* Gap count badge */
+.bh-pill-gaps {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* ── Copy button ── */
+.bh-btn-copy {
+  font-family: var(--brand-body-font);
+  font-size: 0.5rem;
+  font-weight: 500;
+  color: var(--brand-supporting);
+  background: none;
+  border: 1.5px solid var(--brand-light);
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.bh-btn-copy:hover {
+  color: var(--brand-accent);
+  border-color: var(--brand-accent);
+}
+
+.bh-btn-copy svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.bh-btn-copy.copied {
+  color: var(--bh-confidence-high-text);
+  border-color: var(--bh-confidence-high-text);
+}
+
+/* ── Gaps panel ── */
+.bh-gaps-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: #fffbec;
+  border: 1.5px solid rgba(244, 195, 67, 0.35);
+  border-left: 4px solid var(--bh-warning);
+  border-radius: 12px;
+  padding: 18px 22px;
+  margin-bottom: 28px;
+}
+
+.bh-gaps-notice svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--bh-warning);
+  margin-top: 2px;
+}
+
+.bh-gaps-notice-text {
+  font-family: var(--brand-body-font);
+  font-size: var(--bh-fs-sm);
+  color: var(--brand-text);
+  line-height: 1.5;
+}
+
+.bh-gaps-notice-text strong {
+  font-weight: 700;
+  display: block;
+  margin-bottom: 3px;
+}
+
+/* Gap card — amber left border */
+.bh-gap-card {
+  border-left: 3px solid var(--bh-warning);
+}
+
+.bh-gap-card .bh-card-title {
+  color: var(--brand-text);
+}
+
+/* ── Font & Color Presenter ── */
+.bh-presenter-wrap {
+  background: var(--brand-light);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.bh-presenter-palette {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  height: 80px;
+}
+
+.bh-palette-swatch {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 8px 10px;
+  transition: flex 0.2s;
+}
+
+.bh-swatch-name {
+  font-family: var(--brand-body-font);
+  font-size: 0.43rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.bh-swatch-hex {
+  font-family: var(--brand-body-font);
+  font-size: 0.4rem;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+
+.bh-presenter-body {
+  padding: 28px;
+  background: var(--brand-light);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.bh-presenter-fonts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bh-font-row {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+
+.bh-font-label {
+  font-family: var(--brand-body-font);
+  font-size: 0.45rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #aaa;
+  margin-bottom: 6px;
+}
+
+.bh-font-display-heading {
+  font-family: var(--brand-heading-font);
+  font-size: 1.27rem;
+  font-weight: 600;
+  color: var(--brand-text);
+  line-height: 1.1;
+}
+
+.bh-font-display-body {
+  font-family: var(--brand-body-font);
+  font-size: 0.63rem;
+  color: var(--brand-text);
+  line-height: 1.5;
+}
+
+.bh-font-meta {
+  font-family: var(--brand-body-font);
+  font-size: 0.48rem;
+  color: #aaa;
+  margin-top: 4px;
+}
+
+.bh-presenter-preview {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bh-preview-label {
+  font-family: var(--brand-body-font);
+  font-size: 0.45rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #aaa;
+}
+
+.bh-preview-heading {
+  font-family: var(--brand-heading-font);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--brand-text);
+  line-height: 1.2;
+}
+
+.bh-preview-body {
+  font-family: var(--brand-body-font);
+  font-size: 0.58rem;
+  color: var(--brand-text);
+  line-height: 1.55;
+}
+
+.bh-preview-btn {
+  display: inline-block;
+  background: var(--brand-primary);
+  color: #fff;
+  font-family: var(--brand-body-font);
+  font-size: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: default;
+  width: fit-content;
+}
+
+.bh-preview-quote {
+  font-family: var(--brand-heading-font);
+  font-size: var(--bh-fs-base);
+  font-style: italic;
+  color: var(--brand-primary);
+  border-left: 3px solid var(--brand-primary);
+  padding-left: 12px;
+  line-height: 1.4;
+}
+
+/* ── Typography table ── */
+.bh-type-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--brand-body-font);
+  font-size: var(--bh-fs-sm);
+  margin-top: 8px;
+}
+
+.bh-type-table th {
+  text-align: left;
+  color: var(--brand-supporting);
+  font-weight: 600;
+  font-size: 0.47rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0 12px 10px 0;
+  border-bottom: 1px solid var(--brand-light);
+}
+
+.bh-type-table td {
+  padding: 10px 12px 10px 0;
+  color: var(--brand-text);
+  border-bottom: 1px solid var(--brand-light);
+  vertical-align: top;
+  line-height: 1.4;
+  font-size: var(--bh-fs-sm);
+}
+
+.bh-type-table tr:last-child td {
+  border-bottom: none;
+}
+
+.bh-type-sample {
+  display: block;
+  margin-top: 2px;
+  color: var(--brand-supporting);
+  font-size: 0.48rem;
+}
+
+.bh-font-link {
+  color: var(--brand-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.bh-font-link:hover {
+  color: var(--brand-primary);
+}
+
+/* ── Loading state ── */
+.bh-loading {
+  display: flex;
+  align-items: center;
+  font-family: var(--brand-body-font);
+  color: var(--brand-supporting);
+  font-size: var(--bh-fs-sm);
+}
+
+/* ── Empty state ── */
+.bh-empty {
+  font-family: var(--brand-body-font);
+  font-size: var(--bh-fs-sm);
+  color: var(--brand-supporting);
+  font-style: italic;
+}
+
+/* ── Error state ── */
+.bh-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.bh-error span {
+  font-family: var(--brand-body-font);
+  font-size: var(--bh-fs-sm);
+  color: #991b1b;
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 640px) {
+  .bh-tab-bar {
+    padding: 0 16px;
+    flex-wrap: wrap;
+    border-radius: 16px 16px 0 0;
+    gap: 0;
+  }
+
+  .bh-tab {
+    padding: 14px 16px 12px;
+    font-size: 0.57rem;
+  }
+
+  /* Row 1: first 3 tabs */
+  .bh-tab:nth-child(1),
+  .bh-tab:nth-child(2),
+  .bh-tab:nth-child(3) {
+    flex: 1 1 auto;
+  }
+
+  /* Row 2: tabs 4 and gaps */
+  .bh-tab:nth-child(4) {
+    flex: 1 1 auto;
+    border-top: 1px solid var(--brand-light);
+  }
+
+  .bh-tab.bh-gaps-tab {
+    margin-left: 0;
+    border-top: 1px solid var(--brand-light);
+  }
+
+  .bh-tab-panel {
+    padding: 20px 16px 32px;
+  }
+
+  .bh-card {
+    padding: 18px 16px;
+  }
+
+  .bh-card-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .bh-card-title-group {
+    flex-wrap: wrap;
+  }
+
+  .bh-presenter-palette {
+    height: 60px;
+  }
+
+  .bh-swatch-name,
+  .bh-swatch-hex {
+    display: none;
+  }
+
+  .bh-presenter-body {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+}

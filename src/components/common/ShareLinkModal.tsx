@@ -52,7 +52,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
       if (response.access_token_expires) {
         const expDate = new Date(response.access_token_expires);
         setExpiresAt(
-          expDate.toLocaleDateString() + " " + expDate.toLocaleTimeString()
+          expDate.toLocaleDateString() + " " + expDate.toLocaleTimeString(),
         );
       }
     } catch (err: any) {

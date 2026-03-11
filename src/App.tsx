@@ -254,7 +254,7 @@ const App: React.FC = () => {
             />
             <Route
               path="/completed"
-              element={<CompletedContainer readonlyMode={true} />}
+              element={<BrandHubContainer isComplete={true} />}
             />
             <Route
               path="/brands/:brandId/history"

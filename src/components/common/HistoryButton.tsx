@@ -7,12 +7,14 @@ interface HistoryButtonProps {
   brandId: string;
   variant?: "primary" | "secondary" | "tertiary";
   size?: "sm" | "md" | "lg" | "xl";
+  className?: string;
 }
 
 const HistoryButton: React.FC<HistoryButtonProps> = ({
   brandId,
   variant = "secondary",
   size = "md",
+  className,
 }) => {
   const navigate = useNavigate();
 
@@ -21,6 +23,7 @@ const HistoryButton: React.FC<HistoryButtonProps> = ({
       variant={variant}
       size={size}
       onClick={() => navigate(`/brands/${brandId}/history`)}
+      className={className}
     >
       <History className="h-4 w-4 mr-2 inline" />
       History

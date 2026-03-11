@@ -103,6 +103,9 @@ export const LOADER_CONFIGS: Record<string, LoaderConfig> = {
       "Creating usage examples",
     ],
   },
+  brandHubComplete: {
+    loadingText: "Loading your Brand Hub ...",
+  },
 
   primaryPersona: {
     loadingText: "Generating your primary persona...",
