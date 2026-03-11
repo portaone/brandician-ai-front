@@ -237,7 +237,10 @@ const BrandSummary: React.FC = () => {
                   placeholder="Write your brand summary (Markdown supported)..."
                 />
               ) : (
-                <div className="w-full min-h-[300px] p-4 border border-neutral-200 rounded-lg">
+                <div
+                  className="w-full min-h-[300px] p-4 border border-neutral-200 rounded-lg"
+                  style={{ backgroundColor: "var(--color-bg)" }}
+                >
                   {summary && summary.trim() ? (
                     <MarkdownPreviewer markdown={summary} />
                   ) : (

@@ -337,7 +337,7 @@ const ChangeReviewForm: React.FC<ChangeReviewFormProps> = ({
         <div className="prose max-w-none">
           <div
             className="border border-gray-200 rounded-lg p-2 sm:p-6"
-            style={{ backgroundColor: "#f4f2f2" }}
+            style={{ backgroundColor: "var(--color-bg)" }}
           >
             <MarkdownBlock text={oldText} />
           </div>

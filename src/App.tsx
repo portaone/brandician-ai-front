@@ -20,7 +20,7 @@ import ExplanationScreen from "./components/brands/ExplanationScreen";
 import QuestionnaireContainer from "./components/Questionnaire/QuestionnaireContainer";
 import JTBDContainer from "./components/JTBD/JTBDContainer";
 import SurveyContainer from "./components/Survey/SurveyContainer";
-import CollectFeedbackContainer from "./components/CollectFeedback/CollectFeedbackContainer";
+// CollectFeedback merged into SurveyContainer (BRANDICIAN-120)
 import FeedbackReviewFlowContainer from "./components/FeedbackReview/FeedbackReviewFlowContainer";
 import BrandNameContainer from "./components/BrandName/BrandNameContainer";
 import BrandSummary from "./components/BrandSummary/BrandSummary";
@@ -137,11 +137,7 @@ const App: React.FC = () => {
             />
             <Route
               path="/brands/:brandId/collect-feedback"
-              element={
-                <AuthGuard>
-                  <CollectFeedbackContainer />
-                </AuthGuard>
-              }
+              element={<Navigate to="../survey" replace />}
             />
             <Route
               path="/brands/:brandId/summary"

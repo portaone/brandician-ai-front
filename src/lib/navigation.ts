@@ -50,7 +50,7 @@ export const getRouteForStatus = (
     summary: `/brands/${brandId}/summary`,
     jtbd: `/brands/${brandId}/jtbd`,
     create_survey: `/brands/${brandId}/survey`,
-    collect_feedback: `/brands/${brandId}/collect-feedback`,
+    collect_feedback: `/brands/${brandId}/survey`,
     feedback_review_summary: `/brands/${brandId}/feedback-review/summary`,
     feedback_review_jtbd: `/brands/${brandId}/feedback-review/jtbd`,
     primary_persona_selection: `/brands/${brandId}/feedback-review/primary-persona`,

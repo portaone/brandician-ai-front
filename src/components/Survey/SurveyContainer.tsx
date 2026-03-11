@@ -12,9 +12,11 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
-import { scrollToTop } from "../../lib/utils";
+import { navigateAfterProgress } from "../../lib/navigation";
+import { hasEnoughResponses, scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
-import { Survey, SurveyQuestion } from "../../types";
+import { Survey, SurveyQuestion, SurveyStatus } from "../../types";
+import SkipSurveyWarning from "../common/SkipSurveyWarning";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
@@ -31,6 +33,7 @@ const SurveyContainer: React.FC = () => {
   const {
     currentBrand,
     selectBrand,
+    progressBrandStatus,
     isLoading: isBrandLoading,
     error: brandError,
   } = useBrandStore();
@@ -48,12 +51,14 @@ const SurveyContainer: React.FC = () => {
   const [errorType, setErrorType] = useState<"load" | "save" | null>(null);
   const [surveyUrl, setSurveyUrl] = useState<string>("");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [surveyStatus, setSurveyStatus] = useState<SurveyStatus | null>(null);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(false);
+  const [showSkipWarning, setShowSkipWarning] = useState(false);
   const [draggedQuestion, setDraggedQuestion] = useState<number | null>(null);
   const [draftSaveStatus, setDraftSaveStatus] = useState<
     "idle" | "saving" | "saved" | "error"
   >("idle");
   const initialLoadDone = useRef(false);
-
 
   useEffect(() => {
     let isMounted = true;
@@ -146,18 +151,25 @@ const SurveyContainer: React.FC = () => {
       return;
     }
 
-    if (!survey || !brandId || isLoadingSurvey || isRegenerating || showSuccess) return;
+    if (!survey || !brandId || isLoadingSurvey || isRegenerating || showSuccess)
+      return;
 
     const timer = setTimeout(async () => {
       try {
         setDraftSaveStatus("saving");
         await brands.saveSurveyDraft(brandId, survey);
         setDraftSaveStatus("saved");
-        setTimeout(() => setDraftSaveStatus((s) => (s === "saved" ? "idle" : s)), 2000);
+        setTimeout(
+          () => setDraftSaveStatus((s) => (s === "saved" ? "idle" : s)),
+          2000,
+        );
       } catch (err) {
         console.error("Auto-save draft failed:", err);
         setDraftSaveStatus("error");
-        setTimeout(() => setDraftSaveStatus((s) => (s === "error" ? "idle" : s)), 3000);
+        setTimeout(
+          () => setDraftSaveStatus((s) => (s === "error" ? "idle" : s)),
+          3000,
+        );
       }
     }, 1500);
 
@@ -170,6 +182,13 @@ const SurveyContainer: React.FC = () => {
       initialLoadDone.current = false;
     }
   }, [isRegenerating]);
+
+  // Auto-load survey status when success screen is shown
+  useEffect(() => {
+    if (showSuccess && brandId) {
+      loadSurveyStatus();
+    }
+  }, [showSuccess]);
 
   const handleAddQuestion = () => {
     // Get the next sequential ID
@@ -314,9 +333,28 @@ const SurveyContainer: React.FC = () => {
     }
   };
 
-  const handleCheckStatus = () => {
+  const loadSurveyStatus = async () => {
     if (!brandId) return;
-    navigate(`/brands/${brandId}/collect-feedback`);
+    setIsLoadingStatus(true);
+    try {
+      const status = await brands.getSurveyStatus(brandId);
+      setSurveyStatus(status);
+    } catch (error) {
+      console.error("Failed to load survey status:", error);
+    } finally {
+      setIsLoadingStatus(false);
+    }
+  };
+
+  const handleProceed = async () => {
+    if (!brandId) return;
+    try {
+      const statusUpdate = await progressBrandStatus(brandId);
+      navigateAfterProgress(navigate, brandId, statusUpdate);
+    } catch (error) {
+      console.error("Failed to progress brand status:", error);
+    }
+    scrollToTop();
   };
 
   const handleRetry = () => {
@@ -403,7 +441,10 @@ const SurveyContainer: React.FC = () => {
 
   if (isSubmitting) {
     return (
-      <BrandicianLoader config={LOADER_CONFIGS.surveySubmit} isComplete={false} />
+      <BrandicianLoader
+        config={LOADER_CONFIGS.surveySubmit}
+        isComplete={false}
+      />
     );
   }
 
@@ -462,7 +503,9 @@ const SurveyContainer: React.FC = () => {
             </h1>
             <div className="flex items-center gap-3 flex-wrap">
               {draftSaveStatus === "saving" && (
-                <span className="text-sm text-neutral-400 animate-pulse">Saving...</span>
+                <span className="text-sm text-neutral-400 animate-pulse">
+                  Saving...
+                </span>
               )}
               {draftSaveStatus === "saved" && (
                 <span className="text-sm text-green-500">Draft saved</span>
@@ -601,7 +644,9 @@ const SurveyContainer: React.FC = () => {
                   variant="secondary"
                   size="lg"
                   loading={isRegenerating}
-                  leftIcon={!isRegenerating && <RefreshCw className="h-5 w-5" />}
+                  leftIcon={
+                    !isRegenerating && <RefreshCw className="h-5 w-5" />
+                  }
                 >
                   {isRegenerating
                     ? "Regenerating survey..."
@@ -609,7 +654,9 @@ const SurveyContainer: React.FC = () => {
                 </Button>
                 <Button
                   onClick={handleSaveSurvey}
-                  disabled={isSubmitting || isRegenerating || !survey?.questions.length}
+                  disabled={
+                    isSubmitting || isRegenerating || !survey?.questions.length
+                  }
                   size="lg"
                   loading={isSubmitting}
                 >
@@ -621,15 +668,112 @@ const SurveyContainer: React.FC = () => {
           ) : (
             <div className="bg-white rounded-lg shadow-lg p-2 sm:p-6">
               <h2 className="text-xl font-medium text-neutral-800 mb-4">
-                Survey Created Successfully!
+                {hasEnoughResponses(surveyStatus)
+                  ? "Ready to Analyze"
+                  : "Survey Created Successfully!"}
               </h2>
+
+              {/* Survey Status */}
+              {isLoadingStatus ? (
+                <div className="flex items-center justify-center mb-6">
+                  <Loader className="animate-spin h-6 w-6 mr-2 text-primary-600" />
+                  <span className="text-gray-600">
+                    Loading survey status...
+                  </span>
+                </div>
+              ) : surveyStatus ? (
+                <div
+                  className={`mb-6 p-4 rounded-xl border-l-4 ${
+                    hasEnoughResponses(surveyStatus)
+                      ? "bg-primary-50 border border-primary-200 border-l-primary-500"
+                      : "bg-yellow-50 border border-yellow-200 border-l-yellow-400"
+                  }`}
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wider text-secondary-600 mb-3">
+                    Survey Status
+                  </p>
+                  <p className="text-lg font-semibold text-neutral-800 mb-2">
+                    <span
+                      className={
+                        hasEnoughResponses(surveyStatus)
+                          ? "text-primary-600"
+                          : "text-yellow-500"
+                      }
+                    >
+                      {surveyStatus.number_of_responses}
+                    </span>{" "}
+                    of{" "}
+                    <span
+                      className={
+                        hasEnoughResponses(surveyStatus)
+                          ? "text-primary-600"
+                          : "text-yellow-500"
+                      }
+                    >
+                      {surveyStatus.min_responses_required || 0}
+                    </span>{" "}
+                    required responses completed
+                  </p>
+                  {hasEnoughResponses(surveyStatus) ? (
+                    <p className="text-neutral-800 flex items-center gap-2">
+                      <span className="text-primary-600 text-lg">✓</span>
+                      <span className="font-semibold">Ready to proceed</span>
+                    </p>
+                  ) : (
+                    <p className="text-neutral-800">
+                      You need{" "}
+                      <span className="text-yellow-500 font-semibold">
+                        {(surveyStatus.min_responses_required || 0) -
+                          (surveyStatus.number_of_responses || 0)}{" "}
+                        more response
+                        {(surveyStatus.min_responses_required || 0) -
+                          (surveyStatus.number_of_responses || 0) !==
+                        1
+                          ? "s"
+                          : ""}
+                      </span>{" "}
+                      to proceed
+                    </p>
+                  )}
+                  {surveyStatus.last_response_date && (
+                    <p className="text-xs text-secondary-500 mt-2">
+                      Last response:{" "}
+                      {new Date(
+                        surveyStatus.last_response_date,
+                      ).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <p className="text-center text-gray-600">
+                    Unable to load survey status
+                  </p>
+                </div>
+              )}
 
               <div className="mb-6">
                 <SurveyUrlBar url={surveyUrl} />
               </div>
 
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-blue-800 text-sm">
+              <div className="flex justify-center mb-6">
+                <Button
+                  onClick={loadSurveyStatus}
+                  disabled={isLoadingStatus}
+                  variant="secondary"
+                  size="md"
+                >
+                  {isLoadingStatus ? (
+                    <Loader className="animate-spin h-4 w-4 mr-2" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                  )}
+                  Refresh survey status
+                </Button>
+              </div>
+
+              <div className="mb-6 p-4 bg-neutral-100 rounded-xl">
+                <p className="text-neutral-700 text-sm">
                   Please copy the survey URL to clipboard and send it to your
                   potential customers to complete. Try to have as many people
                   engaged as possible, since the more feedback we receive, the
@@ -638,13 +782,53 @@ const SurveyContainer: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex justify-end">
+              {showSkipWarning && (
+                <SkipSurveyWarning
+                  onConfirm={handleProceed}
+                  onCancel={() => setShowSkipWarning(false)}
+                />
+              )}
+
+              <div className="flex justify-between items-center">
+                <div className="flex gap-3">
+                  {hasEnoughResponses(surveyStatus) ? (
+                    <Button
+                      onClick={() => setShowSkipWarning(true)}
+                      variant="secondary"
+                      size="lg"
+                    >
+                      Skip Analysis
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => setShowSkipWarning(true)}
+                      variant="secondary"
+                      size="lg"
+                    >
+                      Skip Survey
+                    </Button>
+                  )}
+                </div>
                 <Button
-                  onClick={handleCheckStatus}
+                  onClick={handleProceed}
+                  disabled={
+                    !hasEnoughResponses(surveyStatus) || isLoadingStatus
+                  }
                   size="lg"
                 >
-                  Wait for survey results
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  {hasEnoughResponses(surveyStatus) ? (
+                    <>
+                      Proceed to analyze the results
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </>
+                  ) : (
+                    <>
+                      {isLoadingStatus && (
+                        <Loader className="animate-spin h-4 w-4 mr-2" />
+                      )}
+                      {`Need at least ${surveyStatus?.min_responses_required || 0} responses to proceed`}
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -741,34 +925,31 @@ const SurveyContainer: React.FC = () => {
           )}
         </div>
 
-          {showRegenerateConfirm && (
-            <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-                <h3 className="text-lg font-medium text-neutral-800 mb-3">
-                  Regenerate Survey?
-                </h3>
-                <p className="text-neutral-600 mb-6">
-                  This will discard your current survey questions and generate a
-                  completely new set using AI. This action cannot be undone.
-                </p>
-                <div className="flex justify-end gap-3">
-                  <Button
-                    onClick={() => setShowRegenerateConfirm(false)}
-                    variant="secondary"
-                    size="md"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleRegenerate}
-                    size="md"
-                  >
-                    Regenerate
-                  </Button>
-                </div>
+        {showRegenerateConfirm && (
+          <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+              <h3 className="text-lg font-medium text-neutral-800 mb-3">
+                Regenerate Survey?
+              </h3>
+              <p className="text-neutral-600 mb-6">
+                This will discard your current survey questions and generate a
+                completely new set using AI. This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  onClick={() => setShowRegenerateConfirm(false)}
+                  variant="secondary"
+                  size="md"
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleRegenerate} size="md">
+                  Regenerate
+                </Button>
               </div>
             </div>
-          )}
+          </div>
+        )}
       </div>
     </div>
   );
