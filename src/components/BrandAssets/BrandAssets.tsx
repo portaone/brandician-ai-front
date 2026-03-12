@@ -13,6 +13,7 @@ import AssetContent from "../common/AssetContent";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import RegenerateButton from "../common/RegenerateButton";
 import BrandicianLoader from "../common/BrandicianLoader";
 
 interface BrandAssetsProps {
@@ -472,19 +473,14 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
 
           {/* Regenerate Assets Button */}
           <div className="mb-6 flex justify-center">
-            <Button
+            <RegenerateButton
               onClick={startAssetGeneration}
               disabled={isGeneratingAssets}
-              variant="secondary"
-              size="lg"
               loading={isGeneratingAssets}
-              leftIcon={
-                !isGeneratingAssets && <RefreshCw className="h-5 w-5" />
-              }
               title="Regenerate all brand assets"
             >
               {isGeneratingAssets ? "Regenerating..." : "Regenerate Assets"}
-            </Button>
+            </RegenerateButton>
           </div>
 
           {/* Proceed to Payment Section */}

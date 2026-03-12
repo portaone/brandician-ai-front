@@ -1,4 +1,4 @@
-import { Check, Edit2, Loader, RefreshCw, X } from "lucide-react";
+import { Check, Edit2, Loader, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
@@ -7,6 +7,7 @@ import { JTBD, JTBDPersonaIn, PersonaInfo } from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import RegenerateButton from "../common/RegenerateButton";
 import MarkdownPreviewer from "../common/MarkDownPreviewer";
 import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
@@ -361,20 +362,14 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
 
           {/* Actions */}
           <div className="flex flex-wrap justify-between items-center gap-3">
-            <Button
-              type="button"
-              variant="secondary"
-              size="md"
+            <RegenerateButton
               onClick={handleRegenerate}
               disabled={isRegenerating || isSaving}
+              loading={isRegenerating}
+              size="md"
             >
-              {isRegenerating ? (
-                <Loader className="animate-spin h-5 w-5 mr-2 inline" />
-              ) : (
-                <RefreshCw className="h-5 w-5 mr-2 inline" />
-              )}
               Regenerate
-            </Button>
+            </RegenerateButton>
 
             <Button
               type="button"

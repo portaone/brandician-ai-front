@@ -1,4 +1,4 @@
-import { ArrowRight, RefreshCw } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import React, {
   useCallback,
   useEffect,
@@ -14,6 +14,7 @@ import AssetContent from "../common/AssetContent";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import RegenerateButton from "../common/RegenerateButton";
 import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
@@ -421,19 +422,16 @@ const VisualIdentityContainer: React.FC = () => {
 
           {/* Regenerate Visual Identity */}
           <div className="mb-6 flex justify-center">
-            <Button
+            <RegenerateButton
               onClick={handleRegenerate}
               disabled={isGenerating}
-              variant="secondary"
-              size="lg"
               loading={isGenerating}
-              leftIcon={!isGenerating && <RefreshCw className="h-5 w-5" />}
               title="Regenerate the visual identity strategy for this brand"
             >
               {isGenerating
                 ? "Regenerating visuals..."
                 : "Regenerate Visual Identity"}
-            </Button>
+            </RegenerateButton>
           </div>
 
           {/* Save and proceed */}

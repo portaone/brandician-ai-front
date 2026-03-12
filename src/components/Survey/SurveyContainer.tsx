@@ -20,6 +20,7 @@ import SkipSurveyWarning from "../common/SkipSurveyWarning";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import RegenerateButton from "../common/RegenerateButton";
 import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
@@ -638,20 +639,15 @@ const SurveyContainer: React.FC = () => {
               </div>
 
               <div className="flex justify-between items-center">
-                <Button
+                <RegenerateButton
                   onClick={() => setShowRegenerateConfirm(true)}
                   disabled={isRegenerating || isSubmitting}
-                  variant="secondary"
-                  size="lg"
                   loading={isRegenerating}
-                  leftIcon={
-                    !isRegenerating && <RefreshCw className="h-5 w-5" />
-                  }
                 >
                   {isRegenerating
                     ? "Regenerating survey..."
                     : "Regenerate Survey"}
-                </Button>
+                </RegenerateButton>
                 <Button
                   onClick={handleSaveSurvey}
                   disabled={

@@ -35,6 +35,7 @@ import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
+import RegenerateButton from "../common/RegenerateButton";
 
 type Step = "rating" | "editing" | "drivers";
 
@@ -635,20 +636,15 @@ const JTBDContainer: React.FC = () => {
                 ))}
               </div>
               <div className="flex justify-between items-center mt-8">
-                <Button
+                <RegenerateButton
                   type="button"
                   variant="selection"
                   size="md"
                   onClick={handleRegeneratePersonas}
                   disabled={isRegenerating || isLoading}
                 >
-                  {isRegenerating ? (
-                    <Loader className="animate-spin h-5 w-5 mr-2 inline" />
-                  ) : (
-                    <RefreshCw className="h-5 w-5 mr-2 inline" />
-                  )}
                   Suggest new personas
-                </Button>
+                </RegenerateButton>
               </div>
             </div>
           )}

@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowRight, Copy, Loader, RefreshCw } from "lucide-react";
+import { AlertCircle, ArrowRight, Copy, Loader } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import axios, { AxiosInstance } from "axios";
 import { useSearchParams } from "react-router-dom";
@@ -11,6 +11,7 @@ import BrandicianLoader from "../common/BrandicianLoader";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
+import RegenerateButton from "../common/RegenerateButton";
 import ShareLinkModal from "../common/ShareLinkModal";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
@@ -544,22 +545,17 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
                     justifyContent: "center",
                   }}
                 >
-                  <Button
+                  <RegenerateButton
                     onClick={generateHub}
                     disabled={isGenerating}
-                    variant="secondary"
-                    size="lg"
                     className="!border-[var(--brand-accent)] text-[var(--brand-accent)] hover:!bg-[var(--brand-accent)]"
                     loading={isGenerating}
-                    leftIcon={
-                      !isGenerating && <RefreshCw className="h-5 w-5" />
-                    }
                     title="Regenerate the Brand Hub from the latest strategy data"
                   >
                     {isGenerating
                       ? "Regenerating Brand Hub..."
                       : "Regenerate Brand Hub"}
-                  </Button>
+                  </RegenerateButton>
                 </div>
               )}
 
