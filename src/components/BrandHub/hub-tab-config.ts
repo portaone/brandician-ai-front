@@ -57,7 +57,7 @@ export const TAB_CONFIGS: UiTabConfig[] = [
       },
       {
         key: "jobs_to_be_done",
-        title: "Jobs-to-be-done summary",
+        title: "Jobs to be done / Customer Needs summary",
         helper:
           "A concise view of the functional, emotional, and social needs the brand helps its audience solve — drawn from multiple user segments.",
       },

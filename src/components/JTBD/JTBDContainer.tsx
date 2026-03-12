@@ -42,7 +42,7 @@ const PERSONA_INFO_LABELS: Record<string, string> = {
   narrative: "Narrative",
   demographics: "Demographics",
   psychographics: "Psychographics",
-  jobs_to_be_done: "Jobs to be Done",
+  jobs_to_be_done: "Jobs to be done / Customer Needs",
   context_triggers: "Context & Triggers",
   desired_outcomes: "Desired Outcomes",
   current_struggles: "Current Struggles",
@@ -510,7 +510,7 @@ const JTBDContainer: React.FC = () => {
           <div className="flex justify-between flex-wrap gap-3 items-center mb-6">
             <h1 className="text-3xl font-display font-bold text-neutral-800">
               <BrandNameDisplay brand={currentBrand!} />
-              Jobs To Be Done Analysis
+              Jobs to be done / Customer Needs Analysis
             </h1>
             <div className="flex items-center flex-wrap gap-3">
               {brandId && <HistoryButton brandId={brandId} size="md" />}

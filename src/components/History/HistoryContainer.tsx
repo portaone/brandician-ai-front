@@ -152,8 +152,8 @@ const HistoryContainer: React.FC = () => {
         },
       },
       jtbd: {
-        name: "Jobs-to-be-Done",
-        description: "JTBD analysis results",
+        name: "Jobs to be done / Customer Needs",
+        description: "JTBD / Customer Needs analysis results",
         dataLoader: async () => {
           if (!brandId) return null;
           const jtbd = await brands.getJTBD(brandId);
@@ -189,8 +189,8 @@ const HistoryContainer: React.FC = () => {
         },
       },
       feedback_review_jtbd: {
-        name: "Feedback Review - JTBD",
-        description: "Updated JTBD based on feedback",
+        name: "Feedback Review - JTBD / Customer Needs",
+        description: "Updated JTBD / Customer Needs based on feedback",
         dataLoader: async () => {
           if (!brandId) return null;
           const jtbd = await brands.getJTBD(brandId);
@@ -573,7 +573,9 @@ const HistoryContainer: React.FC = () => {
         return (
           <div className="p-4 space-y-3">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="font-semibold text-gray-900">Jobs-To-Be-Done:</h4>
+              <h4 className="font-semibold text-gray-900">
+                Jobs to be done / Customer Needs:
+              </h4>
               <CopyButton text={formatJTBD()} />
             </div>
             <JTBDDisplay jtbd={data.data} />

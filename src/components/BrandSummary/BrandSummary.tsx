@@ -270,7 +270,7 @@ const BrandSummary: React.FC = () => {
                 {isSubmitting ? (
                   <Loader className="animate-spin h-5 w-5 mr-2 inline" />
                 ) : null}
-                Proceed to Jobs to be Done
+                Proceed to Jobs to be done / Customer Needs
                 <ArrowRight className="ml-2 h-5 w-5 inline" />
               </Button>
             </div>

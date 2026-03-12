@@ -17,7 +17,7 @@ const PERSONA_INFO_LABELS: Record<string, string> = {
   narrative: "Narrative",
   demographics: "Demographics",
   psychographics: "Psychographics",
-  jobs_to_be_done: "Jobs to be Done",
+  jobs_to_be_done: "Jobs to be done / Customer Needs",
   context_triggers: "Context & Triggers",
   desired_outcomes: "Desired Outcomes",
   current_struggles: "Current Struggles",

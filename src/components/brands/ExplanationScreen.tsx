@@ -125,7 +125,7 @@ const ExplanationScreen: React.FC = () => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       // If successful, go directly to questionnaire with summary parameter
@@ -135,7 +135,7 @@ const ExplanationScreen: React.FC = () => {
       console.error("Failed to upload document:", error);
       setUploadError(
         error.response?.data?.message ||
-          "Failed to upload document. Please try again."
+          "Failed to upload document. Please try again.",
       );
     } finally {
       setIsUploading(false);
@@ -172,7 +172,7 @@ const ExplanationScreen: React.FC = () => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       // If successful, go directly to questionnaire with summary parameter
@@ -182,7 +182,7 @@ const ExplanationScreen: React.FC = () => {
       console.error("Failed to process text:", error);
       setUploadError(
         error.response?.data?.message ||
-          "Failed to process text. Please try again."
+          "Failed to process text. Please try again.",
       );
     } finally {
       setIsProcessingText(false);
@@ -262,9 +262,10 @@ const ExplanationScreen: React.FC = () => {
                     We define profiles of your future customers
                   </h3>
                   <p>
-                    We build Jobs-to-be-Done (JTBD) personas—detailed profiles
-                    that capture different customer needs and motivations. If
-                    anything feels off, you'll have a chance to refine it.
+                    We build Jobs to be done (JTBD) / Customer Needs
+                    personas—detailed profiles that capture different customer
+                    needs and motivations. If anything feels off, you'll have a
+                    chance to refine it.
                   </p>
                 </div>
 
@@ -411,7 +412,7 @@ const ExplanationScreen: React.FC = () => {
                               {selectedFile.size < 1024 * 1024
                                 ? `${(selectedFile.size / 1024).toFixed(1)} KB`
                                 : `${(selectedFile.size / 1024 / 1024).toFixed(
-                                    2
+                                    2,
                                   )} MB`}
                             </p>
                           </div>

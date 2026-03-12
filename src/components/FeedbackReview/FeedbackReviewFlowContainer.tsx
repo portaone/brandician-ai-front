@@ -36,7 +36,7 @@ const REVIEW_STEPS: ReviewStep[] = [
   {
     id: "jtbd",
     component: JTBDAdjustmentContainer,
-    title: "Review CJobs-to-be-Done",
+    title: "Review CJobs to be done / Customer Needs",
     status: BRAND_STATUS_FEEDBACK_REVIEW_JTBD,
   },
   {
@@ -72,7 +72,7 @@ const FeedbackReviewFlowContainer: React.FC = () => {
         setCurrentBrand(brand);
         console.log(
           "[DEBUG] useEffect: brand.current_status =",
-          brand.current_status
+          brand.current_status,
         );
       } catch (e) {
         setError("Failed to load brand info.");
@@ -98,7 +98,8 @@ const FeedbackReviewFlowContainer: React.FC = () => {
     const getStepFromPath = () => {
       if (location.pathname.endsWith("/summary")) return "summary";
       if (location.pathname.endsWith("/jtbd")) return "jtbd";
-      if (location.pathname.endsWith("/primary-persona")) return "primary-persona";
+      if (location.pathname.endsWith("/primary-persona"))
+        return "primary-persona";
       if (location.pathname.endsWith("/archetype")) return "archetype";
       if (location.pathname.endsWith("/feedback-review")) return null; // Old generic path
       return null;
@@ -106,7 +107,7 @@ const FeedbackReviewFlowContainer: React.FC = () => {
 
     const currentStepId = getStepFromPath();
     const expectedStep = REVIEW_STEPS.find(
-      (step) => step.status === currentBrand.current_status
+      (step) => step.status === currentBrand.current_status,
     );
 
     console.log(
@@ -115,7 +116,7 @@ const FeedbackReviewFlowContainer: React.FC = () => {
       "Expected step:",
       expectedStep?.id,
       "Brand status:",
-      currentBrand.current_status
+      currentBrand.current_status,
     );
 
     if (expectedStep && currentStepId !== expectedStep.id) {
@@ -137,14 +138,14 @@ const FeedbackReviewFlowContainer: React.FC = () => {
   const handleStepComplete = async () => {
     if (!brandId || !currentBrand) {
       console.log(
-        "[DEBUG] handleStepComplete: Missing brandId or currentBrand"
+        "[DEBUG] handleStepComplete: Missing brandId or currentBrand",
       );
       return;
     }
 
     console.log(
       "[DEBUG] FeedbackReviewFlow: handleStepComplete called, current status =",
-      currentBrand.current_status
+      currentBrand.current_status,
     );
 
     try {
@@ -153,7 +154,7 @@ const FeedbackReviewFlowContainer: React.FC = () => {
       const progressResp = await brands.progressStatus(brandId);
       console.log(
         "[DEBUG] FeedbackReviewFlow: progress response",
-        progressResp
+        progressResp,
       );
 
       // Re-fetch brand to get the latest status from backend
@@ -161,25 +162,25 @@ const FeedbackReviewFlowContainer: React.FC = () => {
       const updatedBrand = await brands.get(brandId);
       console.log(
         "[DEBUG] FeedbackReviewFlow: brand after progress",
-        updatedBrand
+        updatedBrand,
       );
       setCurrentBrand(updatedBrand);
 
       // Check if we're still in the feedback review flow
       const isStillInReviewFlow = REVIEW_STEPS.some(
-        (step) => step.status === updatedBrand.current_status
+        (step) => step.status === updatedBrand.current_status,
       );
       console.log(
         "[DEBUG] FeedbackReviewFlow: Still in review flow?",
         isStillInReviewFlow,
         "New status:",
-        updatedBrand.current_status
+        updatedBrand.current_status,
       );
 
       if (!isStillInReviewFlow) {
         // We've completed all review steps, navigate to the next phase
         console.log(
-          "[DEBUG] FeedbackReviewFlow: Exiting review flow, navigating to next phase"
+          "[DEBUG] FeedbackReviewFlow: Exiting review flow, navigating to next phase",
         );
         if (updatedBrand.current_status === BRAND_STATUS_PICK_NAME) {
           navigate(`/brands/${brandId}/pick-name`);
@@ -228,7 +229,8 @@ const FeedbackReviewFlowContainer: React.FC = () => {
   const getStepFromPath = () => {
     if (location.pathname.endsWith("/summary")) return "summary";
     if (location.pathname.endsWith("/jtbd")) return "jtbd";
-    if (location.pathname.endsWith("/primary-persona")) return "primary-persona";
+    if (location.pathname.endsWith("/primary-persona"))
+      return "primary-persona";
     if (location.pathname.endsWith("/archetype")) return "archetype";
     return null;
   };

@@ -51,7 +51,9 @@ export const JTBDDisplay: React.FC<JTBDDisplayProps> = ({
   if (isLoading) {
     return (
       <div className={`${className}`}>
-        <h3 className="font-semibold text-gray-800 mb-2">Jobs-To-Be-Done</h3>
+        <h3 className="font-semibold text-gray-800 mb-2">
+          Jobs to be done / Customer Needs
+        </h3>
         <div className="text-gray-500 italic">Loading...</div>
       </div>
     );
@@ -87,7 +89,7 @@ export const JTBDDisplay: React.FC<JTBDDisplayProps> = ({
       {/* Drivers */}
       {jtbd.drivers && (
         <div>
-          <h4 className="font-semibold text-gray-800 mb-2">Drivers:</h4>
+          <h4 className="font-semibold text-gray-800 mb-2">Customer needs:</h4>
           <div className="bg-gray-50 p-3 rounded">
             <div className="prose prose-sm max-w-none text-gray-700">
               <MarkdownPreviewer
