@@ -28,7 +28,7 @@ const Footer: React.FC = () => (
             <h3 className="text-[28px] md:text-[34px] lg:text-[40px] font-['Bitter'] font-normal mt-[15px] md:mt-[18px] lg:mt-[20px] mb-[10px] md:mb-[12px] lg:mb-[15px] leading-[1.25]">
               Nurturing brands into
               <br />
-              legends since 2010
+              legends
             </h3>
             <p className="text-[14px] md:text-[16px] lg:text-[18px] font-['Source_Sans_Pro'] font-medium leading-[1.75] text-[#BFACB8] uppercase tracking-[1.5px] lg:tracking-[2px]">
               Hearts seek connection—
