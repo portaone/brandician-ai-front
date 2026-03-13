@@ -116,6 +116,10 @@ const VisualIdentityContainer: React.FC = () => {
   const [isProgressing, setIsProgressing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Previous palette reuse
+  const [previousPalette, setPreviousPalette] =
+    useState<BackendPaletteColors | null>(null);
+  const [usePreviousPalette, setUsePreviousPalette] = useState(false);
 
   // Track current selector indices so "Save and proceed" can read them
   const selectionRef = useRef({ paletteIndex: 0, fontIndex: 0 });
@@ -126,6 +130,38 @@ const VisualIdentityContainer: React.FC = () => {
       selectBrand(brandId);
     }
   }, [brandId, currentBrand, selectBrand]);
+
+  // Fetch previous palette asset (if any) so the user can opt to reuse it
+  useEffect(() => {
+    if (!brandId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await brands.listAssets(brandId);
+        const assetList = resp?.assets ?? resp;
+        const paletteAsset = (assetList as any[]).find(
+          (a: any) => a.type === "palette",
+        );
+        if (!paletteAsset || cancelled) return;
+        const full = await brands.getAsset(brandId, paletteAsset.id);
+        if (cancelled) return;
+        const content = full.content;
+        if (!content) return;
+        const parsed =
+          typeof content === "string" ? JSON.parse(content) : content;
+        // Only use it if it's a single palette object (already selected),
+        // not the multi-variant { palettes: [...] } format
+        if (parsed && !parsed.palettes) {
+          setPreviousPalette(parsed as BackendPaletteColors);
+        }
+      } catch {
+        // Silently ignore — this is a best-effort lookup
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [brandId]);
 
   const applyResponse = (data: {
     raw_markdown: string;
@@ -203,11 +239,20 @@ const VisualIdentityContainer: React.FC = () => {
     try {
       // Save palette & font selection to hub
       if (paletteNeedsSelection) {
-        await brands.saveVisualIdentitySelection(
-          brandId,
-          selectionRef.current.paletteIndex,
-          selectionRef.current.fontIndex,
-        );
+        if (usePreviousPalette && previousPalette) {
+          await brands.saveVisualIdentitySelection(
+            brandId,
+            -1,
+            selectionRef.current.fontIndex,
+            previousPalette as Record<string, string>,
+          );
+        } else {
+          await brands.saveVisualIdentitySelection(
+            brandId,
+            selectionRef.current.paletteIndex,
+            selectionRef.current.fontIndex,
+          );
+        }
       }
       const statusUpdate = await progressBrandStatus(brandId);
       navigateAfterProgress(navigate, brandId, statusUpdate);
@@ -311,6 +356,24 @@ const VisualIdentityContainer: React.FC = () => {
             </div>
           )}
 
+          {/* Use previous palette banner */}
+          {previousPalette && paletteNeedsSelection && (
+            <div className="mb-6 bg-white rounded-lg shadow-lg px-4 sm:px-6 py-4">
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={usePreviousPalette}
+                  onChange={(e) => setUsePreviousPalette(e.target.checked)}
+                  className="h-4 w-4 rounded-md"
+                  style={{ accentColor: "var(--color-primary)" }}
+                />
+                <span className="text-sm text-neutral-600">
+                  Use my previous color palette instead of choosing a new one
+                </span>
+              </label>
+            </div>
+          )}
+
           {/* Visual System Selector — shown when palette has multiple variants */}
           {paletteNeedsSelection &&
             parsedPalettes.length > 0 &&
@@ -320,6 +383,12 @@ const VisualIdentityContainer: React.FC = () => {
                 fontSets={fontSets}
                 brandName={brandLabel}
                 onSelectionChange={handleSelectionChange}
+                paletteDisabled={usePreviousPalette}
+                overridePalette={
+                  usePreviousPalette && previousPalette
+                    ? transformPalette(previousPalette, 0)
+                    : undefined
+                }
               />
             )}
 

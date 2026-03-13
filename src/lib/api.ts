@@ -799,10 +799,16 @@ export const brands = {
     return response.data;
   },
 
-  saveVisualIdentitySelection: async (brandId: string, paletteIndex: number, fontIndex: number) => {
+  saveVisualIdentitySelection: async (
+    brandId: string,
+    paletteIndex: number,
+    fontIndex: number,
+    paletteOverride?: Record<string, string>,
+  ) => {
     await api.post(apiPath(`/brands/${brandId}/visual-identity/save`), {
       palette_index: paletteIndex,
       font_index: fontIndex,
+      ...(paletteOverride && { palette_override: paletteOverride }),
     });
   },
 

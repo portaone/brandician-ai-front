@@ -39,6 +39,8 @@ interface VisualSystemSelectorProps {
   fontSets: FontSet[];
   brandName: string;
   onSelectionChange?: (paletteIndex: number, fontIndex: number) => void;
+  paletteDisabled?: boolean;
+  overridePalette?: Palette;
 }
 
 // ── Backend data transform ───────────────────────────────
@@ -150,6 +152,8 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
   fontSets,
   brandName,
   onSelectionChange,
+  paletteDisabled,
+  overridePalette,
 }) => {
   const [palIdx, setPalIdx] = useState(0);
   const [fntIdx, setFntIdx] = useState(0);
@@ -165,7 +169,7 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
     return () => mq.removeEventListener("change", handler);
   }, []);
 
-  const pal = palettes[palIdx];
+  const pal = overridePalette && paletteDisabled ? overridePalette : palettes[palIdx];
   const fnt = fontSets[fntIdx];
 
   // Notify parent whenever the selection changes
@@ -181,6 +185,7 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
     color,
     onClick,
     title,
+    disabled,
   }: {
     label: string;
     sub: string;
@@ -188,23 +193,25 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
     color: string;
     onClick: () => void;
     title?: string;
+    disabled?: boolean;
   }) => (
     <button
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
       title={title}
       style={{
         flex: 1,
         padding: "8px 6px 7px",
         borderRadius: "10px",
         border: "none",
-        background: active ? color : "#F0F0F0",
-        color: active ? textOn(color) : "#666",
+        background: disabled ? "#E0E0E0" : active ? color : "#F0F0F0",
+        color: disabled ? "#999" : active ? textOn(color) : "#666",
         fontFamily: UI_FONT_STACK,
         fontWeight: active ? 700 : 600,
         fontSize: "16px",
-        cursor: "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
         transition: "background 0.18s, color 0.18s",
         lineHeight: 1,
+        opacity: disabled ? 0.4 : 1,
       }}
     >
       {label}
@@ -249,6 +256,7 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
             color={p.main.hex}
             onClick={() => setPalIdx(i)}
             title={p.rationale ? stripMarkdown(p.rationale) : undefined}
+            disabled={paletteDisabled}
           />
         ))}
       </div>
