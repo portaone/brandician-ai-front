@@ -1,22 +1,14 @@
-import {
-  AlertCircle,
-  ArrowLeft,
-  ArrowRight,
-  Copy,
-  CreditCard,
-} from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { CreditCard } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { backendConfig, brands } from "../../lib/api";
 import { useGooglePay } from "../../hooks/useGooglePay";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
-import Button from "../common/Button";
-import GetHelpButton from "../common/GetHelpButton";
-import HistoryButton from "../common/HistoryButton";
 import BrandicianLoader from "../common/BrandicianLoader";
 import GooglePayMark from "../icons/GooglePayMark";
-import GooglePayButton from "./GooglePayButton";
+import PaymentAmountStep from "./PaymentAmountStep";
+import PaymentMethodStep from "./PaymentMethodStep";
 
 interface PaymentMethod {
   id: string;
@@ -36,7 +28,7 @@ const PaymentContainer: React.FC = () => {
 
   // Payment state
   const [paymentAmount, setPaymentAmount] = useState<string>(
-    () => sessionStorage.getItem("paymentAmount") || "",
+    () => sessionStorage.getItem("paymentAmount") || "25",
   );
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<string>("credit_card");
@@ -48,27 +40,17 @@ const PaymentContainer: React.FC = () => {
 
   // ---------------------------------------------------------------------------
   // Google Pay configuration
-  //
-  // These values are fetched from the backend /config endpoint on mount.
-  // They configure the useGooglePay hook which manages the entire GPay lifecycle:
-  //   - Checking availability (isReadyToPay)
-  //   - Processing payments (loadPaymentData → Stripe token)
-  //   - Rendering Google's native branded button (createButton)
-  //
-  // See useGooglePay.ts for the full flow documentation.
   // ---------------------------------------------------------------------------
   const [stripePublishableKey, setStripePublishableKey] = useState<
     string | null
   >(null);
-  const [googlePayMerchantId, setGooglePayMerchantId] = useState<string | null>(
-    null,
-  );
+  const [googlePayMerchantId, setGooglePayMerchantId] = useState<
+    string | null
+  >(null);
   const [googlePayEnvironment, setGooglePayEnvironment] = useState<
     "TEST" | "PRODUCTION"
   >("PRODUCTION");
 
-  // Initialize the Google Pay hook. This creates a single PaymentsClient
-  // that handles availability checks, payment processing, AND button rendering.
   const {
     isAvailable: isGooglePayAvailable,
     isLoading: isGooglePayLoading,
@@ -85,27 +67,7 @@ const PaymentContainer: React.FC = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  // Social sharing state for zero-amount
-  const [sharedNetworks, setSharedNetworks] = useState<{
-    [key: string]: boolean;
-  }>({
-    facebook: false,
-    linkedin: false,
-    twitter: false,
-    other: false,
-  });
-  const shareText =
-    "I have just created a branding for my new business idea using Brandician.AI and it was awesome! AI-powered tool analyzes your business idea, suggests the brand archetype, generates brand assets, etc. Visit https://brandician.ai/ to create a brand for your idea!";
-  const atLeastOneShared = Object.values(sharedNetworks).some(Boolean);
   const isZeroAmount = paymentAmount !== "" && parseFloat(paymentAmount) === 0;
-  // Allow proceeding with zero amount - social sharing is optional, not required
-  const canProceed =
-    paymentAmount !== "" &&
-    !isNaN(parseFloat(paymentAmount)) &&
-    parseFloat(paymentAmount) >= 0;
-
-  // Ref for amount input
-  const amountInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (brandId && (!currentBrand || currentBrand.id !== brandId)) {
@@ -126,6 +88,13 @@ const PaymentContainer: React.FC = () => {
     }
   }, [searchParams]);
 
+  // Persist payment amount to sessionStorage
+  useEffect(() => {
+    if (paymentAmount) {
+      sessionStorage.setItem("paymentAmount", paymentAmount);
+    }
+  }, [paymentAmount]);
+
   // Load available payment methods
   useEffect(() => {
     const loadPaymentMethods = async () => {
@@ -139,7 +108,6 @@ const PaymentContainer: React.FC = () => {
         console.error("Failed to fetch config:", configError);
       }
 
-      // Map processor names to payment method IDs
       const processorToMethodId: { [key: string]: string } = {
         stripe: "credit_card",
         paypal: "paypal",
@@ -175,7 +143,6 @@ const PaymentContainer: React.FC = () => {
           },
         ];
 
-        // Filter methods based on available processors from backend
         const allowedMethodIds = availableProcessors.map(
           (p) => processorToMethodId[p.toLowerCase()],
         );
@@ -185,14 +152,12 @@ const PaymentContainer: React.FC = () => {
 
         setAvailablePaymentMethods(paymentMethods);
 
-        // Set default to first enabled method
         const firstEnabled = paymentMethods.find((method) => method.enabled);
         if (firstEnabled) {
           setSelectedPaymentMethod(firstEnabled.id);
         }
       } catch (error) {
         console.error("Failed to load payment methods:", error);
-        // Fallback to credit card
         setAvailablePaymentMethods([
           {
             id: "credit_card",
@@ -210,15 +175,7 @@ const PaymentContainer: React.FC = () => {
     loadPaymentMethods();
   }, []);
 
-  // ---------------------------------------------------------------------------
   // Google Pay availability sync
-  //
-  // The payment method list is initially loaded from the backend (which says
-  // "google_pay is available as a processor"). But the CLIENT might not support
-  // Google Pay (e.g., browser without GPay, no saved cards). The useGooglePay
-  // hook checks this via isReadyToPay(). Once the check completes, we update
-  // the payment method list to reflect actual client-side availability.
-  // ---------------------------------------------------------------------------
   useEffect(() => {
     if (!isGooglePayLoading) {
       setAvailablePaymentMethods((prev) =>
@@ -231,15 +188,8 @@ const PaymentContainer: React.FC = () => {
     }
   }, [isGooglePayAvailable, isGooglePayLoading]);
 
-  useEffect(() => {
-    if (amountInputRef.current) {
-      amountInputRef.current.focus();
-    }
-  }, []);
-
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
-    // Accept zero as valid
     if (paymentAmount === "" || isNaN(Number(paymentAmount))) {
       newErrors.payment = "Please enter a payment amount";
     }
@@ -250,6 +200,39 @@ const PaymentContainer: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handlePaymentAmountChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setPaymentAmount(e.target.value);
+    setErrors({ ...errors, payment: "" });
+  };
+
+  const handleContinue = () => {
+    const amount = parseFloat(paymentAmount);
+    if (paymentAmount === "" || isNaN(amount)) {
+      setErrors({ payment: "Please enter a payment amount" });
+      return;
+    }
+    setErrors({});
+
+    if (amount === 0) {
+      navigate(`/brands/${brandId}/payment/share`);
+      return;
+    }
+
+    setCurrentStep(2);
+  };
+
+  const handleSkipContribution = () => {
+    setPaymentAmount("0");
+    navigate(`/brands/${brandId}/payment/share`);
+  };
+
+  const handleBackToAmount = () => {
+    setCurrentStep(1);
+    setPaymentError(null);
+  };
+
   const handlePaymentSubmit = async () => {
     if (!brandId || !validateForm()) return;
     setIsProcessingPayment(true);
@@ -257,65 +240,39 @@ const PaymentContainer: React.FC = () => {
 
     try {
       if (isZeroAmount) {
-        // Use dedicated skip-payment endpoint for zero-amount contributions
-        // This creates a proper payment record and progresses status securely
         const updatedBrand = await brands.skipPayment(brandId);
         navigateAfterProgress(navigate, brandId, updatedBrand);
         return;
       }
 
-      // -----------------------------------------------------------------------
-      // Google Pay flow:
-      //
-      // 1. requestGooglePayPayment(amount) opens Google's payment sheet
-      //    (handled by useGooglePay hook → PaymentsClient.loadPaymentData)
-      // 2. User selects card and confirms inside Google's popup
-      // 3. Google returns a Stripe token (JSON string with tok_xxx)
-      // 4. We send the token to POST /api/v1.0/payments/google-pay
-      //    (backend parses the token, creates a Stripe PaymentIntent)
-      // 5. Navigate to the payment success page for verification UI
-      //
-      // Note: In TEST mode, the first attempt may fail with OR_BIBED_08
-      // (known flaky behavior of Google's test sandbox). This does not
-      // occur in PRODUCTION with a properly registered merchant.
-      // -----------------------------------------------------------------------
+      // Google Pay flow
       if (selectedPaymentMethod === "google_pay") {
         const amount = parseFloat(paymentAmount);
         const token = await requestGooglePayPayment(amount);
 
         if (!token) {
-          // User clicked "Cancel" in Google's payment sheet — not an error
           setIsProcessingPayment(false);
           return;
         }
 
-        // Send the Stripe token to the backend for payment processing
         await brands.processGooglePay(brandId, token, amount, "USD");
-
-        // Navigate to the success page (same flow as Stripe/PayPal).
-        // PaymentSuccess component will verify payment and show confirmation.
         navigate(`/brands/${brandId}/payment/google_pay/success`);
         return;
       }
 
-      // Create payment session with the backend for other payment methods
+      // Stripe/PayPal flow
       const paymentSession = await brands.createPaymentSession(
         brandId,
         parseFloat(paymentAmount),
         `Brand creation payment for ${currentBrand?.name || "brand"}`,
         selectedPaymentMethod,
       );
-      // Redirect to payment processor checkout (no popup - avoids blocker issues)
       console.log(
         "Redirecting to payment checkout:",
         paymentSession.checkout_url,
       );
 
-      // Save amount so it persists if user cancels and returns
       sessionStorage.setItem("paymentAmount", paymentAmount);
-
-      // Direct redirect - no popup blockers, cleaner UX
-      // PayPal will redirect back to success/cancel URLs configured in backend
       window.location.href = paymentSession.checkout_url;
     } catch (error: any) {
       console.error("Payment submission failed:", error);
@@ -326,34 +283,6 @@ const PaymentContainer: React.FC = () => {
       setPaymentError(errorMessage);
       setIsProcessingPayment(false);
     }
-  };
-
-  const handlePaymentAmountChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    setPaymentAmount(e.target.value);
-    setErrors({ ...errors, payment: "" });
-  };
-
-  const handleCheckboxChange = (network: string) => {
-    setSharedNetworks((prev) => ({ ...prev, [network]: !prev[network] }));
-  };
-
-  const handleCopyShareText = () => {
-    navigator.clipboard.writeText(shareText);
-  };
-
-  const handleProceedToPaymentMethod = () => {
-    if (paymentAmount === "" || isNaN(Number(paymentAmount))) {
-      setErrors({ payment: "Please enter a payment amount" });
-      return;
-    }
-    setErrors({});
-    setCurrentStep(2);
-  };
-
-  const handleBackToAmount = () => {
-    setCurrentStep(1);
   };
 
   if (isLoading || !currentBrand) {
@@ -367,404 +296,38 @@ const PaymentContainer: React.FC = () => {
     );
   }
 
+  if (currentStep === 1) {
+    return (
+      <PaymentAmountStep
+        brandName={currentBrand.name}
+        paymentAmount={paymentAmount}
+        onAmountChange={handlePaymentAmountChange}
+        onPresetSelect={(amount) => setPaymentAmount(amount.toString())}
+        onContinue={handleContinue}
+        onSkipContribution={handleSkipContribution}
+        isZeroAmount={isZeroAmount}
+        errors={errors}
+        paymentError={paymentError}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen py-8">
-      <div className="container mx-auto px-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4 md:p-8">
-            <div className="text-center mb-8">
-              <CreditCard className="h-12 w-12 text-primary-600 mx-auto mb-4" />
-              <div className="flex sm:justify-between flex-wrap gap-2 items-center mb-4">
-                <div className="flex-1 hidden sm:block"></div>
-                <h1 className="text-3xl font-display font-bold text-neutral-800 flex-1 text-center">
-                  Support Our Mission
-                </h1>
-                <div className="flex-1 flex flex-wrap sm:justify-end gap-3">
-                  {brandId && <HistoryButton brandId={brandId} size="md" />}
-                  <GetHelpButton variant="secondary" size="md" />
-                </div>
-              </div>
-              <p className="text-lg text-neutral-600 mb-6">
-                Your brand <strong>{currentBrand.name}</strong> is ready! We ask
-                for a contribution based on the value we've provided.
-              </p>
-            </div>
-
-            {/* Step Indicator */}
-            <div className="flex items-center justify-center mb-8">
-              <div className="flex items-center">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    currentStep >= 1
-                      ? "bg-primary-600 text-white"
-                      : "bg-gray-200 text-gray-600"
-                  }`}
-                >
-                  1
-                </div>
-                <div
-                  className={`w-16 h-1 mx-2 ${
-                    currentStep >= 2 ? "bg-primary-600" : "bg-gray-200"
-                  }`}
-                />
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    currentStep >= 2
-                      ? "bg-primary-600 text-white"
-                      : "bg-gray-200 text-gray-600"
-                  }`}
-                >
-                  2
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-8">
-              {/* Payment Error Alert */}
-              {paymentError && (
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <AlertCircle className="h-5 w-5 text-orange-600 mr-2" />
-                    <p className="text-orange-800">{paymentError}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 1: Payment Amount Section */}
-              {currentStep === 1 && (
-                <>
-                  <div>
-                    <h2 className="text-xl font-semibold text-neutral-800 mb-4">
-                      Choose Your Contribution
-                    </h2>
-                    <p className="text-neutral-600 mb-4">
-                      We ask for a contribution of <strong>any amount</strong>{" "}
-                      based on the value we've added to your brand's future
-                      success. Your support helps us cover AI costs and continue
-                      developing new features for entrepreneurs like you.
-                      <br />
-                      Yes, the amount can even be zero! If you absolutely cannot
-                      contribute now, please enter <strong>0</strong> in the
-                      Amount field and spread the word about us in as many as
-                      possible of your favorite social networks.
-                    </p>
-
-                    <div className="mb-4">
-                      <label
-                        htmlFor="payment"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Contribution Amount ($)
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                          $
-                        </span>
-                        <input
-                          id="payment"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={paymentAmount}
-                          onChange={handlePaymentAmountChange}
-                          className={`w-full pl-8 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                            errors.payment
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          placeholder="Enter amount"
-                          ref={amountInputRef}
-                        />
-                      </div>
-                      {errors.payment && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.payment}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Suggested amounts */}
-                    <div className="grid grid-cols-4 gap-2 mb-6">
-                      {[10, 25, 50, 100].map((amount) => (
-                        <button
-                          key={amount}
-                          onClick={() => setPaymentAmount(amount.toString())}
-                          className={`px-3 py-2 border rounded-lg text-sm transition-colors ${
-                            paymentAmount === amount.toString()
-                              ? "border-primary-500 bg-primary-50 text-primary-700"
-                              : "border-gray-300 hover:bg-gray-50"
-                          }`}
-                        >
-                          ${amount}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Share text section */}
-                    <div className="bg-white border border-gray-200 rounded p-4 mb-6 text-left max-w-2xl mx-auto">
-                      <div className="mb-2 text-gray-700 font-semibold">
-                        Share this text on social networks:
-                      </div>
-                      <div className="font-mono text-base text-gray-900 mb-2 whitespace-pre-line">
-                        {shareText}
-                      </div>
-                      <Button
-                        onClick={handleCopyShareText}
-                        leftIcon={<Copy className="h-4 w-4" />}
-                        variant="primary"
-                      >
-                        Copy to Clipboard
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Step 1 Navigation */}
-                  <div className="border-t pt-6">
-                    {isZeroAmount ? (
-                      <>
-                        {/* Zero amount - show sharing requirement and skip button */}
-                        <div className="mb-6 p-6 border-l-4 border-l-[var(--color-secondary)] rounded-lg text-center bg-[#7f59710d]">
-                          <div className="text-lg font-bold text-[var(--color-text)] mb-4">
-                            <p>
-                              It's ok to pay nothing - sometimes the cash
-                              situation is tight. But can you please do a thing
-                              that won't cost you anything - but will help
-                              Brandician and our customers?
-                            </p>
-                            <p className="mt-2">
-                              Please share the text above on as many as possible
-                              of your favorite social networks.
-                            </p>
-                          </div>
-                          <div className="mb-4 mt-4">
-                            <div className="font-semibold text-lg mb-2">
-                              Yes, I shared it on:
-                            </div>
-                            <div className="flex flex-wrap justify-center gap-6">
-                              <label className="flex items-center gap-2 text-lg">
-                                <input
-                                  type="checkbox"
-                                  checked={sharedNetworks.facebook}
-                                  onChange={() =>
-                                    handleCheckboxChange("facebook")
-                                  }
-                                />
-                                Facebook
-                              </label>
-                              <label className="flex items-center gap-2 text-lg">
-                                <input
-                                  type="checkbox"
-                                  checked={sharedNetworks.linkedin}
-                                  onChange={() =>
-                                    handleCheckboxChange("linkedin")
-                                  }
-                                />
-                                LinkedIn
-                              </label>
-                              <label className="flex items-center gap-2 text-lg">
-                                <input
-                                  type="checkbox"
-                                  checked={sharedNetworks.twitter}
-                                  onChange={() =>
-                                    handleCheckboxChange("twitter")
-                                  }
-                                />
-                                Twitter(X)
-                              </label>
-                              <label className="flex items-center gap-2 text-lg">
-                                <input
-                                  type="checkbox"
-                                  checked={sharedNetworks.other}
-                                  onChange={() => handleCheckboxChange("other")}
-                                />
-                                Other
-                              </label>
-                            </div>
-                          </div>
-                        </div>
-
-                        <Button
-                          onClick={handlePaymentSubmit}
-                          disabled={isProcessingPayment || !atLeastOneShared}
-                          loading={isProcessingPayment}
-                          className="w-full"
-                        >
-                          {isProcessingPayment
-                            ? "Processing..."
-                            : "Proceed without payment"}
-                        </Button>
-                        <p className="text-xs text-gray-500 text-center mt-2">
-                          Your download will be available immediately
-                        </p>
-                      </>
-                    ) : (
-                      <>
-                        {/* Non-zero amount - proceed to payment method */}
-                        <Button
-                          onClick={handleProceedToPaymentMethod}
-                          disabled={paymentAmount === ""}
-                          rightIcon={<ArrowRight className="h-5 w-5" />}
-                          className="w-full"
-                        >
-                          Continue to Payment Method
-                        </Button>
-                        <p className="text-xs text-gray-500 text-center mt-2">
-                          Next: Choose how you'd like to pay
-                        </p>
-                      </>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {/* STEP 2: Payment Method Selection */}
-              {currentStep === 2 && (
-                <>
-                  {/* Amount Summary */}
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-green-700">
-                          Your contribution amount
-                        </p>
-                        <p className="text-2xl font-bold text-green-800">
-                          ${parseFloat(paymentAmount).toFixed(2)}
-                        </p>
-                      </div>
-                      <button
-                        onClick={handleBackToAmount}
-                        className="text-sm text-green-700 hover:text-green-800 underline"
-                      >
-                        Change amount
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Payment Method Selection */}
-                  <div>
-                    <h2 className="text-xl font-semibold text-neutral-800 mb-4">
-                      Select Payment Method
-                    </h2>
-                    {isLoadingMethods ? (
-                      <div className="flex items-center justify-center py-4">
-                        <BrandicianLoader />
-                        <span className="text-gray-600">
-                          Loading payment methods...
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {availablePaymentMethods.map((method) => (
-                          <label
-                            key={method.id}
-                            className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
-                              method.enabled
-                                ? selectedPaymentMethod === method.id
-                                  ? "border-primary-500 bg-primary-50"
-                                  : "border-gray-300 hover:border-gray-400"
-                                : "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60"
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name="paymentMethod"
-                              value={method.id}
-                              checked={selectedPaymentMethod === method.id}
-                              onChange={(e) =>
-                                setSelectedPaymentMethod(e.target.value)
-                              }
-                              disabled={!method.enabled}
-                              className="sr-only"
-                            />
-                            <div className="flex items-center">
-                              {method.icon}
-                              <span className="ml-3 font-medium text-gray-900">
-                                {method.name}
-                              </span>
-                              {!method.enabled && (
-                                <span className="ml-2 text-xs text-gray-500">
-                                  (Not available)
-                                </span>
-                              )}
-                            </div>
-                            {selectedPaymentMethod === method.id &&
-                              method.enabled && (
-                                <div className="ml-auto">
-                                  <div className="h-4 w-4 rounded-full bg-primary-600 flex items-center justify-center">
-                                    <div className="h-2 w-2 rounded-full bg-white" />
-                                  </div>
-                                </div>
-                              )}
-                          </label>
-                        ))}
-                        {errors.paymentMethod && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.paymentMethod}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Step 2 Navigation */}
-                  <div className="border-t pt-6 space-y-3">
-                    <div className="flex gap-3">
-                      <Button
-                        onClick={handleBackToAmount}
-                        variant="secondary"
-                        leftIcon={<ArrowLeft className="h-5 w-5" />}
-                        className="flex-1"
-                      >
-                        Back to Amount
-                      </Button>
-
-                      {/* -----------------------------------------------------------
-                          Google Pay: render the native GPay button via the
-                          GooglePayButton component. It mounts Google's official
-                          branded button (with card info in PRODUCTION) using
-                          PaymentsClient.createButton(). See GooglePayButton.tsx
-                          and useGooglePay.ts for implementation details.
-                          ----------------------------------------------------------- */}
-                      {selectedPaymentMethod === "google_pay" &&
-                      isGooglePayAvailable ? (
-                        <GooglePayButton
-                          createButton={createGooglePayButton}
-                          onPaymentSubmit={handlePaymentSubmit}
-                          isAvailable={isGooglePayAvailable}
-                        />
-                      ) : (
-                        <Button
-                          onClick={handlePaymentSubmit}
-                          disabled={
-                            isProcessingPayment || !selectedPaymentMethod
-                          }
-                          loading={isProcessingPayment}
-                          leftIcon={
-                            !isProcessingPayment ? (
-                              <CreditCard className="h-5 w-5" />
-                            ) : undefined
-                          }
-                          className="flex-1"
-                        >
-                          {isProcessingPayment
-                            ? "Processing..."
-                            : `Pay $${parseFloat(paymentAmount).toFixed(2)}`}
-                        </Button>
-                      )}
-                    </div>
-
-                    <p className="text-xs text-gray-500 text-center">
-                      Secure payment processing • Your download will be
-                      available immediately after payment
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <PaymentMethodStep
+      brandName={currentBrand.name}
+      paymentAmount={paymentAmount}
+      availablePaymentMethods={availablePaymentMethods}
+      selectedPaymentMethod={selectedPaymentMethod}
+      onSelectPaymentMethod={setSelectedPaymentMethod}
+      onBackToAmount={handleBackToAmount}
+      onSubmitPayment={handlePaymentSubmit}
+      isProcessingPayment={isProcessingPayment}
+      isLoadingMethods={isLoadingMethods}
+      isGooglePayAvailable={isGooglePayAvailable}
+      createGooglePayButton={createGooglePayButton}
+      paymentError={paymentError}
+      errors={errors}
+    />
   );
 };
 

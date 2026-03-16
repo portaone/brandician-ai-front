@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Brandician - Brandician.AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@400;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Brandician Color Palette */
+            --color-primary: #fd615e;
+            --color-secondary: #7f5971;
+            --color-light: #bfacb8;
+            --color-bg: #f4f2f2;
+            --color-text: #383236;
+            --color-white: #ffffff;
+
+            /* Fluid Typography */
+            --fs-xl: clamp(1.95rem, 1.56vi + 1.56rem, 2.81rem);
+            --fs-lg: clamp(1.56rem, 1vi + 1.31rem, 2.11rem);
+            --fs-md: clamp(1.25rem, 0.61vi + 1.1rem, 1.58rem);
+            --fs-base: clamp(1rem, 0.34vi + 0.91rem, 1.19rem);
+            --fs-sm: clamp(0.8rem, 0.17vi + 0.76rem, 0.89rem);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Bitter', Georgia, 'Times New Roman', Times, serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            font-size: 16px;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background: var(--color-white);
+            border-bottom: 1px solid var(--color-bg);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Bitter', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--color-text);
+            text-decoration: none;
+        }
+
+        .logo svg {
+            width: 100px;
+            height: auto;
+        }
+
+        .nav {
+            display: flex;
+            gap: 32px;
+        }
+
+        .nav a {
+            font-family: 'Source Sans 3', sans-serif;
+            color: var(--color-text);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.85rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            transition: color 0.2s;
+        }
+
+        .nav a:hover {
+            color: var(--color-secondary);
+        }
+
+        /* Main Content */
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 40px 80px;
+        }
+
+        .content-card {
+            background: var(--color-white);
+            border-radius: 16px;
+            padding: 56px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .brand-label {
+            font-family: 'Bitter', serif;
+            font-size: var(--fs-base);
+            color: var(--color-text);
+        }
+
+        .brand-label .brand-name {
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        h1 {
+            font-family: 'Bitter', serif;
+            font-size: var(--fs-xl);
+            color: var(--color-text);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .intro-text {
+            font-size: var(--fs-base);
+            color: var(--color-text);
+            line-height: 1.7;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .value-exchange {
+            background: rgba(253, 97, 94, 0.05);
+            border-left: 4px solid var(--color-primary);
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+        }
+
+        .value-exchange p {
+            font-size: var(--fs-base);
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
+
+        .share-section {
+            margin-bottom: 32px;
+        }
+
+        .share-section h2 {
+            font-family: 'Bitter', serif;
+            font-size: var(--fs-md);
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .share-description {
+            font-size: var(--fs-sm);
+            color: var(--color-secondary);
+            text-align: center;
+            margin-bottom: 16px;
+            font-family: 'Source Sans 3', sans-serif;
+        }
+
+        .share-link-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .share-link-input {
+            flex: 1;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 0.95rem;
+            color: var(--color-text);
+            background: var(--color-bg);
+            border: 2px solid var(--color-light);
+            border-radius: 12px;
+            padding: 12px 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .share-link-input:focus {
+            border-color: var(--color-secondary);
+        }
+
+        .copy-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: var(--color-secondary);
+            color: var(--color-white);
+            border: none;
+            border-radius: 12px;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover {
+            background: #6d4a60;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(127, 89, 113, 0.3);
+        }
+
+        .copy-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .copy-confirmation {
+            text-align: center;
+            font-size: var(--fs-sm);
+            color: var(--color-primary);
+            font-family: 'Source Sans 3', sans-serif;
+            font-weight: 600;
+        }
+
+        .share-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .share-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: var(--color-white);
+            border: 2px solid var(--color-light);
+            border-radius: 12px;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--color-text);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .share-btn:hover {
+            border-color: var(--color-secondary);
+            background: rgba(127, 89, 113, 0.05);
+        }
+
+        .share-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .share-confirmation {
+            text-align: center;
+            font-size: var(--fs-sm);
+            color: var(--color-light);
+            font-family: 'Source Sans 3', sans-serif;
+        }
+
+        /* Buttons */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            font-family: 'Source Sans 3', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            line-height: 1.1;
+            white-space: nowrap;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: var(--color-white);
+            border-radius: 12px;
+            padding: 14px 24px 12px 24px;
+            min-height: 48px;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #fc4945;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(253, 97, 94, 0.3);
+        }
+
+        .btn-tertiary {
+            background: transparent;
+            color: var(--color-light);
+            border: 1px solid var(--color-light);
+            border-radius: 12px;
+            padding: 10px 20px;
+            min-height: 40px;
+            font-weight: 500;
+        }
+
+        .btn-tertiary:hover:not(:disabled) {
+            background: rgba(191, 172, 184, 0.1);
+            color: var(--color-secondary);
+            border-color: var(--color-secondary);
+        }
+
+        .helper-text {
+            text-align: center;
+            font-size: var(--fs-sm);
+            color: var(--color-light);
+            font-family: 'Source Sans 3', sans-serif;
+            margin-top: 16px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .nav {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .content-card {
+                padding: 32px 24px;
+            }
+
+            .share-buttons {
+                flex-direction: column;
+            }
+
+            .share-btn {
+                width: 100%;
+            }
+
+            .share-link-container {
+                flex-direction: column;
+            }
+
+            .copy-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="#" class="logo">
+                <svg viewBox="0 0 262.3 260.6" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="#fd615e" d="M232,137.5c-1.1-1-4.3-3-8.8,1.1-1.3,1.2-2.8,2.8-4.7,4.9-4.8,5.2-11.5,12.5-19.8,17.8v-47.6c0-10.8-6.3-21.7-16.3-28.3-9.7-6.4-20.6-7.7-34.4-4.1-6.3,1.7-11.6,2.8-16.9,2.9-5.2,0-10.5-1.2-16.9-2.9-13.7-3.6-24.7-2.3-34.4,4.1-10.1,6.6-16.3,17.5-16.3,28.3v47.6c-8.3-5.3-15-12.6-19.8-17.8-1.9-2.1-3.4-3.7-4.7-4.9-4.6-4.1-7.7-2.1-8.8-1.1-1.2,1.1-1.9,2.7-2,4.5-.1,6.9,11.6,19.1,11.7,19.3,19.2,19,38.4,20,91.2,20s72-1,91.2-20c.1-.1,11.9-12.3,11.7-19.3,0-1.8-.7-3.4-2-4.5ZM189,168.6c-12.9,2.8-30.5,3-57.9,3s-45-.2-57.9-3v-54.9c0-7.6,4.6-15.4,12-20.2,7.3-4.8,15.5-5.7,26.6-2.8,7,1.9,13,3.1,19.3,3.2h.1c6.2,0,12.2-1.3,19.3-3.2,11-2.9,19.2-2,26.6,2.8,7.4,4.9,12,12.6,12,20.2v54.9Z"/>
+                    <path fill="#fd615e" d="M135.8,110.1h-9.3c-4,13.3-6.4,15.6-19.6,19.6v9.3c13.3,4,15.6,6.4,19.6,19.6h9.3c4-13.3,6.4-15.6,19.6-19.6v-9.3c-13.3-4-15.6-6.4-19.6-19.6ZM131.1,144.1c-2.4-4.3-5.4-7.3-9.7-9.7,4.3-2.4,7.3-5.4,9.7-9.7,2.4,4.3,5.4,7.3,9.7,9.7-4.3,2.4-7.3,5.4-9.7,9.7Z"/>
+                </svg>
+                Brandician.AI
+            </a>
+            <nav class="nav">
+                <a href="#">About</a>
+                <a href="#">Dashboard</a>
+                <a href="#">Account</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="content-card">
+            <p class="brand-label" style="text-align: center; margin-bottom: 16px;">Brand: <span class="brand-name">Therapeya</span></p>
+            <h1>Help others build better brands</h1>
+            <p class="intro-text">Brandician stays accessible so founders and small teams can build clear, credible brands without agency budgets.</p>
+
+            <div class="value-exchange">
+                <h2 style="font-family: 'Bitter', serif; font-size: var(--fs-md); font-weight: 600; margin-bottom: 12px;">What you gain</h2>
+                <p>A live Brand Hub you can share with your team, designers, or partners. Always up to date. No scattered files or outdated PDFs.</p>
+            </div>
+
+            <div class="value-exchange" style="margin-bottom: 40px;">
+                <h2 style="font-family: 'Bitter', serif; font-size: var(--fs-md); font-weight: 600; margin-bottom: 12px;">How you help</h2>
+                <p>Share your Brand Hub or mention Brandician. It helps other founders discover a more thoughtful way to build their brand.</p>
+            </div>
+
+            <div class="share-section">
+                <h2>Share your Brand Hub</h2>
+                <p class="share-description">Your Brand Hub has a shareable link. Anyone with the link can view your brand strategy and guidelines.</p>
+                <div class="share-link-container">
+                    <input type="text" class="share-link-input" value="https://brandician.ai/brand/therapeya-3k2j9" readonly id="brandHubLink">
+                    <button class="copy-btn" onclick="copyBrandHubLink()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
+                            <path d="M5 15H4C2.89543 15 2 14.1046 2 13V4C2 2.89543 2.89543 2 4 2H13C14.1046 2 15 2.89543 15 4V5" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        Copy Link
+                    </button>
+                </div>
+                <p class="copy-confirmation" id="copyConfirmation" style="display: none;">Link copied!</p>
+            </div>
+
+            <div class="share-section">
+                <h2>Or spread the word about Brandician</h2>
+                <p class="share-description">If Brandician helped clarify your brand, a short mention goes a long way.</p>
+                <div class="share-buttons">
+                    <a href="#" class="share-btn" onclick="shareOn('linkedin'); return false;">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" fill="currentColor"/>
+                        </svg>
+                        Share on LinkedIn
+                    </a>
+                    <a href="#" class="share-btn" onclick="shareOn('twitter'); return false;">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="currentColor"/>
+                        </svg>
+                        Share on X
+                    </a>
+                    <a href="#" class="share-btn" onclick="shareOn('facebook'); return false;">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="currentColor"/>
+                        </svg>
+                        Share on Facebook
+                    </a>
+                </div>
+                <p class="share-confirmation" id="shareConfirmation" style="display: none;">Thank you for sharing!</p>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="viewBrandHub()">
+                    Open Your Brand Hub
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6 3L11 8L6 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <button class="btn btn-tertiary" onclick="skipSharing()">
+                    Skip for now
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function copyBrandHubLink() {
+            const linkInput = document.getElementById('brandHubLink');
+            linkInput.select();
+            linkInput.setSelectionRange(0, 99999); // For mobile devices
+            
+            try {
+                document.execCommand('copy');
+                
+                // Show confirmation
+                const confirmation = document.getElementById('copyConfirmation');
+                confirmation.style.display = 'block';
+                
+                // Hide after 3 seconds
+                setTimeout(() => {
+                    confirmation.style.display = 'none';
+                }, 3000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        }
+
+        function shareOn(platform) {
+            const text = "I just used Brandician.AI to build my brand strategy. Agency-level thinking, without the agency price. Check it out:";
+            const url = "https://brandician.ai";
+            
+            let shareUrl;
+            switch(platform) {
+                case 'linkedin':
+                    shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+                    break;
+                case 'twitter':
+                    shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+                    break;
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+                    break;
+            }
+            
+            window.open(shareUrl, '_blank', 'width=600,height=400');
+            
+            // Show confirmation
+            document.getElementById('shareConfirmation').style.display = 'block';
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                document.getElementById('shareConfirmation').style.display = 'none';
+            }, 3000);
+        }
+
+        function viewBrandHub() {
+            // Navigate to Brand Hub
+            window.location.href = '/brand-hub';
+        }
+
+        function skipSharing() {
+            // Navigate to Brand Hub without sharing
+            window.location.href = '/brand-hub';
+        }
+    </script>
+</body>
+</html>

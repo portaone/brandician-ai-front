@@ -27,6 +27,7 @@ import BrandSummary from "./components/BrandSummary/BrandSummary";
 import TestimonialContainer from "./components/Testimonial/TestimonialContainer";
 import VisualIdentityContainer from "./components/VisualIdentity/VisualIdentityContainer";
 import PaymentContainer from "./components/Payment/PaymentContainer";
+import PaymentShareStep from "./components/Payment/PaymentShareStep";
 import PaymentSuccess from "./components/Payment/PaymentSuccess";
 import PaymentCancel from "./components/Payment/PaymentCancel";
 import CompletedContainer from "./components/Completed/CompletedContainer";
@@ -225,6 +226,14 @@ const App: React.FC = () => {
               element={
                 <AuthGuard>
                   <PaymentContainer />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/brands/:brandId/payment/share"
+              element={
+                <AuthGuard>
+                  <PaymentShareStep />
                 </AuthGuard>
               }
             />
