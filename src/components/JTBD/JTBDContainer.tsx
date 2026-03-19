@@ -575,7 +575,7 @@ const JTBDContainer: React.FC = () => {
                 >
                   3
                 </div>
-                <span className="ml-2 font-medium">Functional Drivers</span>
+                <span className="ml-2 font-medium">Motivational Drivers</span>
               </div>
             </div>
           </div>
@@ -771,7 +771,7 @@ const JTBDContainer: React.FC = () => {
               )}
               {currentStep === "rating" && "Continue to Edit Personas"}
               {currentStep === "editing" &&
-                "Continue to Review Persona's Drivers"}
+                "Continue to Review Motivational Drivers"}
               {currentStep === "drivers" && "Proceed to Survey"}
               <ArrowRight className="ml-2 h-5 w-5 inline" />
             </Button>
