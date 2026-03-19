@@ -1,7 +1,11 @@
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ChevronDown } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
+import {
+  ParsedArchetype,
+  parseArchetypeResponse,
+} from "../../lib/archetype-utils";
 import { scrollToTop } from "../../lib/utils";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
@@ -10,14 +14,48 @@ import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { useBrandStore } from "../../store/brand";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
+import {
+  ArchetypeAdjustmentResponse,
+  ArchetypeChangeSegment,
+  FootNote,
+} from "../../types";
 
-interface ArchetypeAdjustment {
-  old_archetype: string;
-  new_text: string;
-  old_text?: string;
-  changes?: { type: string; content: string; id?: string; t?: string }[];
-  footnotes?: { id: string; text: string; url?: string | null }[];
-}
+/* ── Shared inline style constants ── */
+
+const labelStyle: React.CSSProperties = {
+  fontFamily: "'Source Sans 3', sans-serif",
+  fontSize: "0.75rem",
+  fontWeight: 600,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  color: "var(--color-secondary)",
+  marginBottom: "20px",
+};
+
+const sublabelStyle: React.CSSProperties = {
+  fontFamily: "'Source Sans 3', sans-serif",
+  fontSize: "0.7rem",
+  fontWeight: 600,
+  letterSpacing: "0.1em",
+  textTransform: "uppercase",
+  color: "var(--color-light)",
+  marginBottom: "4px",
+};
+
+const archetypeNameStyle: React.CSSProperties = {
+  fontFamily: "'Bitter', serif",
+  fontSize: "var(--fs-md)",
+  fontWeight: 600,
+  color: "var(--color-text)",
+};
+
+const dividerStyle: React.CSSProperties = {
+  border: 0,
+  borderTop: "1px solid rgba(127, 89, 113, 0.2)",
+  margin: "16px 0",
+};
+
+/* ── Component ── */
 
 interface ArchetypeAdjustmentContainerProps {
   onComplete: () => void;
@@ -29,9 +67,12 @@ const ArchetypeAdjustmentContainer: React.FC<
 > = ({ onComplete, onError }) => {
   const { brandId } = useParams<{ brandId: string }>();
   const { currentBrand } = useBrandStore();
-  const [adjustment, setAdjustment] = useState<ArchetypeAdjustment | null>(
-    null,
-  );
+
+  const [adjustment, setAdjustment] =
+    useState<ArchetypeAdjustmentResponse | null>(null);
+  const [currentArchetype, setCurrentArchetype] =
+    useState<ParsedArchetype | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const explanationRefs = useRef<{ [id: string]: HTMLDivElement | null }>({});
@@ -50,6 +91,8 @@ const ArchetypeAdjustmentContainer: React.FC<
     }));
   };
 
+  /* ── Markdown helpers ── */
+
   const MarkdownBlock: React.FC<{ text: string }> = ({ text }) => (
     <div className="prose prose-sm max-w-none text-neutral-700 leading-relaxed">
       <MarkdownPreviewer markdown={text} />
@@ -67,6 +110,8 @@ const ArchetypeAdjustmentContainer: React.FC<
     );
   };
 
+  /* ── Data fetching ── */
+
   useEffect(() => {
     let isMounted = true;
     if (isLoadingRef.current) {
@@ -76,20 +121,23 @@ const ArchetypeAdjustmentContainer: React.FC<
     isLoadingRef.current = true;
     setIsLoading(true);
     setError(null);
-    const fetchAdjustment = async () => {
+
+    const fetchData = async () => {
       if (!brandId) {
         isLoadingRef.current = false;
         return;
       }
       try {
-        // API: POST /api/v1.0/brands/id/adjust/archetype
-        const data = await brands.suggestArchetypeAdjustment(brandId);
+        const [adjustData, archetypeData] = await Promise.all([
+          brands.suggestArchetypeAdjustment(brandId),
+          brands.getArchetype(brandId).catch(() => null),
+        ]);
+
         if (isMounted) {
-          setAdjustment({
-            ...data,
-            old_archetype: data.old_archetype ?? data.old_text,
-            new_text: data.new_text,
-          });
+          setAdjustment(adjustData);
+          if (archetypeData) {
+            setCurrentArchetype(parseArchetypeResponse(archetypeData));
+          }
           setError(null);
         }
       } catch (error: any) {
@@ -110,16 +158,20 @@ const ArchetypeAdjustmentContainer: React.FC<
         isLoadingRef.current = false;
       }
     };
-    fetchAdjustment();
+
+    fetchData();
     return () => {
       isMounted = false;
       isLoadingRef.current = false;
     };
   }, [brandId, onError, reloadFlag]);
 
+  /* ── Handlers ── */
+
   const handleRetry = () => {
     setError(null);
     setAdjustment(null);
+    setCurrentArchetype(null);
     setIsLoading(true);
     setReloadFlag((flag) => !flag);
   };
@@ -134,21 +186,8 @@ const ArchetypeAdjustmentContainer: React.FC<
   };
 
   const handleAccept = async () => {
-    console.log(
-      "[DEBUG] handleAccept: brandId =",
-      brandId,
-      "adjustment =",
-      adjustment,
-    );
-    if (!brandId || !adjustment) {
-      console.log("[DEBUG] handleAccept: missing brandId or adjustment");
-      return;
-    }
+    if (!brandId || !adjustment) return;
     if (!adjustment.new_text) {
-      console.log(
-        "[DEBUG] handleAccept: missing new_text in adjustment",
-        adjustment,
-      );
       setError(
         "No proposed archetype found. Please try reloading or re-evaluating.",
       );
@@ -158,21 +197,13 @@ const ArchetypeAdjustmentContainer: React.FC<
       return;
     }
     try {
-      console.log(
-        "[DEBUG] handleAccept: calling updateArchetype with",
-        adjustment.new_text,
-      );
       await brands.updateArchetype(brandId, adjustment.new_text);
-      console.log(
-        "[DEBUG] handleAccept: updateArchetype success, calling onComplete",
-      );
       onComplete();
     } catch (error: any) {
       let errorMessage = "Failed to update archetype. Please try again.";
       if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
-      console.error("[DEBUG] handleAccept: error updating archetype", error);
       setError(errorMessage);
       onError(errorMessage);
     }
@@ -184,27 +215,13 @@ const ArchetypeAdjustmentContainer: React.FC<
     scrollToTop();
   };
 
-  function renderChanges() {
-    if (!adjustment?.changes || adjustment.changes.length === 0) {
-      return adjustment?.new_text ? (
-        <MarkdownBlock text={adjustment.new_text} />
-      ) : (
-        <em>No changes were suggested.</em>
-      );
-    }
+  /* ── Change segment renderer ── */
 
-    // Build a map of footnotes for quick lookup
-    const footnotesMap: Record<
-      string,
-      { id: string; text: string; url?: string | null }
-    > = {};
-    if (adjustment.footnotes) {
-      adjustment.footnotes.forEach((note) => {
-        footnotesMap[note.id] = note;
-      });
-    }
-
-    return adjustment.changes.map((seg, i) => {
+  function renderChangeSegments(
+    segments: ArchetypeChangeSegment[],
+    footnotesMap: Record<string, FootNote>,
+  ) {
+    return segments?.map((seg, i) => {
       if (seg.type === "text") {
         return <MarkdownInline key={i} text={seg.content} />;
       }
@@ -255,7 +272,7 @@ const ArchetypeAdjustmentContainer: React.FC<
                     (e.currentTarget.style.color = "#7f5971")
                   }
                 >
-                  {isExpanded ? "Hide explanation" : "Show explanation"}
+                  {isExpanded ? "Hide explanation" : "Why this change?"}
                   <span
                     className="arrow"
                     style={{
@@ -323,6 +340,17 @@ const ArchetypeAdjustmentContainer: React.FC<
     });
   }
 
+  /* ── Build footnotes map ── */
+
+  const footnotesMap: Record<string, FootNote> = {};
+  if (adjustment?.footnotes) {
+    adjustment.footnotes.forEach((note) => {
+      footnotesMap[note.id] = note;
+    });
+  }
+
+  /* ── Loading state ── */
+
   if (isLoading) {
     return (
       <BrandicianLoader
@@ -331,6 +359,8 @@ const ArchetypeAdjustmentContainer: React.FC<
       />
     );
   }
+
+  /* ── Error state ── */
 
   if (error) {
     return (
@@ -356,67 +386,355 @@ const ArchetypeAdjustmentContainer: React.FC<
     return null;
   }
 
+  /* ── Main render ── */
+
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex justify-between flex-wrap gap-2 items-center mb-6">
-            <h1 className="text-3xl font-display font-bold text-neutral-800">
+        <div className="max-w-3xl mx-auto">
+          {/* Page Header */}
+          <div className="flex justify-between items-center flex-wrap gap-2 mb-6">
+            <div>
               <BrandNameDisplay brand={currentBrand!} />
-              Review Brand Archetype
-            </h1>
-            <div className="flex items-center flex-wrap gap-3">
+              <h1
+                style={{
+                  fontFamily: "'Bitter', serif",
+                  fontSize: "var(--fs-xxl)",
+                  color: "var(--color-text)",
+                  fontWeight: 700,
+                  lineHeight: 1.2,
+                  margin: 0,
+                }}
+              >
+                Review Brand Archetype
+              </h1>
+            </div>
+            <div className="flex items-center gap-3">
               {brandId && <HistoryButton brandId={brandId} size="md" />}
               <GetHelpButton variant="secondary" size="md" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-2 py-6 mb-8">
-            {/* Old Archetype */}
-            <div>
-              <h3 className="text-xl font-medium text-neutral-800 p-2 sm:p-0 mb-4">
-                Current Archetype
-              </h3>
-              <div className="prose max-w-none">
-                <div
-                  className="border border-gray-200 rounded-lg p-2 sm:p-6"
-                  style={{ backgroundColor: "#f4f2f2" }}
-                >
-                  <MarkdownBlock text={adjustment.old_archetype} />
+          {/* ── Current Archetype Card ── */}
+          {currentArchetype && (
+            <div
+              style={{
+                background: "var(--color-bg)",
+                border: "2px solid var(--color-light)",
+                borderRadius: "16px",
+                padding: "24px 32px",
+                marginBottom: "24px",
+              }}
+            >
+              <p style={labelStyle}>Current Archetype</p>
+
+              {/* Two-column archetype names */}
+              <div
+                className="archetype-pair"
+                style={{
+                  display: "flex",
+                  gap: "48px",
+                  marginBottom: "16px",
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={sublabelStyle}>Primary</p>
+                  <p style={archetypeNameStyle}>
+                    {currentArchetype.primaryName ? (
+                      <MarkdownPreviewer
+                        markdown={currentArchetype.primaryName}
+                      />
+                    ) : (
+                      "Not yet generated"
+                    )}
+                  </p>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={sublabelStyle}>Secondary</p>
+                  <p style={archetypeNameStyle}>
+                    {currentArchetype.secondaryName ? (
+                      <MarkdownPreviewer
+                        markdown={currentArchetype.secondaryName}
+                      />
+                    ) : (
+                      "Not yet generated"
+                    )}
+                  </p>
                 </div>
               </div>
-            </div>
-            {/* New Archetype */}
-            <div>
-              <h3 className="text-xl font-medium text-neutral-800 p-2 sm:p-0 mb-4">
-                Proposed Archetype
-              </h3>
-              <div className="prose max-w-none">
-                <div
-                  className="border border-gray-200 rounded-lg p-2 sm:p-6"
-                  style={{ backgroundColor: "rgba(244, 195, 67, 0.08)" }}
-                >
-                  <div className="text-neutral-700 leading-relaxed markdown-preview">
-                    {renderChanges()}
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* Action Buttons */}
-            <div className="flex justify-end flex-wrap gap-2">
-              <button onClick={handleReject} className="btn btn-confirm">
-                Keep Current Archetype
+
+              <hr style={dividerStyle} />
+
+              {/* Toggle button */}
+              <button
+                onClick={() => setShowDetails((v) => !v)}
+                style={{
+                  fontFamily: "'Source Sans 3', sans-serif",
+                  fontSize: "0.85rem",
+                  color: "var(--color-secondary)",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "4px 0",
+                  fontWeight: 500,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                {showDetails ? "Hide details" : "Show details"}
+                <ChevronDown
+                  size={14}
+                  style={{
+                    transition: "transform 0.2s",
+                    transform: showDetails ? "rotate(180deg)" : "rotate(0deg)",
+                  }}
+                />
               </button>
+
+              {/* Collapsible details */}
+              {showDetails && (
+                <div
+                  style={{
+                    marginTop: "24px",
+                    paddingTop: "24px",
+                    borderTop: "1px solid rgba(127, 89, 113, 0.2)",
+                  }}
+                >
+                  <div
+                    className="archetype-content"
+                    style={{
+                      display: "flex",
+                      gap: "32px",
+                      marginBottom: "32px",
+                    }}
+                  >
+                    {/* Primary column */}
+                    <div style={{ flex: 1 }}>
+                      <p style={{ ...sublabelStyle, marginBottom: "8px" }}>
+                        Primary
+                      </p>
+                      <MarkdownBlock text={currentArchetype.primaryContent} />
+                    </div>
+
+                    {/* Secondary column */}
+                    {currentArchetype.secondaryContent && (
+                      <div style={{ flex: 1 }}>
+                        <p style={{ ...sublabelStyle, marginBottom: "8px" }}>
+                          Secondary
+                        </p>
+                        <MarkdownBlock
+                          text={currentArchetype.secondaryContent}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Combined Expression */}
+                  {currentArchetype.combinedExpression && (
+                    <>
+                      <h3
+                        style={{
+                          fontFamily: "'Bitter', serif",
+                          fontSize: "var(--fs-md)",
+                          fontWeight: 600,
+                          color: "var(--color-text)",
+                          marginTop: "0.5em",
+                          marginBottom: "0.5em",
+                        }}
+                      >
+                        Combined Expression
+                      </h3>
+                      <MarkdownBlock
+                        text={currentArchetype.combinedExpression}
+                      />
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Proposed Archetype Card ── */}
+          <div
+            style={{
+              background: "var(--color-white)",
+              border: "1px solid var(--color-bg)",
+              borderRadius: "16px",
+              padding: "32px",
+              marginBottom: "32px",
+            }}
+          >
+            {/* Header with badge */}
+            <p style={labelStyle}>
+              Proposed Archetype
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "rgba(244, 195, 67, 0.15)",
+                  color: "var(--color-text)",
+                  padding: "4px 12px",
+                  borderRadius: "12px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  marginLeft: "8px",
+                  textTransform: "none",
+                  letterSpacing: "normal",
+                }}
+              >
+                ✨ AI-refined
+              </span>
+            </p>
+
+            {/* Archetype names row */}
+            <div
+              className="archetype-pair"
+              style={{
+                display: "flex",
+                gap: "48px",
+                marginBottom: "16px",
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={sublabelStyle}>Primary</p>
+                <p style={archetypeNameStyle}>{adjustment.primary_name}</p>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={sublabelStyle}>Secondary</p>
+                <p style={archetypeNameStyle}>{adjustment.secondary_name}</p>
+              </div>
+            </div>
+
+            <hr style={dividerStyle} />
+
+            {/* Two-column content */}
+            <div
+              className="archetype-content"
+              style={{
+                display: "flex",
+                gap: "32px",
+                marginBottom: "32px",
+              }}
+            >
+              {/* Primary column */}
+              <div style={{ flex: 1 }}>
+                <p
+                  style={{
+                    ...sublabelStyle,
+                    marginTop: "0.5em",
+                    marginBottom: "0.5em",
+                  }}
+                >
+                  Primary
+                </p>
+                <div className="text-neutral-700 leading-relaxed markdown-preview">
+                  {renderChangeSegments(adjustment.primary, footnotesMap)}
+                </div>
+              </div>
+
+              {/* Secondary column */}
+              <div style={{ flex: 1 }}>
+                <p
+                  style={{
+                    ...sublabelStyle,
+                    marginTop: "0.5em",
+                    marginBottom: "0.5em",
+                  }}
+                >
+                  Secondary
+                </p>
+                <div className="text-neutral-700 leading-relaxed markdown-preview">
+                  {renderChangeSegments(adjustment.secondary, footnotesMap)}
+                </div>
+              </div>
+            </div>
+
+            {/* Combined Expression */}
+            <h3
+              style={{
+                fontFamily: "'Bitter', serif",
+                fontSize: "var(--fs-md)",
+                fontWeight: 600,
+                color: "var(--color-text)",
+                marginTop: "0.5em",
+                marginBottom: "0.5em",
+              }}
+            >
+              Combined Expression
+            </h3>
+            <div className="text-neutral-700 leading-relaxed markdown-preview">
+              {renderChangeSegments(adjustment.combined, footnotesMap)}
+            </div>
+          </div>
+
+          {/* ── Action Buttons ── */}
+          <div
+            style={{
+              marginTop: "32px",
+              paddingTop: "24px",
+              borderTop: "1px solid var(--color-bg)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+              }}
+            >
               <button
                 onClick={handleReevaluate}
                 disabled={isLoading}
-                className="btn btn-secondary"
+                className="btn btn-tertiary"
               >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M13.5 8a5.5 5.5 0 11-11 0 5.5 5.5 0 0111 0z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <path
+                    d="M8 4v4l3 2"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
                 Re-evaluate
               </button>
-              <button onClick={handleAccept} className="btn btn-primary">
-                Accept New Archetype
-              </button>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <button onClick={handleReject} className="btn btn-secondary">
+                  Keep Current Archetype
+                </button>
+                <button onClick={handleAccept} className="btn btn-primary">
+                  Accept New Archetype
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M6 3L11 8L6 13"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>

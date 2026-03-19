@@ -27,6 +27,17 @@ export const LOADER_CONFIGS: Record<string, LoaderConfig> = {
     ],
   },
 
+  // Step 3b: Brand Archetype
+  archetype: {
+    loadingText: "Analyzing brand archetype...",
+    steps: [
+      "Reviewing brand summary and positioning",
+      "Identifying primary archetype",
+      "Selecting secondary archetype",
+      "Composing archetype expression",
+    ],
+  },
+
   // Step 4: Survey Creation
   survey: {
     loadingText: "Creating validation survey...",

@@ -750,7 +750,7 @@ const JTBDContainer: React.FC = () => {
             {currentStep === "drivers" && (
               <p className="text-sm text-neutral-500">
                 {canProceedFromDrivers
-                  ? "You can now proceed to create the survey"
+                  ? "You can now proceed to the brand archetype"
                   : "Please describe your functional drivers before proceeding"}
               </p>
             )}
@@ -772,7 +772,7 @@ const JTBDContainer: React.FC = () => {
               {currentStep === "rating" && "Continue to Edit Personas"}
               {currentStep === "editing" &&
                 "Continue to Review Motivational Drivers"}
-              {currentStep === "drivers" && "Proceed to Survey"}
+              {currentStep === "drivers" && "Continue to Archetype"}
               <ArrowRight className="ml-2 h-5 w-5 inline" />
             </Button>
           </div>

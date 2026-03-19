@@ -4,6 +4,7 @@ export type BrandStatus =
   | "questionnaire"
   | "summary"
   | "jtbd"
+  | "archetype"
   | "create_survey"
   | "collect_feedback"
   | "feedback_review_summary"
@@ -23,6 +24,7 @@ export const BRAND_STATUS_NEW = "new_brand";
 export const BRAND_STATUS_QUESTIONNAIRE = "questionnaire";
 export const BRAND_STATUS_SUMMARY = "summary";
 export const BRAND_STATUS_JTBD = "jtbd";
+export const BRAND_STATUS_ARCHETYPE = "archetype";
 export const BRAND_STATUS_CREATE_SURVEY = "create_survey";
 export const BRAND_STATUS_COLLECT_FEEDBACK = "collect_feedback";
 export const BRAND_STATUS_FEEDBACK_REVIEW_SUMMARY = "feedback_review_summary";
@@ -49,6 +51,7 @@ export const getRouteForStatus = (
     questionnaire: `/brands/${brandId}/questionnaire`,
     summary: `/brands/${brandId}/summary`,
     jtbd: `/brands/${brandId}/jtbd`,
+    archetype: `/brands/${brandId}/archetype`,
     create_survey: `/brands/${brandId}/survey`,
     collect_feedback: `/brands/${brandId}/survey`,
     feedback_review_summary: `/brands/${brandId}/feedback-review/summary`,
