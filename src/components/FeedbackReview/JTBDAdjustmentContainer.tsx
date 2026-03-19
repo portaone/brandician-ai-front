@@ -381,7 +381,7 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
             <div className="flex gap-3">
               <button
                 onClick={() => setShowRemovalConfirmation(false)}
-                className="px-4 py-2 rounded-lg font-medium text-sm transition-colors bg-white border border-gray-300 text-gray-700 hover:bg-gray-100"
+                className="btn btn-ghost"
               >
                 Cancel
               </button>
@@ -390,7 +390,7 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
                   onRemove(index);
                   setShowRemovalConfirmation(false);
                 }}
-                className="px-4 py-2 rounded-lg font-medium text-sm transition-colors bg-red-600 text-white hover:bg-red-700"
+                className="btn btn-warning"
               >
                 Remove Persona
               </button>

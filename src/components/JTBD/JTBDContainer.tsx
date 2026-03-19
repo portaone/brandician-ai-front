@@ -1,4 +1,4 @@
-import { ArrowRight, Edit2, Loader, RefreshCw, X } from "lucide-react";
+import { ArrowRight, Edit2, Loader, RefreshCw } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
@@ -167,6 +167,7 @@ const JTBDContainer: React.FC = () => {
   const [editingPersona, setEditingPersona] = useState<PersonaItem | null>(
     null,
   );
+  const [pendingRemovalKey, setPendingRemovalKey] = useState<string | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isEditingDrivers, setIsEditingDrivers] = useState(false);
   const isRegeneratingRef = useRef<boolean>(false);
@@ -237,7 +238,7 @@ const JTBDContainer: React.FC = () => {
 
   const handleImportanceChange = (key: string, importance: JTBDImportance) => {
     if (importance === "not_applicable") {
-      handleRemovePersona(key);
+      setPendingRemovalKey(key);
     } else {
       setPersonas((prev) =>
         prev.map((p) => (p._key === key ? { ...p, importance } : p)),
@@ -605,33 +606,54 @@ const JTBDContainer: React.FC = () => {
                           {getPersonaDisplayContent(persona)}
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleRemovePersona(persona._key)}
-                        className="text-neutral-400 hover:text-red-500 transition-colors"
-                        title="Remove persona"
-                      >
-                        <X className="h-5 w-5" />
-                      </button>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {Object.entries(JTBD_IMPORTANCE_LABELS).map(
-                        ([value, label]) => (
+                    {pendingRemovalKey === persona._key ? (
+                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-4">
+                        <span className="text-2xl">⚠️</span>
+                        <div className="flex-1">
+                          <p className="text-gray-800 font-medium">
+                            Remove this persona? This cannot be undone.
+                          </p>
+                        </div>
+                        <div className="flex gap-3">
                           <button
-                            key={value}
-                            onClick={() =>
-                              handleImportanceChange(
-                                persona._key,
-                                value as JTBDImportance,
-                              )
-                            }
-                            className={`btn-selection p-2 text-sm rounded-md ${persona.importance === value ? "selected" : ""}`}
+                            onClick={() => setPendingRemovalKey(null)}
+                            className="btn btn-ghost"
                           >
-                            {label}
+                            Cancel
                           </button>
-                        ),
-                      )}
-                    </div>
+                          <button
+                            onClick={() => {
+                              handleRemovePersona(persona._key);
+                              setPendingRemovalKey(null);
+                            }}
+                            className="btn btn-warning"
+                          >
+                            Remove Persona
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {Object.entries(JTBD_IMPORTANCE_LABELS).map(
+                          ([value, label]) => (
+                            <button
+                              key={value}
+                              onClick={() =>
+                                handleImportanceChange(
+                                  persona._key,
+                                  value as JTBDImportance,
+                                )
+                              }
+                              className={`btn-selection p-2 text-sm rounded-md ${persona.importance === value ? "selected" : ""}`}
+                            >
+                              {label}
+                            </button>
+                          ),
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
