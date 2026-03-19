@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 import { BrandStatus } from "./navigation";
-import { JTBDList, SuggestedJTBDList, Survey, SubmissionLink, AdjustObject, JTBD, JTBDPersonaIn, JTBDPersonaAdjustment } from "../types";
+import { JTBDList, SuggestedJTBDList, Survey, SubmissionLink, AdjustObject, JTBD, JTBDPersonaIn, JTBDPersonaAdjustment, ArchetypeAdjustmentResponse } from "../types";
 import { config } from "../config";
 
 // Extend axios config to include our metadata
@@ -693,7 +693,7 @@ export const brands = {
     return response.data;
   },
 
-  suggestArchetypeAdjustment: async (brandId: string) => {
+  suggestArchetypeAdjustment: async (brandId: string): Promise<ArchetypeAdjustmentResponse> => {
     const key = createRequestKey(
       "POST",
       apiPath(`/brands/${brandId}/adjust/archetype`)

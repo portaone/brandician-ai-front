@@ -27,6 +27,7 @@ const STATUS_ROUTE_MAP: Record<string, string> = {
   questionnaire: "/questionnaire",
   summary: "/summary",
   jtbd: "/jtbd",
+  archetype: "/archetype",
   create_survey: "/survey",
   collect_feedback: "/collect-feedback",
   feedback_review_summary: "/feedback-review/summary",
@@ -158,6 +159,15 @@ const HistoryContainer: React.FC = () => {
           if (!brandId) return null;
           const jtbd = await brands.getJTBD(brandId);
           return { type: "jtbd", data: jtbd };
+        },
+      },
+      archetype: {
+        name: "Brand Archetype",
+        description: "Brand Archetype analysis",
+        dataLoader: async () => {
+          if (!brandId) return null;
+          const archetype = await brands.getArchetype(brandId);
+          return { type: "archetype", data: archetype };
         },
       },
       create_survey: {

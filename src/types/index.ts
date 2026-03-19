@@ -33,6 +33,13 @@ export interface Brand extends BrandReduced {
   alt_options?: BrandNameSuggestion[];
 }
 
+export interface BrandArchetypeData {
+  primary: string | null;
+  secondary: string | null;
+  comment: string | null;
+  archetype: string;
+}
+
 export interface Question {
   id: string;
   text: string;
@@ -232,6 +239,22 @@ export interface AdjustObject {
   survey?: SurveyStatus;
   footnotes?: FootNote[];
   changes?: { type: string; content: string; id?: string; t?: string }[];
+}
+
+export interface ArchetypeChangeSegment {
+  type: string;
+  content: string;
+  id?: string;
+}
+
+export interface ArchetypeAdjustmentResponse {
+  new_text: string;
+  primary_name: string;
+  secondary_name: string;
+  primary: ArchetypeChangeSegment[];
+  secondary: ArchetypeChangeSegment[];
+  combined: ArchetypeChangeSegment[];
+  footnotes?: FootNote[];
 }
 
 export interface BrandNameSuggestion {

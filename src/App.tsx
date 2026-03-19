@@ -19,6 +19,7 @@ import CreateBrand from "./components/brands/CreateBrand";
 import ExplanationScreen from "./components/brands/ExplanationScreen";
 import QuestionnaireContainer from "./components/Questionnaire/QuestionnaireContainer";
 import JTBDContainer from "./components/JTBD/JTBDContainer";
+import BrandArchetype from "./components/BrandArchetype/BrandArchetype";
 import SurveyContainer from "./components/Survey/SurveyContainer";
 // CollectFeedback merged into SurveyContainer (BRANDICIAN-120)
 import FeedbackReviewFlowContainer from "./components/FeedbackReview/FeedbackReviewFlowContainer";
@@ -30,7 +31,7 @@ import PaymentContainer from "./components/Payment/PaymentContainer";
 import PaymentShareStep from "./components/Payment/PaymentShareStep";
 import PaymentSuccess from "./components/Payment/PaymentSuccess";
 import PaymentCancel from "./components/Payment/PaymentCancel";
-import CompletedContainer from "./components/Completed/CompletedContainer";
+
 import BrandHubContainer from "./components/BrandHub/BrandHubContainer";
 import HistoryContainer from "./components/History/HistoryContainer";
 import ColorSchemaPresenter from "./components/ColorSchemaPresenter/ColorSchemaPresenter";
@@ -127,6 +128,10 @@ const App: React.FC = () => {
                   <JTBDContainer />
                 </AuthGuard>
               }
+            />
+            <Route
+              path="/brands/:brandId/archetype"
+              element={<BrandArchetype />}
             />
             <Route
               path="/brands/:brandId/survey"
