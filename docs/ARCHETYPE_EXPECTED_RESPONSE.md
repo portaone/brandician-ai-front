@@ -13,8 +13,8 @@ Both return the same response shape.
 {
   "primary": "<string | null>",
   "secondary": "<string | null>",
-  "comment": "<string | null>",
-  "archetype": "<string>"
+  "combined_expression": "<string | null>",
+  "comment": "<string | null>"
 }
 ```
 
@@ -57,13 +57,13 @@ Parsed as:
 
 If `primary` or `secondary` is `null` or empty, the UI displays "Not yet generated" in that slot.
 
-### `archetype`
+### `combined_expression`
 
 Displayed as-is in the **"Combined Expression"** section. The entire value is rendered as markdown.
 
 If empty or missing, the Combined Expression section is hidden.
 
-**Example `archetype`:**
+**Example `combined_expression`:**
 
 ```
 The **Hero** and **Ruler** archetypes combine to form a brand that **achieves results through structured excellence**. The Hero drives the aspiration for high performance, while the Ruler provides the authoritative consistency and control that makes success repeatable.
@@ -79,8 +79,8 @@ Currently unused by the frontend. Reserved for future use.
 {
   "primary": "**Hero**\nThe **Hero** archetype best reflects this brand's core promise. The target audience is motivated by **achievement, predictability, and reliable outcomes**, seeking solutions that ensure **competency and reliability** leading to **superior performance**.",
   "secondary": "**Ruler**\nThe **Ruler** archetype supports the need for **control, order, structure, and status affirmation** derived from superior tooling and predictable output.",
-  "comment": null,
-  "archetype": "The **Hero** and **Ruler** archetypes combine to form a brand that **achieves results through structured excellence**. The Hero drives the aspiration for high performance, while the Ruler provides the authoritative consistency that makes success repeatable."
+  "combined_expression": "The **Hero** and **Ruler** archetypes combine to form a brand that **achieves results through structured excellence**. The Hero drives the aspiration for high performance, while the Ruler provides the authoritative consistency that makes success repeatable.",
+  "comment": null
 }
 ```
 
@@ -92,4 +92,4 @@ Currently unused by the frontend. Reserved for future use.
 | Primary details      | `primary` lines 2+ | The **Hero** archetype best reflects... |
 | Secondary name       | `secondary` line 1 | **Ruler** |
 | Secondary details    | `secondary` lines 2+ | The **Ruler** archetype supports... |
-| Combined Expression  | `archetype` (full) | The **Hero** and **Ruler** archetypes combine... |
+| Combined Expression  | `combined_expression` (full) | The **Hero** and **Ruler** archetypes combine... |

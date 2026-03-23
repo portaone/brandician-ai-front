@@ -375,7 +375,7 @@ export const useBrandStore = create<BrandState>((set) => ({
         currentBrand: state.currentBrand
           ? {
               ...state.currentBrand,
-              archetype: archetypeData.archetype,
+              archetype: archetypeData.combined_expression || "",
             }
           : null,
         isLoading: false,

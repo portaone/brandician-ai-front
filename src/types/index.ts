@@ -36,8 +36,8 @@ export interface Brand extends BrandReduced {
 export interface BrandArchetypeData {
   primary: string | null;
   secondary: string | null;
+  combined_expression: string | null;
   comment: string | null;
-  archetype: string;
 }
 
 export interface Question {

@@ -747,7 +747,9 @@ const HistoryContainer: React.FC = () => {
               <h4 className="font-semibold text-gray-900 mb-2">Archetype:</h4>
               <div className="bg-gray-50 p-4 rounded">
                 <p className="text-gray-700">
-                  {data.archetype?.archetype ||
+                  {[data.archetype?.primary, data.archetype?.secondary, data.archetype?.combined_expression]
+                    .filter(Boolean)
+                    .join("\n\n") ||
                     data.archetype ||
                     "No archetype available"}
                 </p>
@@ -773,7 +775,11 @@ const HistoryContainer: React.FC = () => {
 
       case "archetype":
         const archetypeText =
-          data.data?.archetype || data.data || "No archetype available";
+          [data.data?.primary, data.data?.secondary, data.data?.combined_expression]
+            .filter(Boolean)
+            .join("\n\n") ||
+          data.data ||
+          "No archetype available";
         return (
           <div className="p-4 space-y-3">
             <div className="flex items-center justify-between mb-2">

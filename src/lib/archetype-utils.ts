@@ -26,7 +26,7 @@ export function parseField(
 /**
  * Parse the archetype API response into structured sections.
  * - `primary` / `secondary`: first line = title, rest = markdown details
- * - `archetype`: used as Combined Expression (full markdown)
+ * - `combined_expression`: used as Combined Expression (full markdown)
  */
 export function parseArchetypeResponse(
   data: BrandArchetypeData,
@@ -39,6 +39,6 @@ export function parseArchetypeResponse(
     secondaryName: secondary.name,
     primaryContent: primary.content,
     secondaryContent: secondary.content,
-    combinedExpression: data.archetype?.trim() || "",
+    combinedExpression: data.combined_expression?.trim() || "",
   };
 }
