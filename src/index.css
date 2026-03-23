@@ -46,7 +46,7 @@
     --body-font-weight: 400;
     --body-font-style: normal;
     --body-font-size: 24px;
-    --body-line-height: 36px;
+    --body-line-height: 1.6;
     --body-letter-spacing: 0%;
 
     /* Menu font properties */
@@ -105,10 +105,18 @@
     font-family: "Montserrat", system-ui, sans-serif;
   }
 
-  h1 { font-size: var(--fs-xl); }
-  h2 { font-size: var(--fs-lg); }
-  h3 { font-size: var(--fs-md); }
-  h4 { font-size: var(--fs-base); }
+  h1 {
+    font-size: var(--fs-xl);
+  }
+  h2 {
+    font-size: var(--fs-lg);
+  }
+  h3 {
+    font-size: var(--fs-md);
+  }
+  h4 {
+    font-size: var(--fs-base);
+  }
 }
 
 @layer components {
@@ -294,7 +302,7 @@
   }
 
   .label {
-    font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif;
+    font-family: "Source Sans 3", "Source Sans Pro", sans-serif;
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.12em;
@@ -304,7 +312,7 @@
   }
 
   .sublabel {
-    font-family: 'Source Sans 3', 'Source Sans Pro', sans-serif;
+    font-family: "Source Sans 3", "Source Sans Pro", sans-serif;
     font-size: 0.7rem;
     font-weight: 600;
     letter-spacing: 0.1em;
@@ -353,7 +361,7 @@
   inset: 0;
   position: absolute;
   z-index: 100;
-  top: 90px;
+  top: 88px;
 }
 
 .loader-container > * {

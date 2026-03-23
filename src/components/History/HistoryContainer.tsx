@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Loader, Share2 } from "lucide-react";
+import { ChevronDown, Loader, Share2 } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import MarkdownPreviewer from "../common/MarkDownPreviewer";
 import { useNavigate, useParams } from "react-router-dom";
@@ -747,7 +747,11 @@ const HistoryContainer: React.FC = () => {
               <h4 className="font-semibold text-gray-900 mb-2">Archetype:</h4>
               <div className="bg-gray-50 p-4 rounded">
                 <p className="text-gray-700">
-                  {[data.archetype?.primary, data.archetype?.secondary, data.archetype?.combined_expression]
+                  {[
+                    data.archetype?.primary,
+                    data.archetype?.secondary,
+                    data.archetype?.combined_expression,
+                  ]
                     .filter(Boolean)
                     .join("\n\n") ||
                     data.archetype ||
@@ -775,7 +779,11 @@ const HistoryContainer: React.FC = () => {
 
       case "archetype":
         const archetypeText =
-          [data.data?.primary, data.data?.secondary, data.data?.combined_expression]
+          [
+            data.data?.primary,
+            data.data?.secondary,
+            data.data?.combined_expression,
+          ]
             .filter(Boolean)
             .join("\n\n") ||
           data.data ||
@@ -1029,147 +1037,163 @@ const HistoryContainer: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen py-[32px]">
+      <div className="container mx-auto px-[27px]">
+        <div className="mx-auto">
           {/* Header */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-start mb-[27px]">
             <div>
-              <h1 className="text-3xl font-display font-bold text-neutral-800">
-                Brand Creation History
+              <p className="text-[length:var(--fs-base)] text-[var(--color-secondary)] mb-[3px]">
+                {currentBrand.brand_name || currentBrand.name}
+              </p>
+              <h1
+                className="font-bold leading-[1.15] text-[var(--color-text)] mb-[3px]"
+                style={{
+                  fontFamily: "var(--title-font-family)",
+                  fontSize: "var(--fs-xxl)",
+                }}
+              >
+                Brand creation history
               </h1>
-              <p className="text-lg text-neutral-600 mt-1">
-                {currentBrand.name}
+              <p className="text-[length:var(--fs-base)] text-[var(--color-light)]">
+                Review all steps and documents from your brand creation journey
               </p>
             </div>
             <GetHelpButton variant="secondary" size="md" />
           </div>
 
-          <div className="mb-8">
-            <p className="text-gray-600">
-              Review all steps and documents from your brand creation journey
-            </p>
-          </div>
-
           {/* Steps List */}
-          <div className="space-y-4">
+          <div className="flex flex-col gap-[7px]">
             {visibleSteps.map((step) => {
               const isCompleted = step.number < currentStepNumber;
               const isActive = step.number === currentStepNumber;
+              const isPending = !isCompleted && !isActive;
 
               return (
                 <div
                   key={step.number}
-                  className={`bg-white rounded-lg shadow-md overflow-hidden ${
-                    !isCompleted && !isActive ? "opacity-60" : ""
-                  }`}
+                  className="bg-[var(--color-white)] rounded-[9px] overflow-hidden"
                 >
                   {/* Step Header */}
-                  <button
+                  <div
                     onClick={() => isCompleted && toggleStep(step.number)}
-                    disabled={!isCompleted && !isActive}
-                    className={`w-full flex flex-wrap gap-2 items-center justify-between p-2 sm:p-6 transition-colors ${
-                      isCompleted
-                        ? "hover:bg-gray-50 cursor-pointer"
-                        : isActive
-                          ? "cursor-default"
-                          : "cursor-not-allowed"
+                    className={`grid grid-cols-[43px_1fr_auto] items-start py-[13px] gap-4 px-[16px] select-none ${
+                      isCompleted ? "cursor-pointer group" : "cursor-default"
                     }`}
                   >
-                    <div className="flex items-start gap-4 flex-wrap">
-                      <div className="flex flex-col items-center gap-2 w-24">
-                        <div
-                          className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                            isCompleted
-                              ? "bg-primary-600 text-white"
-                              : isActive
-                                ? "bg-yellow-500 text-white"
-                                : "bg-gray-300 text-gray-600"
-                          }`}
-                        >
-                          {step.number}
-                        </div>
-                        {isCompleted && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRevertClick(step.number);
-                            }}
-                            className="text-xs px-2 py-1 rounded-md font-medium bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors whitespace-nowrap"
-                          >
-                            Revert to this step
-                          </button>
-                        )}
-                        {isActive && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (currentBrand && brandId) {
-                                let route = getRouteForStatus(
-                                  brandId,
-                                  currentBrand.current_status as any,
-                                );
-                                // For questionnaire step, navigate directly to summary view
-                                if (
-                                  currentBrand.current_status ===
-                                  "questionnaire"
-                                ) {
-                                  route = `/brands/${brandId}/questionnaire?summary=1`;
-                                }
-                                navigate(route);
-                              }
-                            }}
-                            className="btn-primary text-xs px-2 py-1 rounded-md font-medium  whitespace-nowrap min-h-[auto]"
-                          >
-                            Continue
-                          </button>
-                        )}
-                      </div>
-                      <div className="text-left flex-1">
-                        <h3
-                          className={`text-lg font-semibold ${
-                            isCompleted || isActive
-                              ? "text-gray-900"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          {step.name}
-                        </h3>
-                        <p
-                          className={`text-sm ${
-                            isCompleted || isActive
-                              ? "text-gray-500"
-                              : "text-gray-400"
-                          }`}
-                        >
-                          {step.description}
-                        </p>
-                      </div>
+                    {/* Number circle */}
+                    <div
+                      className={`w-[44px] h-[44px] rounded-full flex items-center justify-center font-bold text-[0.73rem] mt-[1px] shrink-0 ${
+                        isCompleted
+                          ? "bg-[var(--color-primary)] text-[var(--color-white)]"
+                          : isActive
+                            ? "bg-[var(--color-warning)] text-[var(--color-text)]"
+                            : "border-2 border-[var(--color-light)] text-[var(--color-light)]"
+                      }`}
+                      style={{ fontFamily: "var(--title-font-family)" }}
+                    >
+                      {step.number}
                     </div>
-                    <div className="flex items-center gap-2">
-                      {!isCompleted && (
-                        <span
-                          className={`text-xs px-3 py-1 rounded-full font-medium ${
-                            isActive
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
+
+                    {/* Step meta */}
+                    <div className="pr-[11px]">
+                      <div
+                        className={`font-bold text-[length:var(--fs-base)] leading-[1.3] transition-colors duration-150 ${
+                          isPending
+                            ? "text-[var(--color-light)]"
+                            : "text-[var(--color-text)]"
+                        } ${isCompleted ? "group-hover:text-[var(--color-primary)]" : ""}`}
+                        style={{ fontFamily: "var(--title-font-family)" }}
+                      >
+                        {step.name}
+                      </div>
+                      <div className="text-[length:var(--fs-sm)] text-[var(--color-light)] mt-[1px]">
+                        {step.description}
+                      </div>
+                      {isCompleted && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRevertClick(step.number);
+                          }}
+                          style={{
+                            lineHeight: 1.6,
+                          }}
+                          className="mt-[7px] inline-block text-[0.47rem] font-semibold tracking-[0.03em] text-[var(--color-primary)] bg-[rgba(253,97,94,0.07)] border border-[rgba(253,97,94,0.2)] rounded-[4px] px-[7px] py-[3px] cursor-pointer transition-colors duration-200 hover:bg-[rgba(253,97,94,0.14)]"
                         >
-                          {isActive ? "in progress" : "pending"}
+                          Revert to this step
+                        </button>
+                      )}
+                      {isActive && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (currentBrand && brandId) {
+                              let route = getRouteForStatus(
+                                brandId,
+                                currentBrand.current_status as any,
+                              );
+                              if (
+                                currentBrand.current_status === "questionnaire"
+                              ) {
+                                route = `/brands/${brandId}/questionnaire?summary=1`;
+                              }
+                              navigate(route);
+                            }
+                          }}
+                          className="mt-[10px] inline-flex items-center gap-[6px] text-[0.52rem] font-semibold tracking-[0.05em] uppercase text-[var(--color-white)] bg-[var(--color-primary)] border-none rounded-[8px] px-[17px] py-[5px] cursor-pointer transition-colors duration-200 hover:bg-[#fc4945]"
+                          style={{
+                            lineHeight: 1.6,
+                            fontFamily: "'Source Sans 3', sans-serif",
+                          }}
+                        >
+                          Continue
+                          <svg
+                            width="13"
+                            height="13"
+                            viewBox="0 0 14 14"
+                            fill="none"
+                          >
+                            <path
+                              d="M3 7h8M8 4l3 3-3 3"
+                              stroke="currentColor"
+                              strokeWidth="1.75"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Right column: badges + chevron */}
+                    <div className="flex items-center pt-[8px] gap-[8px] shrink-0">
+                      {isActive && (
+                        <span
+                          className="text-[0.47rem] font-semibold tracking-[0.05em] uppercase px-[7px] py-[3px] rounded-[13px] bg-[rgba(244,195,67,0.15)] text-[#8a6800] border border-[rgba(244,195,67,0.4)]"
+                          style={{ lineHeight: 1.6 }}
+                        >
+                          In progress
                         </span>
                       )}
-                      {isCompleted &&
-                        (expandedSteps[step.number] ? (
-                          <ChevronUp className="h-5 w-5 text-gray-400" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5 text-gray-400" />
-                        ))}
+                      {isPending && (
+                        <span className="text-[0.47rem] font-semibold tracking-[0.05em] uppercase px-[7px] py-[3px] rounded-[13px] bg-[var(--color-bg)] text-[var(--color-light)] border border-[var(--color-light)]">
+                          Pending
+                        </span>
+                      )}
+                      {isCompleted && (
+                        <ChevronDown
+                          className={`w-[12px] h-[12px] text-[var(--color-light)] transition-transform duration-[250ms] ease-in-out shrink-0 ${
+                            expandedSteps[step.number] ? "rotate-180" : ""
+                          }`}
+                        />
+                      )}
                     </div>
-                  </button>
+                  </div>
 
                   {/* Step Content */}
                   {isCompleted && expandedSteps[step.number] && (
-                    <div className="border-t border-gray-200">
+                    <div className="border-t border-[var(--color-bg)]">
                       {renderStepContent(step.number)}
                     </div>
                   )}
@@ -1182,35 +1206,58 @@ const HistoryContainer: React.FC = () => {
 
       {/* Revert Confirmation Modal */}
       {revertModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Confirm Revert
-            </h2>
-            <p className="text-gray-700 mb-6">
-              All assets and documents generated after this step will be lost.
-              Are you sure you want to revert to step {revertTargetStep}?
+        <div
+          className="fixed inset-0 bg-[rgba(56,50,54,0.4)] flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isReverting)
+              handleRevertCancel();
+          }}
+        >
+          <div className="bg-[var(--color-white)] rounded-[11px] p-[32px_36px] max-w-[420px] w-[calc(100%-27px)] shadow-[0_5px_21px_rgba(56,50,54,0.18)]">
+            <p
+              className="font-bold text-[length:var(--fs-md)] text-[var(--color-text)] mb-[8px]"
+              style={{ fontFamily: "var(--title-font-family)" }}
+            >
+              Revert to this step?
             </p>
-            <div className="flex justify-end gap-3">
+            <p className="text-[length:var(--fs-sm)] text-[var(--color-text)] leading-[1.6] mb-[19px]">
+              All assets and documents generated after this step will be lost.
+              <br />
+              <br />
+              Are you sure you want to revert to{" "}
+              <strong className="font-bold text-[var(--color-primary)]">
+                Step {revertTargetStep}
+              </strong>
+              ?
+            </p>
+            <div className="flex gap-[8px] justify-end">
               <button
                 onClick={handleRevertCancel}
                 disabled={isReverting}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-[0.53rem] font-semibold tracking-[0.05em] uppercase text-[var(--color-secondary)] bg-transparent border-2 border-[var(--color-secondary)] rounded-[5px] px-[18px] py-[9px] cursor-pointer transition-all duration-200 hover:bg-[var(--color-secondary)] hover:text-[var(--color-white)] disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  fontFamily: "'Source Sans 3', sans-serif",
+                  lineHeight: 1,
+                }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleRevertConfirm}
                 disabled={isReverting}
-                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="text-[0.53rem] font-semibold tracking-[0.05em] uppercase text-[var(--color-white)] bg-[var(--color-primary)] border-none rounded-[8px] px-[18px] py-[9px] cursor-pointer transition-colors duration-200 hover:bg-[#fc4945] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-[5px]"
+                style={{
+                  fontFamily: "'Source Sans 3', sans-serif",
+                  lineHeight: 1,
+                }}
               >
                 {isReverting ? (
                   <>
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    <div className="animate-spin h-[11px] w-[11px] border-2 border-white border-t-transparent rounded-full"></div>
                     Reverting...
                   </>
                 ) : (
-                  "Revert"
+                  "Yes, revert"
                 )}
               </button>
             </div>

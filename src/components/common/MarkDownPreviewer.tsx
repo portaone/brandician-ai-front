@@ -30,6 +30,8 @@ const processInline = (text: string) => {
 };
 
 export const parseMarkdown = (text: string) => {
+  if (!text) return "";
+
   const lines = text.split("\n");
   const blocks: string[] = [];
   let currentList: { type: string; items: string[] } | null = null;
