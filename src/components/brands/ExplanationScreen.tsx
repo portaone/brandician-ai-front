@@ -350,12 +350,13 @@ const ExplanationScreen: React.FC = () => {
                           <span
                             className="inline-block font-menu font-semibold uppercase"
                             style={{
-                              fontSize: "0.72rem",
-                              letterSpacing: "0.08em",
+                              fontSize: "0.48rem",
+                              letterSpacing: "0.05em",
                               background: "rgba(244, 195, 67, 0.15)",
                               color: "#a07d10",
                               borderRadius: 4,
                               padding: "2px 8px",
+                              lineHeight: 1.6,
                               marginTop: 6,
                             }}
                           >
