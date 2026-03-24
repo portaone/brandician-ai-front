@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create new brand - Brandician.AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@400;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-primary: #fd615e;
+            --color-secondary: #7f5971;
+            --color-light: #bfacb8;
+            --color-bg: #f4f2f2;
+            --color-text: #383236;
+            --color-warning: #F4C343;
+            --color-white: #ffffff;
+
+            --fs-xxl: clamp(2.44rem, 2.38vi + 1.85rem, 3.75rem);
+            --fs-xl: clamp(1.95rem, 1.56vi + 1.56rem, 2.81rem);
+            --fs-lg: clamp(1.56rem, 1vi + 1.31rem, 2.11rem);
+            --fs-md: clamp(1.25rem, 0.61vi + 1.1rem, 1.58rem);
+            --fs-base: clamp(1rem, 0.34vi + 0.91rem, 1.19rem);
+            --fs-sm: clamp(0.8rem, 0.17vi + 0.76rem, 0.89rem);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Source Sans 3', sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        header {
+            background: var(--color-white);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--color-bg);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Bitter', serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--color-text);
+            text-decoration: none;
+        }
+
+        .logo svg { width: 36px; height: 36px; }
+
+        nav { display: flex; gap: 32px; }
+
+        nav a {
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--color-text);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        nav a:hover { color: var(--color-secondary); }
+
+        /* Page layout */
+        .page-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 48px 20px 80px;
+        }
+
+        /* Back button */
+        .back-btn {
+            align-self: flex-start;
+            margin-left: max(20px, calc(50% - 440px));
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--color-secondary);
+            background: transparent;
+            border: 2px solid var(--color-secondary);
+            border-radius: 10px;
+            padding: 9px 16px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+            margin-bottom: 32px;
+        }
+        .back-btn:hover { background: var(--color-secondary); color: var(--color-white); }
+
+        /* Card */
+        .card {
+            background: var(--color-white);
+            border-radius: 16px;
+            padding: 48px;
+            width: 100%;
+            max-width: 880px;
+            box-shadow: 0 2px 12px rgba(56, 50, 54, 0.06);
+        }
+
+        .card h1 {
+            font-family: 'Bitter', serif;
+            font-size: var(--fs-xl);
+            font-weight: 700;
+            color: var(--color-text);
+            line-height: 1.2;
+            margin-bottom: 40px;
+        }
+
+        /* Form fields */
+        .field {
+            margin-bottom: 28px;
+        }
+
+        .field label {
+            display: block;
+            font-family: 'Bitter', serif;
+            font-size: var(--fs-base);
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 10px;
+        }
+
+        .field label .optional {
+            font-family: 'Source Sans 3', sans-serif;
+            font-weight: 400;
+            font-size: var(--fs-sm);
+            color: var(--color-light);
+            margin-left: 6px;
+        }
+
+        .field-hint {
+            font-size: var(--fs-sm);
+            color: var(--color-light);
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        /* Text input */
+        .text-input {
+            width: 100%;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: var(--fs-base);
+            color: var(--color-text);
+            background: var(--color-bg);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 14px 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .text-input::placeholder { color: var(--color-light); }
+        .text-input:focus { border-color: var(--color-secondary); background: var(--color-white); }
+
+        /* Textarea */
+        textarea.text-input {
+            resize: vertical;
+            min-height: 120px;
+            line-height: 1.6;
+        }
+
+        /* Custom select wrapper */
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper select {
+            width: 100%;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: var(--fs-base);
+            color: var(--color-text);
+            background: var(--color-bg);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 14px 48px 14px 16px;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .select-wrapper select:focus {
+            border-color: var(--color-secondary);
+            background: var(--color-white);
+        }
+
+        .select-wrapper select.placeholder-shown,
+        .select-wrapper select:invalid {
+            color: var(--color-light);
+        }
+
+        /* Chevron icon */
+        .select-wrapper::after {
+            content: '';
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 7.5l5 5 5-5' stroke='%23bfacb8' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-size: contain;
+            pointer-events: none;
+            transition: background-image 0.2s;
+        }
+
+        .select-wrapper:focus-within::after {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 7.5l5 5 5-5' stroke='%237f5971' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        }
+
+        /* Required asterisk */
+        .required {
+            color: var(--color-primary);
+            margin-left: 3px;
+            font-size: 0.75em;
+            vertical-align: super;
+        }
+
+        /* Disabled button tooltip */
+        .btn-wrap {
+            position: relative;
+        }
+
+        .btn-wrap .tooltip {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--color-text);
+            color: var(--color-white);
+            font-size: var(--fs-sm);
+            font-family: 'Source Sans 3', sans-serif;
+            white-space: nowrap;
+            padding: 7px 12px;
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .btn-wrap .tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: var(--color-text);
+        }
+
+        .btn-wrap:hover .tooltip { display: block; }
+
+        /* Label row with not sure link */
+        .label-row {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .label-row label {
+            margin-bottom: 0;
+        }
+
+        .not-sure-link {
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: var(--fs-sm);
+            font-weight: 500;
+            color: var(--color-light);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            text-decoration-style: dashed;
+            transition: color 0.2s;
+            line-height: 1;
+        }
+        .not-sure-link:hover { color: var(--color-secondary); }
+
+        /* Inline posture guide */
+        .posture-guide {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, margin 0.3s ease;
+            margin-bottom: 0;
+        }
+        .posture-guide.visible {
+            max-height: 600px;
+            margin-bottom: 12px;
+        }
+
+        .posture-guide-inner {
+            background: var(--color-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            padding: 4px 0;
+        }
+
+        .posture-guide-row {
+            display: flex;
+            gap: 16px;
+            align-items: baseline;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .posture-guide-row:hover { background: rgba(127, 89, 113, 0.07); }
+        .posture-guide-row:hover .posture-guide-label { color: var(--color-primary); }
+
+        .posture-guide-label {
+            font-size: var(--fs-sm);
+            font-weight: 700;
+            color: var(--color-secondary);
+            min-width: 200px;
+            flex-shrink: 0;
+            line-height: 1.5;
+            transition: color 0.15s;
+        }
+
+        .posture-guide-desc {
+            font-size: var(--fs-sm);
+            color: var(--color-text);
+            line-height: 1.5;
+        }
+
+        /* Posture preview pill */
+        .posture-preview {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: rgba(127, 89, 113, 0.06);
+            border-radius: 10px;
+            border: 1px solid rgba(127, 89, 113, 0.15);
+        }
+
+        .posture-preview.visible { display: flex; }
+
+        .posture-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-secondary);
+            flex-shrink: 0;
+        }
+
+        .posture-preview-text {
+            font-size: var(--fs-sm);
+            color: var(--color-secondary);
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: var(--color-bg);
+            margin: 8px 0 28px;
+        }
+
+        /* Submit button */
+        .btn-create {
+            width: 100%;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--color-white);
+            background: var(--color-primary);
+            border: none;
+            border-radius: 12px;
+            padding: 16px 24px;
+            min-height: 52px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .btn-create:hover:not(:disabled) {
+            background: #fc4945;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(253, 97, 94, 0.3);
+        }
+
+        .btn-create:disabled {
+            background: var(--color-light);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header { padding: 16px 20px; }
+            .card { padding: 32px 24px; }
+            .back-btn { margin-left: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="#" class="logo">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="20" r="19" fill="#383236"/>
+            <path d="M10 24 Q20 12 30 24" stroke="#fd615e" stroke-width="2.5" fill="none"/>
+            <ellipse cx="20" cy="24" rx="11" ry="2.5" fill="#fd615e" opacity="0.9"/>
+            <polygon points="20,14 21.5,19 18.5,19" fill="#ffffff"/>
+        </svg>
+        Brandician.AI
+    </a>
+    <nav>
+        <a href="#">About</a>
+        <a href="#">Dashboard</a>
+        <a href="#">Account</a>
+    </nav>
+</header>
+
+<div class="page-wrap">
+
+    <a href="#" class="back-btn">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Back to brands
+    </a>
+
+    <div class="card">
+        <h1>Create new brand</h1>
+
+        <!-- Project name -->
+        <div class="field">
+            <label for="project-name">Project name<span class="required">*</span></label>
+            <input
+                type="text"
+                id="project-name"
+                class="text-input"
+                placeholder="Enter project name"
+                oninput="checkForm()"
+            >
+            <p class="field-hint">This is just how the project appears in your dashboard — use your brand name if you have one, or a working title if you don't.</p>
+        </div>
+
+        <!-- Brand posture -->
+        <div class="field">
+            <div class="label-row">
+                <label for="brand-posture">Brand posture<span class="required">*</span></label>
+                <button class="not-sure-link" type="button" onclick="toggleGuide()">Not sure?</button>
+            </div>
+
+            <!-- Inline guide (collapsed by default) -->
+            <div class="posture-guide" id="posture-guide">
+                <div class="posture-guide-inner">
+                    <div class="posture-guide-row" onclick="pickPosture('commercial')">
+                        <span class="posture-guide-label">Commercial &amp; growth</span>
+                        <span class="posture-guide-desc">A startup, SME, or product business competing in a market. Branding focuses on differentiation, positioning, and scale.</span>
+                    </div>
+                    <div class="posture-guide-row" onclick="pickPosture('personal')">
+                        <span class="posture-guide-label">Personal brand</span>
+                        <span class="posture-guide-desc">You are the brand — expert, creator, solopreneur, or freelancer. Branding focuses on your story, credibility, and authentic voice.</span>
+                    </div>
+                    <div class="posture-guide-row" onclick="pickPosture('purpose')">
+                        <span class="posture-guide-label">Purpose-driven</span>
+                        <span class="posture-guide-desc">An NGO, non-profit, or social enterprise with a mission at the centre. Branding focuses on impact, values, and community trust.</span>
+                    </div>
+                    <div class="posture-guide-row" onclick="pickPosture('knowledge')">
+                        <span class="posture-guide-label">Knowledge &amp; influence</span>
+                        <span class="posture-guide-desc">A consultancy, agency, academy, or think tank. Branding focuses on intellectual authority and the depth of your expertise.</span>
+                    </div>
+                    <div class="posture-guide-row" onclick="pickPosture('community')">
+                        <span class="posture-guide-label">Community &amp; membership</span>
+                        <span class="posture-guide-desc">An association, cooperative, professional body, or club. Branding focuses on shared identity and the sense of belonging.</span>
+                    </div>
+                    <div class="posture-guide-row" onclick="pickPosture('institutional')">
+                        <span class="posture-guide-label">Institutional &amp; enterprise</span>
+                        <span class="posture-guide-desc">A corporation, multinational, or holding company. Branding focuses on stability, trust, and credibility at scale.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="select-wrapper">
+                <select
+                    id="brand-posture"
+                    onchange="updatePosture(); checkForm()"
+                >
+                    <option value="" disabled selected>Select the type of brand you're building</option>
+                    <option value="commercial">Commercial &amp; growth — Startup / SME / scale-up / D2C</option>
+                    <option value="personal">Personal brand — Expert / creator / solopreneur / freelancer</option>
+                    <option value="purpose">Purpose-driven — NGO / non-profit / charity / social enterprise</option>
+                    <option value="knowledge">Knowledge &amp; influence — Consultancy / agency / think tank / academy</option>
+                    <option value="community">Community &amp; membership — Association / cooperative / professional body</option>
+                    <option value="institutional">Institutional &amp; enterprise — Corporation / multinational / holding company</option>
+                </select>
+            </div>
+            <div class="posture-preview" id="posture-preview">
+                <div class="posture-dot"></div>
+                <span class="posture-preview-text" id="posture-preview-text"></span>
+            </div>
+            <p class="field-hint">This shapes how your brand strategy is framed throughout the entire process.</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Description -->
+        <div class="field">
+            <label for="description">Description <span class="optional">Optional</span></label>
+            <textarea
+                id="description"
+                class="text-input"
+                placeholder="Briefly describe what this brand is about"
+            ></textarea>
+        </div>
+
+        <!-- Submit -->
+        <div class="btn-wrap">
+            <span class="tooltip" id="btn-tooltip">Enter a project name and select a brand posture</span>
+            <button class="btn-create" id="create-btn" disabled>
+                Create brand
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const postureHints = {
+        commercial: "Strategy will focus on market differentiation, scalability, and competitive positioning.",
+        personal:   "Strategy will focus on your personal story, expertise, and authentic voice.",
+        purpose:    "Strategy will focus on mission, community impact, and values-led communication.",
+        knowledge:  "Strategy will focus on intellectual authority, trust, and thought leadership.",
+        community:  "Strategy will focus on shared identity, belonging, and member relationships.",
+        institutional: "Strategy will focus on trust, stability, and multi-stakeholder credibility."
+    };
+
+    function toggleGuide() {
+        const guide = document.getElementById('posture-guide');
+        const link = document.querySelector('.not-sure-link');
+        const isOpen = guide.classList.contains('visible');
+        guide.classList.toggle('visible', !isOpen);
+        link.textContent = isOpen ? 'Not sure?' : 'Hide guide';
+    }
+
+    function pickPosture(value) {
+        const select = document.getElementById('brand-posture');
+        select.value = value;
+        updatePosture();
+        checkForm();
+        // Collapse guide after picking
+        document.getElementById('posture-guide').classList.remove('visible');
+        document.querySelector('.not-sure-link').textContent = 'Not sure?';
+    }
+
+    function updatePosture() {
+        const select = document.getElementById('brand-posture');
+        const preview = document.getElementById('posture-preview');
+        const previewText = document.getElementById('posture-preview-text');
+        const val = select.value;
+
+        if (val && postureHints[val]) {
+            previewText.textContent = postureHints[val];
+            preview.classList.add('visible');
+        } else {
+            preview.classList.remove('visible');
+        }
+    }
+
+    function checkForm() {
+        const name = document.getElementById('project-name').value.trim();
+        const posture = document.getElementById('brand-posture').value;
+        const btn = document.getElementById('create-btn');
+        const tooltip = document.getElementById('btn-tooltip');
+
+        btn.disabled = !(name && posture);
+
+        if (!name && !posture) {
+            tooltip.textContent = 'Enter a project name and select a brand posture';
+        } else if (!name) {
+            tooltip.textContent = 'Enter a project name to continue';
+        } else if (!posture) {
+            tooltip.textContent = 'Select a brand posture to continue';
+        }
+
+        // Hide tooltip once button is enabled
+        tooltip.style.display = (name && posture) ? 'none' : '';
+    }
+</script>
+
+</body>
+</html>

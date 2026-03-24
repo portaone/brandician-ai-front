@@ -19,6 +19,7 @@ export interface BrandReduced {
   brand_name?: string;
   payment_complete?: number;
   status_description?: string;
+  brand_posture?: string;
 }
 
 export interface Brand extends BrandReduced {
@@ -172,17 +173,19 @@ export const IMPORTANCE_TO_RANKING: Record<JTBDImportance, number> = {
 };
 
 /** Maps numeric ranking (0–5) → display label, derived from JTBD_IMPORTANCE_LABELS */
-export const RANKING_TO_IMPORTANCE_LABEL: Record<number, string> = Object.fromEntries(
-  Object.entries(IMPORTANCE_TO_RANKING).map(([key, rank]) => [
-    rank,
-    JTBD_IMPORTANCE_LABELS[key as JTBDImportance],
-  ]),
-) as Record<number, string>;
+export const RANKING_TO_IMPORTANCE_LABEL: Record<number, string> =
+  Object.fromEntries(
+    Object.entries(IMPORTANCE_TO_RANKING).map(([key, rank]) => [
+      rank,
+      JTBD_IMPORTANCE_LABELS[key as JTBDImportance],
+    ]),
+  ) as Record<number, string>;
 
 /** Maps numeric ranking (0–5) → JTBDImportance key */
-export const RANKING_TO_IMPORTANCE: Record<number, JTBDImportance> = Object.fromEntries(
-  Object.entries(IMPORTANCE_TO_RANKING).map(([key, rank]) => [rank, key]),
-) as Record<number, JTBDImportance>;
+export const RANKING_TO_IMPORTANCE: Record<number, JTBDImportance> =
+  Object.fromEntries(
+    Object.entries(IMPORTANCE_TO_RANKING).map(([key, rank]) => [rank, key]),
+  ) as Record<number, JTBDImportance>;
 
 export type SurveyQuestionType =
   | "text"

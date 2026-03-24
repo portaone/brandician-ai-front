@@ -1,6 +1,16 @@
 import axios, { AxiosInstance } from "axios";
 import { BrandStatus } from "./navigation";
-import { JTBDList, SuggestedJTBDList, Survey, SubmissionLink, AdjustObject, JTBD, JTBDPersonaIn, JTBDPersonaAdjustment, ArchetypeAdjustmentResponse } from "../types";
+import {
+  JTBDList,
+  SuggestedJTBDList,
+  Survey,
+  SubmissionLink,
+  AdjustObject,
+  JTBD,
+  JTBDPersonaIn,
+  JTBDPersonaAdjustment,
+  ArchetypeAdjustmentResponse,
+} from "../types";
 import { config } from "../config";
 
 // Extend axios config to include our metadata
@@ -26,7 +36,7 @@ const logApiCall = (
   url: string,
   requestId: string,
   data?: any,
-  response?: any
+  response?: any,
 ) => {
   console.log(`🌐 [${requestId}] API ${type} ${url}`);
 
@@ -54,7 +64,7 @@ const logConnectionError = (error: any, url: string, requestId: string) => {
     console.log("   - Verify the API URL in your .env file");
     console.log("   - Current API_URL:", API_URL);
     console.log(
-      "   - Expected format: http://localhost:PORT (e.g., http://localhost:8000)"
+      "   - Expected format: http://localhost:PORT (e.g., http://localhost:8000)",
     );
   }
 
@@ -71,7 +81,7 @@ const createRequestKey = (method: string, url: string, data?: any) => {
 
 const deduplicate = async <T>(
   key: string,
-  requestFn: () => Promise<T>
+  requestFn: () => Promise<T>,
 ): Promise<T> => {
   if (pendingRequests.has(key)) {
     const requestId = generateRequestId();
@@ -128,7 +138,7 @@ api.interceptors.request.use((config) => {
     config.method?.toUpperCase() || "REQUEST",
     config.url || "",
     requestId,
-    config.data
+    config.data,
   );
 
   return config;
@@ -143,7 +153,7 @@ api.interceptors.response.use(
       response.config.url || "",
       requestId,
       undefined,
-      response.data
+      response.data,
     );
     return response;
   },
@@ -180,7 +190,7 @@ api.interceptors.response.use(
         console.log(
           `🔄 [${requestId}] Retrying request (attempt ${
             retryCount + 1
-          }/${MAX_RETRIES}) after ${delay}ms...`
+          }/${MAX_RETRIES}) after ${delay}ms...`,
         );
 
         return new Promise((resolve) => {
@@ -192,7 +202,7 @@ api.interceptors.response.use(
 
       // Max retries reached
       console.error(
-        `❌ [${requestId}] Max retries (${MAX_RETRIES}) reached for network error`
+        `❌ [${requestId}] Max retries (${MAX_RETRIES}) reached for network error`,
       );
       return Promise.reject(error);
     }
@@ -227,7 +237,7 @@ api.interceptors.response.use(
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export const auth = {
@@ -279,8 +289,16 @@ export const brands = {
     });
   },
 
-  create: async (name: string, description?: string) => {
-    const response = await api.post(apiPath("/brands"), { name, description });
+  create: async (
+    name: string,
+    description?: string,
+    brand_posture?: string,
+  ) => {
+    const response = await api.post(apiPath("/brands"), {
+      name,
+      description,
+      brand_posture,
+    });
     return response.data;
   },
 
@@ -317,7 +335,7 @@ export const brands = {
   progressStatus: async (brandId: string) => {
     const key = createRequestKey(
       "POST",
-      apiPath(`/brands/${brandId}/progress/`)
+      apiPath(`/brands/${brandId}/progress/`),
     );
     return deduplicate(key, async () => {
       const response = await api.post(apiPath(`/brands/${brandId}/progress/`));
@@ -339,7 +357,7 @@ export const brands = {
       apiPath(`/brands/${brandId}/revert/`),
       requestId,
       undefined,
-      response.data
+      response.data,
     );
     return response.data;
   },
@@ -356,7 +374,7 @@ export const brands = {
 
   getQuestion: async (brandId: string, questionId: string) => {
     const response = await api.get(
-      apiPath(`/brands/${brandId}/questions/${questionId}`)
+      apiPath(`/brands/${brandId}/questions/${questionId}`),
     );
     return response.data;
   },
@@ -372,7 +390,7 @@ export const brands = {
 
   getAnswer: async (brandId: string, answerId: string) => {
     const response = await api.get(
-      apiPath(`/brands/${brandId}/answers/${answerId}`)
+      apiPath(`/brands/${brandId}/answers/${answerId}`),
     );
     return response.data;
   },
@@ -380,11 +398,11 @@ export const brands = {
   updateAnswer: async (
     brandId: string,
     answerId: string,
-    answer: { question: string; answer: string }
+    answer: { question: string; answer: string },
   ) => {
     const response = await api.put(
       apiPath(`/brands/${brandId}/answers/${answerId}`),
-      answer
+      answer,
     );
     return response.data;
   },
@@ -409,16 +427,29 @@ export const brands = {
     await api.put(apiPath(`/brands/${brandId}/jtbd/`), jtbd);
   },
 
-  updateJTBDPersona: async (brandId: string, personaId: string, persona: JTBDPersonaIn): Promise<void> => {
+  updateJTBDPersona: async (
+    brandId: string,
+    personaId: string,
+    persona: JTBDPersonaIn,
+  ): Promise<void> => {
     await api.put(apiPath(`/brands/${brandId}/jtbd/${personaId}/`), persona);
   },
 
-  createJTBDPersona: async (brandId: string, persona: JTBDPersonaIn): Promise<JTBD> => {
-    const response = await api.post(apiPath(`/brands/${brandId}/jtbd/persona/`), persona);
+  createJTBDPersona: async (
+    brandId: string,
+    persona: JTBDPersonaIn,
+  ): Promise<JTBD> => {
+    const response = await api.post(
+      apiPath(`/brands/${brandId}/jtbd/persona/`),
+      persona,
+    );
     return response.data;
   },
 
-  deleteJTBDPersona: async (brandId: string, personaId: string): Promise<void> => {
+  deleteJTBDPersona: async (
+    brandId: string,
+    personaId: string,
+  ): Promise<void> => {
     await api.delete(apiPath(`/brands/${brandId}/jtbd/${personaId}/`));
   },
 
@@ -427,35 +458,50 @@ export const brands = {
     return response.data.drivers;
   },
 
-  updateJTBDDrivers: async (brandId: string, drivers: string): Promise<void> => {
+  updateJTBDDrivers: async (
+    brandId: string,
+    drivers: string,
+  ): Promise<void> => {
     await api.put(apiPath(`/brands/${brandId}/jtbd-drivers/`), { drivers });
   },
 
   getPrimaryPersona: async (brandId: string): Promise<JTBD> => {
-    const response = await api.get(apiPath(`/brands/${brandId}/primary-persona/`));
+    const response = await api.get(
+      apiPath(`/brands/${brandId}/primary-persona/`),
+    );
     return response.data;
   },
 
   generatePrimaryPersona: async (brandId: string): Promise<JTBD> => {
-    const key = createRequestKey("POST", apiPath(`/brands/${brandId}/primary-persona/`));
+    const key = createRequestKey(
+      "POST",
+      apiPath(`/brands/${brandId}/primary-persona/`),
+    );
     return deduplicate(key, async () => {
-      const response = await api.post(apiPath(`/brands/${brandId}/primary-persona/`));
+      const response = await api.post(
+        apiPath(`/brands/${brandId}/primary-persona/`),
+      );
       return response.data;
     });
   },
 
-  savePrimaryPersona: async (brandId: string, persona: JTBDPersonaIn): Promise<void> => {
+  savePrimaryPersona: async (
+    brandId: string,
+    persona: JTBDPersonaIn,
+  ): Promise<void> => {
     await api.put(apiPath(`/brands/${brandId}/primary-persona/`), persona);
   },
 
-  adjustJTBDPersonas: async (brandId: string): Promise<JTBDPersonaAdjustment[]> => {
+  adjustJTBDPersonas: async (
+    brandId: string,
+  ): Promise<JTBDPersonaAdjustment[]> => {
     const key = createRequestKey(
       "POST",
-      apiPath(`/brands/${brandId}/adjust/jtbd-personas`)
+      apiPath(`/brands/${brandId}/adjust/jtbd-personas`),
     );
     return deduplicate(key, async () => {
       const response = await api.post(
-        apiPath(`/brands/${brandId}/adjust/jtbd-personas`)
+        apiPath(`/brands/${brandId}/adjust/jtbd-personas`),
       );
       return response.data;
     });
@@ -464,11 +510,11 @@ export const brands = {
   adjustJTBDDrivers: async (brandId: string): Promise<AdjustObject> => {
     const key = createRequestKey(
       "POST",
-      apiPath(`/brands/${brandId}/adjust/jtbd-drivers`)
+      apiPath(`/brands/${brandId}/adjust/jtbd-drivers`),
     );
     return deduplicate(key, async () => {
       const response = await api.post(
-        apiPath(`/brands/${brandId}/adjust/jtbd-drivers`)
+        apiPath(`/brands/${brandId}/adjust/jtbd-drivers`),
       );
       return response.data;
     });
@@ -484,7 +530,7 @@ export const brands = {
 
   regenerateSurveyDraft: async (brandId: string) => {
     const response = await api.post(
-      apiPath(`/brands/${brandId}/survey/?regenerate=true`)
+      apiPath(`/brands/${brandId}/survey/?regenerate=true`),
     );
     return response.data;
   },
@@ -496,7 +542,7 @@ export const brands = {
 
   getSurveyQuestions: async (brandId: string) => {
     const response = await api.get(
-      apiPath(`/brands/${brandId}/survey/questions/`)
+      apiPath(`/brands/${brandId}/survey/questions/`),
     );
     return response.data;
   },
@@ -506,7 +552,7 @@ export const brands = {
       apiPath(`/brands/${brandId}/survey/responses/csv`),
       {
         responseType: "blob",
-      }
+      },
     );
     return response.data;
   },
@@ -514,18 +560,18 @@ export const brands = {
   saveSurveyDraft: async (brandId: string, survey: Survey) => {
     const response = await api.patch(
       apiPath(`/brands/${brandId}/survey/`),
-      survey
+      survey,
     );
     return response.data;
   },
 
   saveSurvey: async (
     brandId: string,
-    survey: Survey
+    survey: Survey,
   ): Promise<SubmissionLink> => {
     const response = await api.put(
       apiPath(`/brands/${brandId}/survey`),
-      survey
+      survey,
     );
     return response.data;
   },
@@ -540,7 +586,7 @@ export const brands = {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
     return response.data;
   },
@@ -548,7 +594,7 @@ export const brands = {
   processAudioBatch: async (
     brandId: string,
     answerId: string,
-    audioFile: File
+    audioFile: File,
   ) => {
     const formData = new FormData();
     formData.append("audio_file", audioFile);
@@ -559,7 +605,7 @@ export const brands = {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
     return response.data;
   },
@@ -567,10 +613,10 @@ export const brands = {
   getAudioProcessingStatus: async (
     brandId: string,
     answerId: string,
-    processingId: string
+    processingId: string,
   ) => {
     const response = await api.get(
-      apiPath(`/brands/${brandId}/answers/${answerId}/audio/${processingId}`)
+      apiPath(`/brands/${brandId}/answers/${answerId}/audio/${processingId}`),
     );
     return response.data;
   },
@@ -580,7 +626,7 @@ export const brands = {
     answerId: string,
     sourceText: string,
     style?: string,
-    language?: string
+    language?: string,
   ) => {
     const response = await api.post(
       apiPath(`/brands/${brandId}/answers/${answerId}/augment`),
@@ -588,7 +634,7 @@ export const brands = {
         source_text: sourceText,
         style,
         language,
-      }
+      },
     );
     return response.data;
   },
@@ -620,7 +666,7 @@ export const brands = {
 
   getSurveyStatus: async (brandId: string) => {
     const response = await api.get(
-      apiPath(`/brands/${brandId}/survey/status/`)
+      apiPath(`/brands/${brandId}/survey/status/`),
     );
     return response.data;
   },
@@ -628,11 +674,11 @@ export const brands = {
   analyzeFeedback: async (brandId: string) => {
     const key = createRequestKey(
       "POST",
-      apiPath(`/brands/${brandId}/survey-feedback`)
+      apiPath(`/brands/${brandId}/survey-feedback`),
     );
     return deduplicate(key, async () => {
       const response = await api.post(
-        apiPath(`/brands/${brandId}/survey-feedback`)
+        apiPath(`/brands/${brandId}/survey-feedback`),
       );
       return response.data;
     });
@@ -641,11 +687,11 @@ export const brands = {
   adjustSummary: async (brandId: string): Promise<AdjustObject> => {
     const key = createRequestKey(
       "POST",
-      apiPath(`/brands/${brandId}/adjust/summary`)
+      apiPath(`/brands/${brandId}/adjust/summary`),
     );
     return deduplicate(key, async () => {
       const response = await api.post(
-        apiPath(`/brands/${brandId}/adjust/summary`)
+        apiPath(`/brands/${brandId}/adjust/summary`),
       );
       return response.data;
     });
@@ -669,7 +715,7 @@ export const brands = {
       if (error.response?.status === 404) {
         // If no archetype exists, suggest new one
         const response = await api.post(
-          apiPath(`/brands/${brandId}/archetype/`)
+          apiPath(`/brands/${brandId}/archetype/`),
         );
         return response.data;
       }
@@ -688,19 +734,21 @@ export const brands = {
 
   adjustArchetype: async (brandId: string) => {
     const response = await api.put(
-      apiPath(`/brands/${brandId}/adjust/archetype`)
+      apiPath(`/brands/${brandId}/adjust/archetype`),
     );
     return response.data;
   },
 
-  suggestArchetypeAdjustment: async (brandId: string): Promise<ArchetypeAdjustmentResponse> => {
+  suggestArchetypeAdjustment: async (
+    brandId: string,
+  ): Promise<ArchetypeAdjustmentResponse> => {
     const key = createRequestKey(
       "POST",
-      apiPath(`/brands/${brandId}/adjust/archetype`)
+      apiPath(`/brands/${brandId}/adjust/archetype`),
     );
     return deduplicate(key, async () => {
       const response = await api.post(
-        apiPath(`/brands/${brandId}/adjust/archetype`)
+        apiPath(`/brands/${brandId}/adjust/archetype`),
       );
       return response.data;
     });
@@ -709,7 +757,7 @@ export const brands = {
   produceAssets: async (
     brandId: string,
     assetType?: string,
-    currentApi: AxiosInstance = api
+    currentApi: AxiosInstance = api,
   ) => {
     const basePath = apiPath(`/brands/${brandId}/produce-assets/`);
     const url =
@@ -728,7 +776,7 @@ export const brands = {
     const key = createRequestKey("GET", apiPath(`/brands/${brandId}/assets/`));
     return deduplicate(key, async () => {
       const response = await currentApi.get(
-        apiPath(`/brands/${brandId}/assets/`)
+        apiPath(`/brands/${brandId}/assets/`),
       );
       return response.data;
     });
@@ -737,15 +785,15 @@ export const brands = {
   getAsset: async (
     brandId: string,
     assetId: string,
-    currentApi: AxiosInstance = api
+    currentApi: AxiosInstance = api,
   ) => {
     const key = createRequestKey(
       "GET",
-      apiPath(`/brands/${brandId}/assets/${assetId}`)
+      apiPath(`/brands/${brandId}/assets/${assetId}`),
     );
     return deduplicate(key, async () => {
       const response = await currentApi.get(
-        apiPath(`/brands/${brandId}/assets/${assetId}`)
+        apiPath(`/brands/${brandId}/assets/${assetId}`),
       );
       return response.data;
     });
@@ -754,29 +802,32 @@ export const brands = {
   selectPalette: async (brandId: string, variantIndex: number) => {
     const response = await api.post(
       apiPath(`/brands/${brandId}/select-palette/`),
-      { variant_index: variantIndex }
+      { variant_index: variantIndex },
     );
     return response.data;
   },
 
   getOrGenerateVisualIdentityDraft: async (brandId: string) => {
     const response = await api.post(
-      apiPath(`/brands/${brandId}/visual-identity-draft/`)
+      apiPath(`/brands/${brandId}/visual-identity-draft/`),
     );
     return response.data;
   },
 
   regenerateVisualIdentityDraft: async (brandId: string) => {
     const response = await api.post(
-      apiPath(`/brands/${brandId}/visual-identity-draft/?regenerate=true`)
+      apiPath(`/brands/${brandId}/visual-identity-draft/?regenerate=true`),
     );
     return response.data;
   },
 
-  selectVisualIdentityVariant: async (brandId: string, variantIndex: number) => {
+  selectVisualIdentityVariant: async (
+    brandId: string,
+    variantIndex: number,
+  ) => {
     const response = await api.post(
       apiPath(`/brands/${brandId}/visual-identity-draft/select`),
-      { variant_index: variantIndex }
+      { variant_index: variantIndex },
     );
     return response.data;
   },
@@ -787,15 +838,22 @@ export const brands = {
 
   // Visual identity (hub-based) endpoints
   suggestVisualIdentity: async (brandId: string) => {
-    const key = createRequestKey("POST", apiPath(`/brands/${brandId}/visual-identity/suggest`));
+    const key = createRequestKey(
+      "POST",
+      apiPath(`/brands/${brandId}/visual-identity/suggest`),
+    );
     return deduplicate(key, async () => {
-      const response = await api.post(apiPath(`/brands/${brandId}/visual-identity/suggest`));
+      const response = await api.post(
+        apiPath(`/brands/${brandId}/visual-identity/suggest`),
+      );
       return response.data;
     });
   },
 
   getVisualIdentityOptions: async (brandId: string) => {
-    const response = await api.get(apiPath(`/brands/${brandId}/visual-identity/suggest`));
+    const response = await api.get(
+      apiPath(`/brands/${brandId}/visual-identity/suggest`),
+    );
     return response.data;
   },
 
@@ -824,15 +882,15 @@ export const brands = {
   getBrandHubTab: async (
     brandId: string,
     tab: string,
-    currentApi: AxiosInstance = api
+    currentApi: AxiosInstance = api,
   ) => {
     const key = createRequestKey(
       "GET",
-      apiPath(`/brands/${brandId}/hub/tabs/${tab}`)
+      apiPath(`/brands/${brandId}/hub/tabs/${tab}`),
     );
     return deduplicate(key, async () => {
       const response = await currentApi.get(
-        apiPath(`/brands/${brandId}/hub/tabs/${tab}`)
+        apiPath(`/brands/${brandId}/hub/tabs/${tab}`),
       );
       return response.data;
     });
@@ -841,11 +899,11 @@ export const brands = {
   generateBrandHub: async (brandId: string) => {
     const key = createRequestKey(
       "POST",
-      apiPath(`/brands/${brandId}/hub/generate`)
+      apiPath(`/brands/${brandId}/hub/generate`),
     );
     return deduplicate(key, async () => {
       const response = await api.post(
-        apiPath(`/brands/${brandId}/hub/generate`)
+        apiPath(`/brands/${brandId}/hub/generate`),
       );
       return response.data;
     });
@@ -854,7 +912,7 @@ export const brands = {
   pickName: async (brandId: string) => {
     const key = createRequestKey(
       "POST",
-      apiPath(`/brands/${brandId}/pick-name/`)
+      apiPath(`/brands/${brandId}/pick-name/`),
     );
     return deduplicate(key, async () => {
       const response = await api.post(apiPath(`/brands/${brandId}/pick-name/`));
@@ -866,14 +924,14 @@ export const brands = {
     brandId: string,
     answerId: string,
     answer: string,
-    question: string
+    question: string,
   ) => {
     const response = await api.put(
       apiPath(`/brands/${brandId}/answers/${answerId}`),
       {
         question,
         answer,
-      }
+      },
     );
     return response.data;
   },
@@ -882,7 +940,7 @@ export const brands = {
     brandId: string,
     amount: number,
     description?: string,
-    paymentMethod?: string
+    paymentMethod?: string,
   ) => {
     const params = new URLSearchParams();
     if (paymentMethod) {
@@ -905,11 +963,11 @@ export const brands = {
   getPaymentStatus: async (brandId: string) => {
     const key = createRequestKey(
       "GET",
-      apiPath(`/brands/${brandId}/payment-status`)
+      apiPath(`/brands/${brandId}/payment-status`),
     );
     return deduplicate(key, async () => {
       const response = await api.get(
-        apiPath(`/brands/${brandId}/payment-status`)
+        apiPath(`/brands/${brandId}/payment-status`),
       );
       return response.data;
     });
@@ -917,7 +975,7 @@ export const brands = {
 
   completePaymentFlow: async (brandId: string) => {
     const response = await api.post(
-      apiPath(`/brands/${brandId}/complete-payment`)
+      apiPath(`/brands/${brandId}/complete-payment`),
     );
     return response.data;
   },
@@ -931,7 +989,7 @@ export const brands = {
     brandId: string,
     token: string,
     amount: number,
-    currency: string = "USD"
+    currency: string = "USD",
   ) => {
     const response = await api.post(apiPath("/payments/google-pay"), {
       brand_id: brandId,
@@ -963,7 +1021,7 @@ export const brands = {
       apiPath(`/brands/${brandId}/register-domains/`),
       {
         domains,
-      }
+      },
     );
     return response.data;
   },
@@ -975,7 +1033,7 @@ export const brands = {
       testimonial?: string;
       suggestion?: string;
       author?: string;
-    }
+    },
   ) => {
     await api.put(apiPath(`/brands/${brandId}/feedback/`), feedback);
   },

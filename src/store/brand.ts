@@ -43,7 +43,11 @@ interface BrandState {
   isLoading: boolean;
   error: string | null;
   loadBrands: () => Promise<void>;
-  createBrand: (name: string, description?: string) => Promise<Brand>;
+  createBrand: (
+    name: string,
+    description?: string,
+    brand_posture?: string,
+  ) => Promise<Brand>;
   selectBrand: (brandId: string, currentApi?: AxiosInstance) => Promise<void>;
   loadQuestions: (brandId: string) => Promise<void>;
   loadAnswers: (brandId: string) => Promise<void>;
@@ -51,13 +55,17 @@ interface BrandState {
     brandId: string,
     questionId: string,
     answer: string,
-    question: string
+    question: string,
   ) => Promise<void>;
   updateBrandStatus: (brandId: string, status: BrandStatus) => Promise<void>;
   progressBrandStatus: (brandId: string) => Promise<{ status: BrandStatus }>;
   loadJTBD: (brandId: string) => Promise<void>;
   updateJTBD: (brandId: string, jtbd: JTBDList) => Promise<void>;
-  updateJTBDPersona: (brandId: string, personaId: string, persona: JTBDPersonaIn) => Promise<void>;
+  updateJTBDPersona: (
+    brandId: string,
+    personaId: string,
+    persona: JTBDPersonaIn,
+  ) => Promise<void>;
   generateBrandSummary: (brandId: string) => Promise<void>;
   updateBrandSummary: (brandId: string, summary: string) => Promise<void>;
   loadSummary: (brandId: string) => Promise<string>;
@@ -67,7 +75,7 @@ interface BrandState {
   updateBrandName: (brandId: string, brandName: string) => Promise<void>;
   updateBrandProjectName: (
     brandId: string,
-    projectName: string
+    projectName: string,
   ) => Promise<void>;
 }
 
@@ -92,10 +100,14 @@ export const useBrandStore = create<BrandState>((set) => ({
     }
   },
 
-  createBrand: async (name: string, description?: string) => {
+  createBrand: async (
+    name: string,
+    description?: string,
+    brand_posture?: string,
+  ) => {
     set({ isLoading: true, error: null });
     try {
-      const brand = await brands.create(name, description);
+      const brand = await brands.create(name, description, brand_posture);
       set((state) => ({
         brands: [...state.brands, brand],
         currentBrand: brand,
@@ -140,12 +152,12 @@ export const useBrandStore = create<BrandState>((set) => ({
           id: questionId,
           question: questionId,
           answer: data.answer,
-        })
+        }),
       );
 
       // Create optimized map for O(1) lookups
       const answersMap = new Map(
-        answers.map((answer) => [answer.question, answer])
+        answers.map((answer) => [answer.question, answer]),
       );
 
       set({ answers, answersMap });
@@ -160,7 +172,7 @@ export const useBrandStore = create<BrandState>((set) => ({
     brandId: string,
     questionId: string,
     answer: string,
-    question: string
+    question: string,
   ) => {
     set({ isLoading: true, error: null });
     try {
@@ -168,7 +180,7 @@ export const useBrandStore = create<BrandState>((set) => ({
         brandId,
         questionId,
         answer,
-        question
+        question,
       );
 
       set((state) => {
@@ -283,25 +295,30 @@ export const useBrandStore = create<BrandState>((set) => ({
     }
   },
 
-  updateJTBDPersona: async (brandId: string, personaId: string, persona: JTBDPersonaIn) => {
+  updateJTBDPersona: async (
+    brandId: string,
+    personaId: string,
+    persona: JTBDPersonaIn,
+  ) => {
     await brands.updateJTBDPersona(brandId, personaId, persona);
     set((state) => ({
-      currentBrand: state.currentBrand && state.currentBrand.jtbd
-        ? {
-            ...state.currentBrand,
-            jtbd: {
-              ...state.currentBrand.jtbd,
-              personas: {
-                ...state.currentBrand.jtbd.personas,
-                [personaId]: {
-                  ...state.currentBrand.jtbd.personas[personaId],
-                  ...persona,
-                  id: personaId,
+      currentBrand:
+        state.currentBrand && state.currentBrand.jtbd
+          ? {
+              ...state.currentBrand,
+              jtbd: {
+                ...state.currentBrand.jtbd,
+                personas: {
+                  ...state.currentBrand.jtbd.personas,
+                  [personaId]: {
+                    ...state.currentBrand.jtbd.personas[personaId],
+                    ...persona,
+                    id: personaId,
+                  },
                 },
               },
-            },
-          }
-        : state.currentBrand,
+            }
+          : state.currentBrand,
     }));
   },
 
@@ -440,7 +457,7 @@ export const useBrandStore = create<BrandState>((set) => ({
     } catch (error: any) {
       const errorMessage = getErrorMessage(
         error,
-        "Failed to update brand name"
+        "Failed to update brand name",
       );
       set({ isLoading: false, error: errorMessage });
       throw new Error(errorMessage);
@@ -452,14 +469,14 @@ export const useBrandStore = create<BrandState>((set) => ({
       await brands.patch(brandId, { name: projectName });
       set((state) => ({
         brands: state.brands.map((brand) =>
-          brand.id === brandId ? { ...brand, name: projectName } : brand
+          brand.id === brandId ? { ...brand, name: projectName } : brand,
         ),
         isLoading: false,
       }));
     } catch (error: any) {
       const errorMessage = getErrorMessage(
         error,
-        "Failed to update brand project name"
+        "Failed to update brand project name",
       );
       set({ isLoading: false, error: errorMessage });
       throw new Error(errorMessage);
