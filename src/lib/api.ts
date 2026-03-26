@@ -12,12 +12,14 @@ import {
   ArchetypeAdjustmentResponse,
 } from "../types";
 import { config } from "../config";
+import { recordRequestEnd } from "./requestLogger";
 
 // Extend axios config to include our metadata
 declare module "axios" {
   export interface AxiosRequestConfig {
     metadata?: {
       requestId: string;
+      startTime?: number;
     };
   }
 }
@@ -127,7 +129,7 @@ api.interceptors.request.use((config) => {
   config.headers["X-Request-ID"] = requestId;
 
   // Store request ID in config for later use in response/error logging
-  config.metadata = { requestId };
+  config.metadata = { requestId, startTime: Date.now() };
 
   // Initialize retry count if not set
   if (!config.hasOwnProperty("retryCount")) {
@@ -155,6 +157,9 @@ api.interceptors.response.use(
       undefined,
       response.data,
     );
+    if (!response.config.url?.includes("/users/help-request")) {
+      recordRequestEnd(response.config, response);
+    }
     return response;
   },
   async (error) => {
@@ -204,6 +209,9 @@ api.interceptors.response.use(
       console.error(
         `❌ [${requestId}] Max retries (${MAX_RETRIES}) reached for network error`,
       );
+      if (!config.url?.includes("/users/help-request")) {
+        recordRequestEnd(config, undefined, error);
+      }
       return Promise.reject(error);
     }
 
@@ -233,8 +241,14 @@ api.interceptors.response.use(
           window.location.href = "/login";
         }
         // For other errors (including network errors), just reject
+        if (!originalRequest.url?.includes("/users/help-request")) {
+          recordRequestEnd(originalRequest, undefined, refreshError);
+        }
         return Promise.reject(refreshError);
       }
+    }
+    if (!originalRequest?.url?.includes("/users/help-request")) {
+      recordRequestEnd(originalRequest, error.response, error);
     }
     return Promise.reject(error);
   },

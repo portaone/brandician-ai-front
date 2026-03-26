@@ -2,6 +2,7 @@ import { AlertCircle, CheckCircle, LifeBuoy, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { auth } from "../../lib/api";
+import { getFormattedLogs } from "../../lib/requestLogger";
 import { useAuthStore } from "../../store/auth";
 import Button from "./Button";
 
@@ -132,9 +133,14 @@ const GetHelpButton: React.FC<GetHelpButtonProps> = ({
     setIsSending(true);
     try {
       // Call the API to send help request
+      const recentLogs = getFormattedLogs();
+      const messageWithLogs = recentLogs
+        ? `${issueDetails.trim()}\n\n${recentLogs}`
+        : issueDetails.trim();
+
       const response = await auth.sendHelpRequest({
         name: name.trim(),
-        message: issueDetails.trim(),
+        message: messageWithLogs,
         brand_id: brandId,
         url: window.location.href,
       });
