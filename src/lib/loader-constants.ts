@@ -27,6 +27,18 @@ export const LOADER_CONFIGS: Record<string, LoaderConfig> = {
     ],
   },
 
+  // Step 3: JTBD Persona Suggestion (AI generation)
+  jtbdSuggest: {
+    loadingText: "Generating customer personas...",
+    steps: [
+      "Analyzing brand strategy and positioning",
+      "Identifying key customer segments",
+      "Building persona narratives and demographics",
+      "Mapping jobs to be done and desired outcomes",
+      "Defining motivations, pain points, and brand connection",
+    ],
+  },
+
   // Step 3b: Brand Archetype
   archetype: {
     loadingText: "Analyzing brand archetype...",

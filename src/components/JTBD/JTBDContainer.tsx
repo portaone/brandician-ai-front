@@ -167,7 +167,9 @@ const JTBDContainer: React.FC = () => {
   const [editingPersona, setEditingPersona] = useState<PersonaItem | null>(
     null,
   );
-  const [pendingRemovalKey, setPendingRemovalKey] = useState<string | null>(null);
+  const [pendingRemovalKey, setPendingRemovalKey] = useState<string | null>(
+    null,
+  );
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isEditingDrivers, setIsEditingDrivers] = useState(false);
   const isRegeneratingRef = useRef<boolean>(false);
@@ -372,10 +374,10 @@ const JTBDContainer: React.FC = () => {
     scrollToTop();
   };
 
-  if (isLoading) {
+  if (isLoading || (isRegenerating && personas.length === 0)) {
     return (
       <BrandicianLoader
-        config={LOADER_CONFIGS.customerNeeds}
+        config={LOADER_CONFIGS.jtbdSuggest}
         isComplete={false}
       />
     );
@@ -663,6 +665,7 @@ const JTBDContainer: React.FC = () => {
                   variant="selection"
                   size="md"
                   onClick={handleRegeneratePersonas}
+                  loading={isRegenerating}
                   disabled={isRegenerating || isLoading}
                 >
                   Suggest new personas
