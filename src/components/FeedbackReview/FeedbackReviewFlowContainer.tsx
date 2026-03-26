@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { brands } from "../../lib/api";
+import { useBrandStore } from "../../store/brand";
 import ArchetypeAdjustmentContainer from "./ArchetypeAdjustmentContainer";
 import JTBDAdjustmentContainer from "./JTBDAdjustmentContainer";
 import SummaryAdjustmentContainer from "./SummaryAdjustmentContainer";
@@ -58,6 +58,7 @@ const FeedbackReviewFlowContainer: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { brandId } = useParams<{ brandId: string }>();
+  const { selectBrand, progressBrandStatus } = useBrandStore();
   const [error, setError] = useState<string | null>(null);
   const [currentBrand, setCurrentBrand] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,11 +69,12 @@ const FeedbackReviewFlowContainer: React.FC = () => {
       if (!brandId) return;
       setIsLoading(true);
       try {
-        const brand = await brands.get(brandId);
+        await selectBrand(brandId);
+        const brand = useBrandStore.getState().currentBrand;
         setCurrentBrand(brand);
         console.log(
           "[DEBUG] useEffect: brand.current_status =",
-          brand.current_status,
+          brand?.current_status,
         );
       } catch (e) {
         setError("Failed to load brand info.");
@@ -149,22 +151,22 @@ const FeedbackReviewFlowContainer: React.FC = () => {
     );
 
     try {
-      // Always progress to the next status via backend
+      // Always progress to the next status via backend (also re-fetches and updates the store)
       console.log("[DEBUG] FeedbackReviewFlow: Calling progressStatus...");
-      const progressResp = await brands.progressStatus(brandId);
+      const progressResp = await progressBrandStatus(brandId);
       console.log(
         "[DEBUG] FeedbackReviewFlow: progress response",
         progressResp,
       );
 
-      // Re-fetch brand to get the latest status from backend
-      console.log("[DEBUG] FeedbackReviewFlow: Fetching updated brand...");
-      const updatedBrand = await brands.get(brandId);
+      const updatedBrand = useBrandStore.getState().currentBrand;
       console.log(
         "[DEBUG] FeedbackReviewFlow: brand after progress",
         updatedBrand,
       );
       setCurrentBrand(updatedBrand);
+
+      if (!updatedBrand) return;
 
       // Check if we're still in the feedback review flow
       const isStillInReviewFlow = REVIEW_STEPS.some(
