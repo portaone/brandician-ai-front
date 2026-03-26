@@ -1,5 +1,5 @@
 import { ArrowRight, Edit2 } from "lucide-react";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { scrollToTop } from "../../lib/utils";
 import { Answer, Question } from "../../types";
@@ -20,6 +20,25 @@ const QuestionnaireSummary: React.FC<QuestionnaireSummaryProps> = ({
   const navigate = useNavigate();
   const { brandId } = useParams<{ brandId: string }>();
 
+  const sortedQuestions = useMemo(() => {
+    // "Unanswered first": questions with non-empty answers appear last.
+    const answeredIds = new Set(
+      (answers ?? [])
+        .filter((a) => (a.answer ?? "").toString().trim().length > 0)
+        .map((a) => a.question ?? ""),
+    );
+
+    return questions
+      .map((q, idx) => ({ q, idx }))
+      .sort((a, b) => {
+        const aAnswered = answeredIds.has(a.q.id);
+        const bAnswered = answeredIds.has(b.q.id);
+        if (aAnswered === bAnswered) return a.idx - b.idx;
+        return aAnswered ? 1 : -1;
+      })
+      .map((x) => x.q);
+  }, [questions, answers]);
+
   // Scroll to top when component mounts
   useEffect(() => {
     // Add a delay to ensure DOM is fully rendered
@@ -37,7 +56,7 @@ const QuestionnaireSummary: React.FC<QuestionnaireSummaryProps> = ({
       </h2>
 
       <div className="space-y-6 mb-8">
-        {questions.map((question) => {
+        {sortedQuestions.map((question) => {
           const answer = answers.find((a) => a.question === question.id);
 
           return (

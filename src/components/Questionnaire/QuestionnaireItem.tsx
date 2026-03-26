@@ -16,8 +16,8 @@ import Button from "../common/Button";
 interface QuestionnaireItemProps {
   question: string;
   hint?: string;
-  onNext: (answer: string) => void;
-  onPrevious: () => void;
+  onNext: (answer: string) => void | Promise<void>;
+  onPrevious: () => void | Promise<void>;
   questionNumber: number;
   totalQuestions: number;
   isLastQuestion: boolean;
@@ -26,8 +26,7 @@ interface QuestionnaireItemProps {
   answerId?: string;
   submitError?: string | null;
   onRetrySubmit?: () => void;
-  onShowSummary: () => void;
-  isAllQuestionsAnswered: boolean;
+  onShowSummary: (answer: string) => Promise<void>;
 }
 
 const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
@@ -44,7 +43,6 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   submitError,
   onRetrySubmit,
   onShowSummary,
-  isAllQuestionsAnswered,
 }) => {
   const [answer, setAnswer] = useState(currentAnswer || "");
   const [aiEnhancedAnswer, setAiEnhancedAnswer] = useState("");
@@ -406,9 +404,15 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     }
   };
 
-  const handleShowSummary = () => {
-    handleSubmit();
-    onShowSummary();
+  const handleShowSummary = async () => {
+    const finalAnswer = useAiAnswer ? aiEnhancedAnswer : answer;
+    if (augmentationError) return;
+    setIsSubmitting(true);
+    try {
+      await onShowSummary(finalAnswer);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const copyToClipboard = async () => {
@@ -646,8 +650,8 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
           Question {questionNumber} of {totalQuestions}
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {!isLastQuestion && isAllQuestionsAnswered && (
+        <div className="flex flex-col sm:flex-row gap-2">
+          {!isLastQuestion && (
             <Button
               type="button"
               variant="secondary"
@@ -658,7 +662,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
               {isSubmitting ? (
                 <Loader className="animate-spin h-5 w-5 mr-2 inline" />
               ) : null}
-              Return to summary
+              Summary
             </Button>
           )}
           <Button

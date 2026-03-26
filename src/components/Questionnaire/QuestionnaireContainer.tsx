@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
-import { Answer, Question } from "../../types";
+import { Question } from "../../types";
 import Button from "../common/Button";
 import QuestionnaireHeader from "./QuestionnaireHeader";
 import QuestionnaireItem from "./QuestionnaireItem";
@@ -43,9 +43,18 @@ const QuestionnaireContainer: React.FC = () => {
     return answersMap;
   }, [answers]);
 
-  const isAllQuestionsAnswered = useMemo(() => {
-    return answers.length === questions.length;
-  }, [answers, questions]);
+  const answeredQuestionIds = useMemo(() => {
+    const set = new Set<string>();
+    (answers ?? []).forEach((a) => {
+      const id = (a.question ?? a.id) as string | undefined;
+      if (id) set.add(id);
+    });
+    return set;
+  }, [answers]);
+
+  const sortedQuestions = useMemo(() => {
+    return sortQuestionsByAnswered(questions, answeredQuestionIds);
+  }, [questions, answeredQuestionIds]);
 
   useEffect(() => {
     console.log("🔄 Loading brand data for brandId:", brandId);
@@ -73,7 +82,7 @@ const QuestionnaireContainer: React.FC = () => {
 
   useEffect(() => {
     console.log("🔍 Checking navigation logic:", {
-      questionsLength: questions.length,
+      questionsLength: sortedQuestions.length,
       answersExists: !!answers,
       answersLength: answers?.length || 0,
       currentQuestionIndex,
@@ -82,7 +91,7 @@ const QuestionnaireContainer: React.FC = () => {
     });
 
     if (
-      questions.length > 0 &&
+      sortedQuestions.length > 0 &&
       answers !== null &&
       answers !== undefined &&
       currentQuestionIndex === -1
@@ -97,8 +106,8 @@ const QuestionnaireContainer: React.FC = () => {
         return;
       }
 
-      const firstUnansweredIndex = questions.findIndex(
-        (q) => !(q.id in typedAnswers),
+      const firstUnansweredIndex = sortedQuestions.findIndex(
+        (q) => !answeredQuestionIds.has(q.id),
       );
       console.log("🎯 First unanswered question index:", firstUnansweredIndex);
 
@@ -119,7 +128,14 @@ const QuestionnaireContainer: React.FC = () => {
         setCurrentQuestionIndex(firstUnansweredIndex);
       }
     }
-  }, [questions, answers, currentQuestionIndex, searchParams, typedAnswers]);
+  }, [
+    sortedQuestions,
+    answers,
+    currentQuestionIndex,
+    searchParams,
+    typedAnswers,
+    answeredQuestionIds,
+  ]);
 
   useAutoFocus([
     questions,
@@ -149,48 +165,70 @@ const QuestionnaireContainer: React.FC = () => {
     );
   }
 
-  const handleNext = async (answer: string) => {
-    if (!questions[currentQuestionIndex]) return;
+  const submitAnswerIfChanged = async (
+    answer: string,
+  ): Promise<"submitted" | "skipped" | "failed"> => {
+    const currentQuestion = sortedQuestions[currentQuestionIndex];
+    if (!currentQuestion) return "failed";
 
     // Clear any previous submit errors
     setSubmitError(null);
 
-    // Get the current answer from the store
-    const currentAnswerObj = typedAnswers[questions[currentQuestionIndex].id];
+    const currentAnswerObj = typedAnswers[currentQuestion.id];
     const previousAnswer = currentAnswerObj?.answer ?? "";
 
-    // Only submit if the answer has changed (trimmed)
-    if (answer.trim() !== previousAnswer.trim()) {
-      try {
-        await submitAnswer(
-          brandId,
-          questions[currentQuestionIndex].id,
-          answer,
-          questions[currentQuestionIndex].text,
-        );
-      } catch (error: any) {
-        console.error("Failed to submit answer:", error);
-        setSubmitError(
-          error?.response?.data?.message ||
-            error?.message ||
-            "Failed to submit answer. Please try again.",
-        );
-        return;
-      }
-    }
+    const shouldSubmit = answer.trim() !== previousAnswer.trim();
+    if (!shouldSubmit) return "skipped";
 
-    if (currentQuestionIndex === questions.length - 1) {
+    try {
+      await submitAnswer(brandId!, currentQuestion.id, answer, currentQuestion.text);
+      return "submitted";
+    } catch (error: any) {
+      console.error("Failed to submit answer:", error);
+      setSubmitError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to submit answer. Please try again.",
+      );
+      return "failed";
+    }
+  };
+
+  const handleNext = async (answer: string) => {
+    const currentQuestion = sortedQuestions[currentQuestionIndex];
+    if (!currentQuestion) return;
+
+    const wasAnsweredBefore = answeredQuestionIds.has(currentQuestion.id);
+    const submitResult = await submitAnswerIfChanged(answer);
+    if (submitResult === "failed") return;
+    const didSubmit = submitResult === "submitted";
+
+    const answeredAfterSet = new Set(answeredQuestionIds);
+    if (didSubmit) answeredAfterSet.add(currentQuestion.id);
+
+    const sortedAfter = sortQuestionsByAnswered(questions, answeredAfterSet);
+    const hasAnyUnansweredAfter = sortedAfter.some(
+      (q) => !answeredAfterSet.has(q.id),
+    );
+    if (!hasAnyUnansweredAfter) {
       setShowSummary(true);
       return;
     }
 
-    const nextQuestionIndex: number =
-      findUnansweredQuestionIndex(currentQuestionIndex, "next", {
-        questions,
-        answers,
-      }) ?? currentQuestionIndex + 1;
+    // If the current unanswered question just became answered, it will move to
+    // the "answered tail". In that case the next question is the one that now
+    // occupies the same index.
+    const becameAnswered = !wasAnsweredBefore && didSubmit;
+    const nextIndexCandidate = becameAnswered
+      ? currentQuestionIndex
+      : currentQuestionIndex + 1;
 
-    setCurrentQuestionIndex(nextQuestionIndex);
+    if (nextIndexCandidate >= sortedAfter.length) {
+      setShowSummary(true);
+      return;
+    }
+
+    setCurrentQuestionIndex(nextIndexCandidate);
   };
 
   const handleRetrySubmit = () => {
@@ -200,24 +238,29 @@ const QuestionnaireContainer: React.FC = () => {
 
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
-      const previousQuestionIndex =
-        findUnansweredQuestionIndex(currentQuestionIndex, "previous", {
-          questions,
-          answers,
-        }) ?? currentQuestionIndex - 1;
-
-      setCurrentQuestionIndex(previousQuestionIndex);
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
   };
 
   const handleEditAnswer = (questionId: string) => {
-    const index = questions.findIndex((q) => q.id === questionId);
+    const index = sortedQuestions.findIndex((q) => q.id === questionId);
     if (index !== -1) {
       setShowSummary(false);
       setCurrentQuestionIndex(index);
       // Note: The QuestionnaireItem component will handle scrolling to the question
       // via its useEffect when the question changes
     }
+  };
+
+  const handleSubmitAndShowSummary = async (answer: string) => {
+    const currentQuestion = sortedQuestions[currentQuestionIndex];
+    if (!currentQuestion) return;
+
+    const submitResult = await submitAnswerIfChanged(answer);
+    // If we failed to persist, don't switch the UI to the summary.
+    if (submitResult === "failed") return;
+
+    setShowSummary(true);
   };
 
   const handleComplete = async () => {
@@ -278,8 +321,8 @@ const QuestionnaireContainer: React.FC = () => {
   const progress =
     currentQuestionIndex === -1
       ? 0
-      : ((currentQuestionIndex + 1) / questions.length) * 100;
-  const currentQuestion = questions[currentQuestionIndex];
+      : ((currentQuestionIndex + 1) / sortedQuestions.length) * 100;
+  const currentQuestion = sortedQuestions[currentQuestionIndex];
   const currentAnswerObj = currentQuestion
     ? typedAnswers[currentQuestion.id]
     : undefined;
@@ -392,7 +435,7 @@ const QuestionnaireContainer: React.FC = () => {
 
               {showSummary ? (
                 <QuestionnaireSummary
-                  questions={questions}
+                  questions={sortedQuestions}
                   answers={answers}
                   onEditAnswer={handleEditAnswer}
                   onComplete={handleComplete}
@@ -404,15 +447,16 @@ const QuestionnaireContainer: React.FC = () => {
                   onNext={handleNext}
                   onPrevious={handlePrevious}
                   questionNumber={currentQuestionIndex + 1}
-                  totalQuestions={questions.length}
-                  isLastQuestion={currentQuestionIndex === questions.length - 1}
+                  totalQuestions={sortedQuestions.length}
+                  isLastQuestion={
+                    currentQuestionIndex === sortedQuestions.length - 1
+                  }
                   currentAnswer={currentAnswerObj?.answer}
                   brandId={brandId}
                   answerId={currentQuestion.id}
                   submitError={submitError}
                   onRetrySubmit={handleRetrySubmit}
-                  onShowSummary={() => setShowSummary(true)}
-                  isAllQuestionsAnswered={isAllQuestionsAnswered}
+                  onShowSummary={handleSubmitAndShowSummary}
                 />
               ) : null}
             </>
@@ -423,21 +467,21 @@ const QuestionnaireContainer: React.FC = () => {
   );
 };
 
-function findUnansweredQuestionIndex(
-  currentQuestionIndex: number,
-  action: "previous" | "next",
-  { questions, answers }: { questions: Question[]; answers: Answer[] },
-): number | null {
-  const filteredQuestions: Question[] =
-    action === "next"
-      ? questions.slice(currentQuestionIndex + 1)
-      : questions.slice(0, currentQuestionIndex).reverse();
+function sortQuestionsByAnswered(
+  questions: Question[],
+  answeredIds: Set<string>,
+): Question[] {
+  return questions
+    .map((q, idx) => ({ q, idx }))
+    .sort((a, b) => {
+      const aAnswered = answeredIds.has(a.q.id);
+      const bAnswered = answeredIds.has(b.q.id);
 
-  const unansweredQuestionIndex: string | undefined = filteredQuestions.find(
-    (q: Question) => !answers.some((a) => a.id === q.id),
-  )?.id;
-
-  return unansweredQuestionIndex ? Number(unansweredQuestionIndex) - 1 : null;
+      // Unanswered first, answered last. Keep original order within the groups.
+      if (aAnswered === bAnswered) return a.idx - b.idx;
+      return aAnswered ? 1 : -1;
+    })
+    .map((x) => x.q);
 }
 
 export default QuestionnaireContainer;
