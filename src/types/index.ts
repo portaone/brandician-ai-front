@@ -198,6 +198,7 @@ export interface SurveyQuestion {
   type: SurveyQuestionType;
   text: string;
   options?: string[];
+  other_specify?: boolean;
 }
 
 export interface Survey {

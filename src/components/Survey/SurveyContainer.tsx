@@ -611,16 +611,21 @@ const SurveyContainer: React.FC = () => {
                             </div>
                           </div>
 
-                          {question.options && (
+                          {(question.options || question.other_specify) && (
                             <div className="space-y-2">
-                              {question.options.map((option, optionIndex) => (
+                              {question.options?.map((option, optionIndex) => (
                                 <div
                                   key={optionIndex}
                                   className="text-neutral-600 pl-4"
                                 >
-                                  • {option}
+                                  • {question.other_specify && option.trim().toLowerCase() === "other" ? <>Other (<span className="underline bg-neutral-200 rounded px-0.5">free-text answer</span>)</> : option}
                                 </div>
                               ))}
+                              {question.other_specify && !question.options?.some((o) => o.trim().toLowerCase() === "other") && (
+                                <div className="text-neutral-600 pl-4">
+                                  • Other (<span className="underline bg-neutral-200 rounded px-0.5">free-text answer</span>)
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -896,6 +901,22 @@ const SurveyContainer: React.FC = () => {
     - Option 2
     - Option 3"
                       />
+                      <label className="flex items-center space-x-3 mt-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editingQuestion.other_specify || false}
+                          onChange={(e) =>
+                            setEditingQuestion({
+                              ...editingQuestion,
+                              other_specify: e.target.checked,
+                            })
+                          }
+                          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        />
+                        <span className="text-sm text-gray-700">
+                          Allow &quot;Other&quot; free-text answer
+                        </span>
+                      </label>
                     </div>
                   )}
                 </div>
