@@ -1,18 +1,34 @@
 import { AlertCircle, Mail, RefreshCw } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuthStore } from "../../store/auth";
 import Button from "../common/Button";
+import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [otpId, setOtpId] = useState<string | null>(null);
-  const { login, verifyOTP, isLoading, error, clearError } = useAuthStore();
+  const magicLinkAttempted = useRef(false);
+  const { login, verifyOTP, verifyMagicLink, isLoading, error, clearError } = useAuthStore();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useAutoFocus([otpId]);
+
+  // Handle magic link token from URL
+  useEffect(() => {
+    const magicToken = searchParams.get("magic");
+    if (magicToken && !magicLinkAttempted.current) {
+      magicLinkAttempted.current = true;
+      // Remove the token from URL to prevent re-attempts on re-render
+      setSearchParams({}, { replace: true });
+      verifyMagicLink(magicToken)
+        .then(() => navigate("/brands"))
+        .catch(() => { /* error is set in store */ });
+    }
+  }, [searchParams, verifyMagicLink, navigate, setSearchParams]);
 
   // Clear error when component mounts or when user starts typing
   useEffect(() => {
@@ -55,6 +71,15 @@ const LoginForm: React.FC = () => {
     setOtpId(null);
     setOtp("");
   };
+
+  // Show loader while magic link is being verified
+  if (magicLinkAttempted.current && isLoading) {
+    return (
+      <div className="loader-container">
+        <BrandicianLoader />
+      </div>
+    );
+  }
 
   // Check if error is a connection error
   const isConnectionError =

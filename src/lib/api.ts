@@ -278,6 +278,16 @@ export const auth = {
     return response.data;
   },
 
+  verifyMagicLink: async (token: string) => {
+    const response = await api.post("/api/v1.0/auth/magic-link", { token });
+    const { access_token, refresh_token } = response.data;
+    localStorage.setItem("access_token", access_token);
+    if (refresh_token) {
+      localStorage.setItem("refresh_token", refresh_token);
+    }
+    return response.data;
+  },
+
   getCurrentUser: async () => {
     const response = await api.get("/api/v1.0/users/me");
     return response.data;

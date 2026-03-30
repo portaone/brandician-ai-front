@@ -56,6 +56,7 @@ interface AuthState {
   otpId: string | null;
   register: (email: string, name: string) => Promise<string>;
   verifyOTP: (otpId: string, otp: string) => Promise<void>;
+  verifyMagicLink: (token: string) => Promise<void>;
   login: (email: string) => Promise<string>;
   logout: () => void;
   loadUser: () => Promise<void>;
@@ -90,6 +91,20 @@ export const useAuthStore = create<AuthState>()(
           const user = await auth.getCurrentUser();
           set({ user, isLoading: false, otpId: null });
           // Initialize Clarity on successful login
+          initClarity(getConsentCookies(), user);
+        } catch (error) {
+          const errorMessage = getErrorMessage(error);
+          set({ isLoading: false, error: errorMessage });
+          throw error;
+        }
+      },
+
+      verifyMagicLink: async (token: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          await auth.verifyMagicLink(token);
+          const user = await auth.getCurrentUser();
+          set({ user, isLoading: false, otpId: null });
           initClarity(getConsentCookies(), user);
         } catch (error) {
           const errorMessage = getErrorMessage(error);
