@@ -282,6 +282,28 @@ const BrandArchetype: React.FC = () => {
                   borderTop: "1px solid rgba(127, 89, 113, 0.2)",
                 }}
               >
+                {/* Differentiation Signal */}
+                {parsed.diffSignal && (
+                  <div style={{ marginBottom: "24px" }}>
+                    <p
+                      style={{
+                        fontFamily: "'Source Sans 3', sans-serif",
+                        fontSize: "0.7rem",
+                        fontWeight: 600,
+                        letterSpacing: "0.1em",
+                        textTransform: "uppercase",
+                        color: "var(--color-light)",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      Differentiation Signal
+                    </p>
+                    <div className="prose prose-sm max-w-none text-neutral-700 leading-relaxed">
+                      <MarkdownPreviewer markdown={parsed.diffSignal} />
+                    </div>
+                  </div>
+                )}
+
                 <div
                   className="archetype-content"
                   style={{

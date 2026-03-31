@@ -6,6 +6,7 @@ export interface ParsedArchetype {
   primaryContent: string;
   secondaryContent: string;
   combinedExpression: string;
+  diffSignal: string;
 }
 
 /**
@@ -40,5 +41,6 @@ export function parseArchetypeResponse(
     primaryContent: primary.content,
     secondaryContent: secondary.content,
     combinedExpression: data.combined_expression?.trim() || "",
+    diffSignal: data.diff_signal?.trim() || "",
   };
 }
