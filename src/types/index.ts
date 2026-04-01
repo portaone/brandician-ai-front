@@ -38,7 +38,6 @@ export interface BrandArchetypeData {
   primary: string | null;
   secondary: string | null;
   combined_expression: string | null;
-  diff_signal: string | null;
   comment: string | null;
 }
 
@@ -256,7 +255,6 @@ export interface ArchetypeAdjustmentResponse {
   new_text: string;
   primary_name: string;
   secondary_name: string;
-  diff_signal: ArchetypeChangeSegment[];
   primary: ArchetypeChangeSegment[];
   secondary: ArchetypeChangeSegment[];
   combined: ArchetypeChangeSegment[];

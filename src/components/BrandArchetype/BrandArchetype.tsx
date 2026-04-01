@@ -24,8 +24,9 @@ const BrandArchetype: React.FC = () => {
   const navigate = useNavigate();
   const { currentBrand, selectBrand, progressBrandStatus } = useBrandStore();
 
-  const [archetypeData, setArchetypeData] =
-    useState<BrandArchetypeData | null>(null);
+  const [archetypeData, setArchetypeData] = useState<BrandArchetypeData | null>(
+    null,
+  );
   const [parsed, setParsed] = useState<ParsedArchetype | null>(null);
   const [isGenerating, setIsGenerating] = useState(true);
   const [isRegenerating, setIsRegenerating] = useState(false);
@@ -93,10 +94,7 @@ const BrandArchetype: React.FC = () => {
 
   if (isGenerating) {
     return (
-      <BrandicianLoader
-        config={LOADER_CONFIGS.archetype}
-        isComplete={false}
-      />
+      <BrandicianLoader config={LOADER_CONFIGS.archetype} isComplete={false} />
     );
   }
 
@@ -282,28 +280,6 @@ const BrandArchetype: React.FC = () => {
                   borderTop: "1px solid rgba(127, 89, 113, 0.2)",
                 }}
               >
-                {/* Differentiation Signal */}
-                {parsed.diffSignal && (
-                  <div style={{ marginBottom: "24px" }}>
-                    <p
-                      style={{
-                        fontFamily: "'Source Sans 3', sans-serif",
-                        fontSize: "0.7rem",
-                        fontWeight: 600,
-                        letterSpacing: "0.1em",
-                        textTransform: "uppercase",
-                        color: "var(--color-light)",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      Differentiation Signal
-                    </p>
-                    <div className="prose prose-sm max-w-none text-neutral-700 leading-relaxed">
-                      <MarkdownPreviewer markdown={parsed.diffSignal} />
-                    </div>
-                  </div>
-                )}
-
                 <div
                   className="archetype-content"
                   style={{
@@ -328,9 +304,7 @@ const BrandArchetype: React.FC = () => {
                       Primary
                     </p>
                     <div className="prose prose-sm max-w-none text-neutral-700 leading-relaxed">
-                      <MarkdownPreviewer
-                        markdown={parsed.primaryContent}
-                      />
+                      <MarkdownPreviewer markdown={parsed.primaryContent} />
                     </div>
                   </div>
 
@@ -351,9 +325,7 @@ const BrandArchetype: React.FC = () => {
                         Secondary
                       </p>
                       <div className="prose prose-sm max-w-none text-neutral-700 leading-relaxed">
-                        <MarkdownPreviewer
-                          markdown={parsed.secondaryContent}
-                        />
+                        <MarkdownPreviewer markdown={parsed.secondaryContent} />
                       </div>
                     </div>
                   )}

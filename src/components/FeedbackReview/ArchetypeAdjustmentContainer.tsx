@@ -501,16 +501,6 @@ const ArchetypeAdjustmentContainer: React.FC<
                     borderTop: "1px solid rgba(127, 89, 113, 0.2)",
                   }}
                 >
-                  {/* Differentiation Signal */}
-                  {currentArchetype.diffSignal && (
-                    <div style={{ marginBottom: "24px" }}>
-                      <p style={{ ...sublabelStyle, marginBottom: "8px" }}>
-                        Differentiation Signal
-                      </p>
-                      <MarkdownBlock text={currentArchetype.diffSignal} />
-                    </div>
-                  )}
-
                   <div
                     className="archetype-content"
                     style={{
@@ -618,18 +608,6 @@ const ArchetypeAdjustmentContainer: React.FC<
             </div>
 
             <hr style={dividerStyle} />
-
-            {/* Differentiation Signal */}
-            {adjustment.diff_signal && adjustment.diff_signal.length > 0 && (
-              <div style={{ marginBottom: "24px" }}>
-                <p style={{ ...sublabelStyle, marginBottom: "8px" }}>
-                  Differentiation Signal
-                </p>
-                <div className="text-neutral-700 leading-relaxed markdown-preview">
-                  {renderChangeSegments(adjustment.diff_signal, footnotesMap)}
-                </div>
-              </div>
-            )}
 
             {/* Two-column content */}
             <div
