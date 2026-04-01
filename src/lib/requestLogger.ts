@@ -4,16 +4,14 @@ interface ApiLogEntry {
   timestamp: string;
   method: string;
   url: string;
+  requestId: string;
   status: number | null;
   error: string | null;
-  requestBody: string | null;
-  responseBody: string | null;
   durationMs: number;
 }
 
 const STORAGE_KEY = "brandician_api_request_logs";
 const MAX_ENTRIES = 5;
-const MAX_BODY_LENGTH = 1000;
 
 // In-memory store, hydrated from localStorage
 let logs: ApiLogEntry[] = [];
@@ -35,21 +33,6 @@ function syncToStorage(): void {
   }
 }
 
-function truncateBody(data: unknown): string | null {
-  if (data === undefined || data === null) return null;
-  if (typeof data === "object" && data instanceof FormData) return "[FormData]";
-
-  try {
-    const str = JSON.stringify(data);
-    if (str.length > MAX_BODY_LENGTH) {
-      return str.slice(0, MAX_BODY_LENGTH) + "...[truncated by logger]";
-    }
-    return str;
-  } catch {
-    return "[non-serializable]";
-  }
-}
-
 export function recordRequestEnd(
   config: AxiosRequestConfig,
   response?: AxiosResponse,
@@ -57,19 +40,17 @@ export function recordRequestEnd(
 ): void {
   const startTime = config.metadata?.startTime;
   const now = Date.now();
-  const durationMs = startTime ? now - startTime : 0;
 
   const entry: ApiLogEntry = {
     timestamp: new Date(now).toISOString(),
     method: (config.method || "UNKNOWN").toUpperCase(),
     url: config.url || "",
+    requestId: config.metadata?.requestId || config.headers?.["X-Request-ID"] || "unknown",
     status: response?.status ?? error?.response?.status ?? null,
     error: error
       ? error.response?.statusText || error.message || "Unknown error"
       : null,
-    requestBody: truncateBody(config.data),
-    responseBody: truncateBody(response?.data ?? error?.response?.data),
-    durationMs,
+    durationMs: startTime ? now - startTime : 0,
   };
 
   logs.push(entry);
@@ -93,14 +74,9 @@ export function getFormattedLogs(): string {
     lines.push(
       `    ${entry.method} ${entry.url} -> ${statusText} (${entry.durationMs}ms)`,
     );
+    lines.push(`    X-Request-ID: ${entry.requestId}`);
     if (entry.error) {
       lines.push(`    Error: ${entry.error}`);
-    }
-    if (entry.requestBody) {
-      lines.push(`    Request: ${entry.requestBody}`);
-    }
-    if (entry.responseBody) {
-      lines.push(`    Response: ${entry.responseBody}`);
     }
     lines.push("");
   });
