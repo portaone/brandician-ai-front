@@ -43,6 +43,7 @@ import Profile from "./components/Profile";
 import "./index.css";
 import { RouterActions } from "./components/common/RouterActions";
 import BrandAssets from "./components/BrandAssets/BrandAssets";
+import NotFound from "./components/NotFound";
 
 function BrandAssetsWrapper() {
   const { brandId } = useParams();
@@ -294,7 +295,7 @@ const App: React.FC = () => {
               path="/cookies"
               element={<MarkdownPage filePath="/cookies.md" />}
             />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </AnimatePresence>
         <CookieConsent />
