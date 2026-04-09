@@ -311,6 +311,27 @@
     margin-bottom: 8px;
   }
 
+  /* Dashboard card hover */
+  .brand-card:hover {
+    border-color: var(--color-light) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(56, 50, 54, 0.12);
+  }
+
+  /* Step badge */
+  .step-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: "Source Sans 3", "Source Sans Pro", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    padding: 3px 8px;
+    margin-bottom: 6px;
+  }
+
   .sublabel {
     font-family: "Source Sans 3", "Source Sans Pro", sans-serif;
     font-size: 0.7rem;

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your brands — Brandician.AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@400;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-primary: #fd615e;
+            --color-secondary: #7f5971;
+            --color-light: #bfacb8;
+            --color-bg: #f4f2f2;
+            --color-text: #383236;
+            --color-warning: #F4C343;
+            --color-white: #ffffff;
+
+            --fs-xxl: clamp(2.44rem, 2.38vi + 1.85rem, 3.75rem);
+            --fs-xl: clamp(1.95rem, 1.56vi + 1.56rem, 2.81rem);
+            --fs-lg: clamp(1.56rem, 1vi + 1.31rem, 2.11rem);
+            --fs-md: clamp(1.25rem, 0.61vi + 1.1rem, 1.58rem);
+            --fs-base: clamp(1rem, 0.34vi + 0.91rem, 1.19rem);
+            --fs-sm: clamp(0.8rem, 0.17vi + 0.76rem, 0.89rem);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Source Sans 3', sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: var(--color-white);
+            border-bottom: 1px solid var(--color-bg);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Bitter', serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--color-text);
+            text-decoration: none;
+        }
+
+        .logo svg { width: 36px; height: 36px; }
+
+        nav { display: flex; gap: 32px; }
+
+        nav a {
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--color-text);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        nav a:hover { color: var(--color-secondary); }
+
+        /* Page */
+        .page-wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 40px 60px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        h1 {
+            font-family: 'Bitter', serif;
+            font-size: var(--fs-xl);
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .btn-primary {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--color-primary);
+            color: var(--color-white);
+            border: none;
+            border-radius: 12px;
+            padding: 14px 24px 12px;
+            min-height: 48px;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .btn-primary:hover { opacity: 0.9; }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+            .header-container { padding: 16px 20px; }
+            .page-wrap { padding: 24px 20px 40px; }
+        }
+
+        /* Card */
+        .card {
+            background: var(--color-white);
+            border-radius: 14px;
+            padding: 24px;
+            position: relative;
+            cursor: pointer;
+            border: 1.5px solid transparent;
+            transition: border-color 0.15s, transform 0.15s;
+            display: flex;
+            flex-direction: column;
+        }
+        .card:hover {
+            border-color: var(--color-light);
+            transform: translateY(-2px);
+        }
+
+        .card-hd {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .card-name {
+            font-family: 'Bitter', serif;
+            font-size: var(--fs-base);
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        /* Step badge */
+        .step-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--color-secondary);
+            background: rgba(127, 89, 113, 0.08);
+            border-radius: 6px;
+            padding: 3px 8px;
+            margin-bottom: 10px;
+        }
+        .step-badge.active {
+            color: #a0722a;
+            background: rgba(244, 195, 67, 0.15);
+        }
+
+        .card-status {
+            font-size: var(--fs-sm);
+            color: var(--color-light);
+            line-height: 1.5;
+            margin-bottom: 14px;
+            flex: 1;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 20px;
+            margin-top: auto;
+        }
+
+        .card-stats { display: flex; gap: 16px; }
+        .stat { font-size: var(--fs-sm); color: var(--color-light); }
+        .stat strong { color: var(--color-secondary); font-weight: 600; }
+
+        .card-arrow {
+            font-size: 16px;
+            color: var(--color-light);
+            opacity: 0;
+            transition: opacity 0.15s, color 0.15s;
+        }
+        .card:hover .card-arrow {
+            opacity: 1;
+            color: var(--color-secondary);
+        }
+
+        /* Menu button */
+        .menu-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 20px;
+            color: var(--color-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s;
+            line-height: 1;
+            font-family: 'Source Sans 3', sans-serif;
+            position: relative;
+            z-index: 2;
+        }
+        .menu-btn:hover, .menu-btn.on { background: var(--color-bg); }
+
+        /* Popup */
+        .popup {
+            position: absolute;
+            right: 16px;
+            top: 52px;
+            background: var(--color-white);
+            border: 1px solid var(--color-bg);
+            border-radius: 12px;
+            padding: 6px 0;
+            z-index: 10;
+            min-width: 200px;
+            box-shadow: 0 8px 24px rgba(56, 50, 54, 0.12);
+            display: none;
+        }
+        .popup.on { display: block; }
+
+        .pitem {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            font-size: var(--fs-sm);
+            font-weight: 600;
+            color: var(--color-text);
+            cursor: pointer;
+            white-space: nowrap;
+            font-family: 'Source Sans 3', sans-serif;
+        }
+        .pitem:hover { background: var(--color-bg); }
+        .pitem svg { flex-shrink: 0; color: var(--color-light); }
+        .pitem.danger { color: var(--color-warning); }
+        .pitem.danger svg { color: var(--color-warning); }
+        .pdiv { height: 1px; background: var(--color-bg); margin: 4px 0; }
+        .pitem.dim { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+        .dim-note {
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--color-light);
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-container">
+        <a class="logo">
+            <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="36" height="36" rx="8" fill="#fd615e"/>
+                <path d="M18 7L8 13V23L18 29L28 23V13L18 7Z" fill="white" fill-opacity="0.2"/>
+                <path d="M18 7L8 13L18 19L28 13L18 7Z" fill="white"/>
+                <path d="M8 13V23L18 29V19L8 13Z" fill="white" fill-opacity="0.7"/>
+                <path d="M28 13V23L18 29V19L28 13Z" fill="white" fill-opacity="0.5"/>
+            </svg>
+            Brandician.AI
+        </a>
+        <nav>
+            <a>About</a>
+            <a>Dashboard</a>
+            <a>Account</a>
+        </nav>
+    </div>
+</header>
+
+<div class="page-wrap">
+    <div class="page-header">
+        <h1>Your brands</h1>
+        <button class="btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Create new brand
+        </button>
+    </div>
+
+    <div class="grid">
+
+        <!-- Card: Test again — in progress -->
+        <div class="card" onclick="cardClick(event,'m1')">
+            <div class="card-hd">
+                <div class="card-name">Test again</div>
+                <button class="menu-btn" onclick="toggle('m1',this)">⋯</button>
+                <div class="popup" id="m1">
+                    <div class="pitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 0 0-2 2v16h16v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Rename</div>
+                    <div class="pitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>History</div>
+                    <div class="pdiv"></div>
+                    <div class="pitem dim"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/></svg>Share hub<span class="dim-note">not published</span></div>
+                    <div class="pitem dim"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics<span class="dim-note">not published</span></div>
+                    <div class="pdiv"></div>
+                    <div class="pitem danger"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Delete</div>
+                </div>
+            </div>
+            <div class="step-badge active">Step 1 — Questionnaire</div>
+            <div class="card-status">Answering the discovery questionnaire</div>
+            <div class="card-footer">
+                <div class="card-stats"></div>
+                <span class="card-arrow">→</span>
+            </div>
+        </div>
+
+        <!-- Card: Aikicraft — brand hub -->
+        <div class="card" onclick="cardClick(event,'m2')">
+            <div class="card-hd">
+                <div class="card-name">Aikicraft</div>
+                <button class="menu-btn" onclick="toggle('m2',this)">⋯</button>
+                <div class="popup" id="m2">
+                    <div class="pitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 0 0-2 2v16h16v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Rename</div>
+                    <div class="pitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>History</div>
+                    <div class="pdiv"></div>
+                    <div class="pitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/></svg>Share hub</div>
+                    <div class="pitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</div>
+                    <div class="pdiv"></div>
+                    <div class="pitem danger"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Delete</div>
+                </div>
+            </div>
+            <div class="step-badge">Brand hub</div>
+            <div class="card-status">Review the comprehensive brand info we produced</div>
+            <div class="card-footer">
+                <div class="card-stats">
+                    <span class="stat"><strong>61</strong> views</span>
+                    <span class="stat"><strong>29</strong> emails</span>
+                </div>
+                <span class="card-arrow">→</span>
+            </div>
+        </div>
+
+        <!-- Card: DREM — in progress -->
+        <div class="card" onclick="cardClick(event,'m3')">
+            <div class="card-hd">
+                <div class="card-name">DREM</div>
+                <button class="menu-btn" onclick="toggle('m3',this)">⋯</button>
+                <div class="popup" id="m3">
+                    <div class="pitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 0 0-2 2v16h16v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Rename</div>
+                    <div class="pitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>History</div>
+                    <div class="pdiv"></div>
+                    <div class="pitem dim"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/></svg>Share hub<span class="dim-note">not published</span></div>
+                    <div class="pitem dim"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics<span class="dim-note">not published</span></div>
+                    <div class="pdiv"></div>
+                    <div class="pitem danger"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Delete</div>
+                </div>
+            </div>
+            <div class="step-badge active">Step 4 — Survey</div>
+            <div class="card-status">Creating a survey for potential customers</div>
+            <div class="card-footer">
+                <div class="card-stats"></div>
+                <span class="card-arrow">→</span>
+            </div>
+        </div>
+
+        <!-- Card: Therapeya — brand hub -->
+        <div class="card" onclick="cardClick(event,'m4')">
+            <div class="card-hd">
+                <div class="card-name">Therapeya</div>
+                <button class="menu-btn" onclick="toggle('m4',this)">⋯</button>
+                <div class="popup" id="m4">
+                    <div class="pitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 0 0-2 2v16h16v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Rename</div>
+                    <div class="pitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>History</div>
+                    <div class="pdiv"></div>
+                    <div class="pitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/></svg>Share hub</div>
+                    <div class="pitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</div>
+                    <div class="pdiv"></div>
+                    <div class="pitem danger"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Delete</div>
+                </div>
+            </div>
+            <div class="step-badge">Brand hub</div>
+            <div class="card-status">Fizioterapija in Manualna Terapija Martina Lenček</div>
+            <div class="card-footer">
+                <div class="card-stats">
+                    <span class="stat"><strong>34</strong> views</span>
+                    <span class="stat"><strong>18</strong> emails</span>
+                </div>
+                <span class="card-arrow">→</span>
+            </div>
+        </div>
+
+        <!-- Card: Saša S — brand hub, no stats -->
+        <div class="card" onclick="cardClick(event,'m5')">
+            <div class="card-hd">
+                <div class="card-name">Saša S</div>
+                <button class="menu-btn" onclick="toggle('m5',this)">⋯</button>
+                <div class="popup" id="m5">
+                    <div class="pitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4H4a2 2 0 0 0-2 2v16h16v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>Rename</div>
+                    <div class="pitem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>History</div>
+                    <div class="pdiv"></div>
+                    <div class="pitem dim"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/></svg>Share hub<span class="dim-note">not published</span></div>
+                    <div class="pitem dim"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics<span class="dim-note">not published</span></div>
+                    <div class="pdiv"></div>
+                    <div class="pitem danger"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Delete</div>
+                </div>
+            </div>
+            <div class="step-badge">Brand hub</div>
+            <div class="card-status">Brand creation completed, download your brand assets</div>
+            <div class="card-footer">
+                <div class="card-stats"></div>
+                <span class="card-arrow">→</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function toggle(id, btn) {
+        event.stopPropagation();
+        const all = document.querySelectorAll('.popup');
+        const btns = document.querySelectorAll('.menu-btn');
+        const el = document.getElementById(id);
+        const isOn = el.classList.contains('on');
+        all.forEach(p => p.classList.remove('on'));
+        btns.forEach(b => b.classList.remove('on'));
+        if (!isOn) { el.classList.add('on'); btn.classList.add('on'); }
+    }
+    function cardClick(e, menuId) {
+        if (e.target.closest('.menu-btn') || e.target.closest('.popup')) return;
+        document.querySelectorAll('.popup').forEach(p => p.classList.remove('on'));
+        document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('on'));
+    }
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.card')) {
+            document.querySelectorAll('.popup').forEach(p => p.classList.remove('on'));
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('on'));
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,21 +1,71 @@
 import {
-  Copy,
-  Edit2,
+  BarChart3,
   History,
-  Link,
   MoreVertical,
   Plus,
+  Share2,
   Trash2,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { brands as brandsApi } from "../../lib/api";
+import { backendConfig } from "../../lib/api";
 import { getRouteForStatus } from "../../lib/navigation";
-import { useAuthStore } from "../../store/auth";
 import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
+import ShareLinkModal from "../common/ShareLinkModal";
 import { Brand } from "../../types";
 import BrandicianLoader from "../common/BrandicianLoader";
+
+// Short names for step badge display
+const STEP_SHORT_NAMES: Record<string, string> = {
+  questionnaire: "Questionnaire",
+  summary: "Summary",
+  jtbd: "Personas",
+  archetype: "Archetype",
+  create_survey: "Survey",
+  collect_feedback: "Feedback",
+  feedback_review_summary: "Review: Summary",
+  feedback_review_jtbd: "Review: Personas",
+  primary_persona_selection: "Primary Persona",
+  feedback_review_archetype: "Review: Archetype",
+  pick_name: "Name",
+  create_visual_identity: "Visual Identity",
+  create_hub: "Brand Hub",
+  create_assets: "Assets",
+  testimonial: "Testimonial",
+  payment: "Payment",
+};
+
+function getStepBadge(
+  brand: Brand,
+  statusSequence: Array<{ status: string; description: string }>,
+): { label: string; isActive: boolean } {
+  const isCompleted =
+    brand.hub_published === true || brand.current_status === "completed";
+  if (isCompleted) {
+    return { label: "Brand hub", isActive: false };
+  }
+
+  // Build step number from sequence (excluding new_brand and completed)
+  const steps = statusSequence.filter(
+    (s) => s.status !== "new_brand" && s.status !== "completed",
+  );
+  const stepIndex = steps.findIndex(
+    (s) => s.status === (brand.current_status || "new_brand"),
+  );
+  if (stepIndex >= 0) {
+    const shortName =
+      STEP_SHORT_NAMES[steps[stepIndex].status] ||
+      steps[stepIndex].status.replace(/_/g, " ");
+    return {
+      label: `Step ${stepIndex + 1} \u2014 ${shortName}`,
+      isActive: true,
+    };
+  }
+
+  // Fallback for new_brand or unknown
+  return { label: "Step 1 \u2014 Questionnaire", isActive: true };
+}
 
 const BrandList: React.FC = () => {
   const {
@@ -26,7 +76,6 @@ const BrandList: React.FC = () => {
     isLoading,
     error,
   } = useBrandStore();
-  const { user } = useAuthStore();
   const navigate = useNavigate();
   const [deleteConfirm, setDeleteConfirm] = useState<{
     brandId: string;
@@ -41,11 +90,20 @@ const BrandList: React.FC = () => {
   const [isRenaming, setIsRenaming] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-
-  const isAdmin = user?.admin || false;
+  const [shareBrand, setShareBrand] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [statusSequence, setStatusSequence] = useState<
+    Array<{ status: string; description: string }>
+  >([]);
 
   useEffect(() => {
     loadBrands();
+    backendConfig
+      .getConfig()
+      .then((config) => setStatusSequence(config.status_sequence))
+      .catch(console.error);
   }, []);
 
   // Close menu when clicking outside
@@ -73,31 +131,6 @@ const BrandList: React.FC = () => {
     console.groupEnd();
 
     navigate(path);
-  };
-
-  const handleClone = async (brandId: string, brandName: string) => {
-    if (
-      !confirm(
-        `Are you sure you want to clone "${brandName}"? This will create an exact copy of the brand with all its data.`,
-      )
-    ) {
-      return;
-    }
-
-    try {
-      const clonedBrand = await brandsApi.cloneBrand(brandId);
-      console.log("Brand cloned successfully:", clonedBrand);
-      // Reload brands to show the new clone
-      await loadBrands();
-      alert(`Successfully cloned "${brandName}" as "${clonedBrand.name}"`);
-    } catch (error: any) {
-      console.error("Failed to clone brand:", error);
-      alert(
-        `Failed to clone brand: ${
-          error.response?.data?.detail || error.message
-        }`,
-      );
-    }
   };
 
   const handleDelete = async () => {
@@ -131,32 +164,6 @@ const BrandList: React.FC = () => {
       );
     } finally {
       setIsRenaming(false);
-    }
-  };
-
-  const handleCopyLink = async (brand: Brand) => {
-    const route = getRouteForStatus(
-      brand.id,
-      (brand.current_status || "new_brand") as any,
-    );
-    const fullUrl = `${window.location.origin}${route}`;
-    try {
-      await navigator.clipboard.writeText(fullUrl);
-      setOpenMenuId(null);
-    } catch (error) {
-      const textarea = document.createElement("textarea");
-      textarea.value = fullUrl;
-      textarea.style.position = "fixed";
-      textarea.style.opacity = "0";
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand("copy");
-        setOpenMenuId(null);
-      } catch (err) {
-        console.error("Fallback copy failed:", err);
-      }
-      document.body.removeChild(textarea);
     }
   };
 
@@ -204,130 +211,368 @@ const BrandList: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {brands.map((brand) => (
-              <div
-                key={brand.id}
-                className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-lg transition-shadow flex flex-col relative"
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="text-lg font-medium text-gray-900 flex-1">
-                    {brand.name}
-                    {brand.brand_name && brand.brand_name !== brand.name && (
-                      <span className="block text-sm font-normal text-primary-600">
-                        {brand.brand_name}
-                      </span>
-                    )}
-                  </h3>
-                  <div
-                    className="relative"
-                    ref={(el) => (menuRefs.current[brand.id] = el)}
-                  >
-                    <button
-                      onClick={() =>
-                        setOpenMenuId(openMenuId === brand.id ? null : brand.id)
-                      }
-                      className="p-1 rounded-md hover:bg-gray-100 transition-colors"
-                      aria-label="More options"
+            {brands.map((brand) => {
+              const badge = getStepBadge(brand, statusSequence);
+              return (
+                <div
+                  key={brand.id}
+                  className="brand-card group bg-white rounded-lg p-4 flex flex-col relative"
+                  style={{
+                    border: "1.5px solid transparent",
+                    cursor: "pointer",
+                    transition:
+                      "border-color 0.15s, transform 0.15s, box-shadow 0.15s",
+                    zIndex: openMenuId === brand.id ? 20 : undefined,
+                  }}
+                  onClick={() =>
+                    handleContinue(
+                      brand.id,
+                      brand.current_status || "new_brand",
+                    )
+                  }
+                >
+                  {/* Header: name + menu */}
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3
+                      className="flex-1"
+                      style={{
+                        fontFamily: "var(--title-font-family)",
+                        fontWeight: 700,
+                        fontSize: "var(--fs-base)",
+                        color: "var(--color-text)",
+                      }}
                     >
-                      <MoreVertical className="h-5 w-5 text-gray-600" />
-                    </button>
-                    {openMenuId === brand.id && (
-                      <div className="absolute right-4 top-6 xl:left-1 xl:right-auto 2xl:left-8 2xl:top-0 bg-white rounded-lg border border-gray-200 shadow-lg z-10 min-w-[180px]">
-                        <button
-                          onClick={() => {
-                            setRenameConfirm({
-                              brandId: brand.id,
-                              brandName: brand.name,
-                            });
-                            setRenameValue(brand.name);
-                            setOpenMenuId(null);
+                      {brand.name}
+                      {brand.brand_name && brand.brand_name !== brand.name && (
+                        <span
+                          className="block font-normal"
+                          style={{
+                            fontSize: "var(--fs-sm)",
+                            color: "var(--color-primary)",
                           }}
-                          className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-gray-50 transition-colors text-gray-700 text-sm first:rounded-t-lg"
                         >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-3.5 w-3.5"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              fill="currentColor"
-                              d="M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h8.925l-2 2H5v14h14v-6.95l2-2V19q0 .825-.587 1.413T19 21zm4-6v-4.25l9.175-9.175q.3-.3.675-.45t.75-.15q.4 0 .763.15t.662.45L22.425 3q.275.3.425.663T23 4.4t-.137.738t-.438.662L13.25 15zM21.025 4.4l-1.4-1.4zM11 13h1.4l5.8-5.8l-.7-.7l-.725-.7L11 11.575zm6.5-6.5l-.725-.7zl.7.7z"
-                            />
-                          </svg>
-                          <span>Rename</span>
-                        </button>
-                        {isAdmin && (
+                          {brand.brand_name}
+                        </span>
+                      )}
+                    </h3>
+                    <div
+                      className="relative"
+                      ref={(el) => (menuRefs.current[brand.id] = el)}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        onClick={() =>
+                          setOpenMenuId(
+                            openMenuId === brand.id ? null : brand.id,
+                          )
+                        }
+                        className="p-1 rounded-full transition-colors"
+                        style={{ color: "var(--color-light)" }}
+                        aria-label="More options"
+                      >
+                        <MoreVertical className="h-5 w-5" />
+                      </button>
+                      {openMenuId === brand.id && (
+                        <div
+                          className="absolute right-4 top-6 xl:left-1 xl:right-auto 2xl:left-8 2xl:top-0 bg-white rounded-lg shadow-lg z-10 min-w-[250px]"
+                          style={{
+                            border: "1px solid var(--color-bg)",
+                            boxShadow: "0 8px 24px rgba(56, 50, 54, 0.12)",
+                            padding: "6px 0",
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {/* Group 1: Rename, History */}
                           <button
                             onClick={() => {
-                              handleClone(brand.id, brand.name);
+                              setRenameConfirm({
+                                brandId: brand.id,
+                                brandName: brand.name,
+                              });
+                              setRenameValue(brand.name);
                               setOpenMenuId(null);
                             }}
-                            className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-gray-50 transition-colors text-gray-700 text-sm"
+                            className="w-full text-left flex items-center gap-2 transition-colors first:rounded-t-lg"
+                            style={{
+                              padding: "10px 16px",
+                              fontSize: "var(--fs-sm)",
+                              fontWeight: 600,
+                              color: "var(--color-text)",
+                              fontFamily: "'Source Sans 3', sans-serif",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background =
+                                "var(--color-bg)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "transparent")
+                            }
                           >
-                            <Copy className="h-3.5 w-3.5" />
-                            <span>Clone</span>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-3.5 w-3.5"
+                              style={{ color: "var(--color-light)" }}
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                fill="currentColor"
+                                d="M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h8.925l-2 2H5v14h14v-6.95l2-2V19q0 .825-.587 1.413T19 21zm4-6v-4.25l9.175-9.175q.3-.3.675-.45t.75-.15q.4 0 .763.15t.662.45L22.425 3q.275.3.425.663T23 4.4t-.137.738t-.438.662L13.25 15zM21.025 4.4l-1.4-1.4zM11 13h1.4l5.8-5.8l-.7-.7l-.725-.7L11 11.575zm6.5-6.5l-.725-.7zl.7.7z"
+                              />
+                            </svg>
+                            Rename
                           </button>
-                        )}
-                        <button
-                          onClick={() => {
-                            navigate(`/brands/${brand.id}/history`);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-gray-50 transition-colors text-gray-700 text-sm"
-                        >
-                          <History className="h-3.5 w-3.5" />
-                          <span>History</span>
-                        </button>
-                        <button
-                          onClick={() => handleCopyLink(brand)}
-                          className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-gray-50 transition-colors text-gray-700 text-sm"
-                        >
-                          <Link className="h-3.5 w-3.5" />
-                          <span>Copy link</span>
-                        </button>
-                        <button
-                          onClick={() => {
-                            setDeleteConfirm({
-                              brandId: brand.id,
-                              brandName: brand.name,
-                            });
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full px-3 py-1.5 text-left flex items-center gap-2 hover:bg-gray-50 transition-colors text-red-600 text-sm last:rounded-b-lg"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    )}
+                          <button
+                            onClick={() => {
+                              navigate(`/brands/${brand.id}/history`);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full text-left flex items-center gap-2 transition-colors"
+                            style={{
+                              padding: "10px 16px",
+                              fontSize: "var(--fs-sm)",
+                              fontWeight: 600,
+                              color: "var(--color-text)",
+                              fontFamily: "'Source Sans 3', sans-serif",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background =
+                                "var(--color-bg)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "transparent")
+                            }
+                          >
+                            <History
+                              className="h-3.5 w-3.5"
+                              style={{ color: "var(--color-light)" }}
+                            />
+                            History
+                          </button>
+
+                          {/* Divider */}
+                          <div
+                            style={{
+                              height: 1,
+                              background: "var(--color-bg)",
+                              margin: "4px 0",
+                            }}
+                          />
+
+                          {/* Group 2: Share hub, Analytics */}
+                          <button
+                            onClick={() => {
+                              if (brand.hub_published) {
+                                setShareBrand({
+                                  id: brand.id,
+                                  name: brand.name,
+                                });
+                              }
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full text-left flex items-center gap-2"
+                            style={{
+                              padding: "10px 16px",
+                              fontSize: "var(--fs-sm)",
+                              fontWeight: 600,
+                              color: "var(--color-text)",
+                              fontFamily: "'Source Sans 3', sans-serif",
+                              ...(!brand.hub_published
+                                ? {
+                                    opacity: 0.35,
+                                    cursor: "not-allowed",
+                                    pointerEvents: "none" as const,
+                                  }
+                                : {}),
+                            }}
+                          >
+                            <Share2
+                              className="h-3.5 w-3.5"
+                              style={{ color: "var(--color-light)" }}
+                            />
+                            Share hub
+                            {!brand.hub_published && (
+                              <span
+                                style={{
+                                  fontSize: "11px",
+                                  fontWeight: 600,
+                                  letterSpacing: "0.08em",
+                                  textTransform: "uppercase",
+                                  color: "var(--color-light)",
+                                  marginLeft: "auto",
+                                }}
+                              >
+                                not published
+                              </span>
+                            )}
+                          </button>
+                          <button
+                            className="w-full text-left flex items-center gap-2"
+                            style={{
+                              padding: "10px 16px",
+                              fontSize: "var(--fs-sm)",
+                              fontWeight: 600,
+                              color: "var(--color-text)",
+                              fontFamily: "'Source Sans 3', sans-serif",
+                              ...(!brand.hub_published
+                                ? {
+                                    opacity: 0.35,
+                                    cursor: "not-allowed",
+                                    pointerEvents: "none" as const,
+                                  }
+                                : {}),
+                            }}
+                            onClick={() => setOpenMenuId(null)}
+                          >
+                            <BarChart3
+                              className="h-3.5 w-3.5"
+                              style={{ color: "var(--color-light)" }}
+                            />
+                            Analytics
+                            {!brand.hub_published && (
+                              <span
+                                style={{
+                                  fontSize: "11px",
+                                  fontWeight: 600,
+                                  letterSpacing: "0.08em",
+                                  textTransform: "uppercase",
+                                  color: "var(--color-light)",
+                                  marginLeft: "auto",
+                                }}
+                              >
+                                not published
+                              </span>
+                            )}
+                          </button>
+
+                          {/* Divider */}
+                          <div
+                            style={{
+                              height: 1,
+                              background: "var(--color-bg)",
+                              margin: "4px 0",
+                            }}
+                          />
+
+                          {/* Group 3: Delete */}
+                          <button
+                            onClick={() => {
+                              setDeleteConfirm({
+                                brandId: brand.id,
+                                brandName: brand.name,
+                              });
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full text-left flex items-center gap-2 transition-colors last:rounded-b-lg"
+                            style={{
+                              padding: "10px 16px",
+                              fontSize: "var(--fs-sm)",
+                              fontWeight: 600,
+                              color: "var(--color-warning)",
+                              fontFamily: "'Source Sans 3', sans-serif",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background =
+                                "var(--color-bg)")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = "transparent")
+                            }
+                          >
+                            <Trash2
+                              className="h-3.5 w-3.5"
+                              style={{ color: "var(--color-warning)" }}
+                            />
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Step badge */}
+                  <div
+                    className="step-badge"
+                    style={
+                      badge.isActive
+                        ? {
+                            color: "#a0722a",
+                            background: "rgba(244, 195, 67, 0.15)",
+                          }
+                        : {
+                            color: "#7f5971",
+                            background: "rgba(127, 89, 113, 0.08)",
+                          }
+                    }
+                  >
+                    {badge.label}
+                  </div>
+
+                  {/* Status description */}
+                  <div className="flex-grow">
+                    <span
+                      style={{
+                        fontSize: "var(--fs-sm)",
+                        color: "var(--color-light)",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {brand.status_description || "Unknown status"}
+                    </span>
+                  </div>
+
+                  {/* Footer: stats + arrow */}
+                  <div
+                    className="flex items-center justify-between"
+                    style={{ marginTop: "auto", paddingTop: 14 }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "var(--fs-sm)",
+                        color: "var(--color-light)",
+                      }}
+                    >
+                      {brand.hub_published && (
+                        <>
+                          <span>
+                            <strong
+                              style={{
+                                color: "var(--color-secondary)",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {brand.hub_views ?? 0}
+                            </strong>{" "}
+                            views
+                          </span>
+                          <span style={{ margin: "0 10px" }} />
+                          <span>
+                            <strong
+                              style={{
+                                color: "var(--color-secondary)",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {brand.hub_email_captures ?? 0}
+                            </strong>{" "}
+                            emails
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <span
+                      className="opacity-0 group-hover:opacity-100"
+                      style={{
+                        color: "var(--color-secondary)",
+                        fontSize: 16,
+                        transition: "opacity 0.15s, color 0.15s",
+                      }}
+                    >
+                      &rarr;
+                    </span>
                   </div>
                 </div>
-                {brand.description && (
-                  <p className="text-gray-500 mb-4 line-clamp-2">
-                    {brand.description}
-                  </p>
-                )}
-                <div className="flex-grow">
-                  <span className="text-sm text-gray-500">
-                    Status: {brand.status_description || "Unknown status"}
-                  </span>
-                </div>
-                <div className="mt-4">
-                  <Button
-                    onClick={() =>
-                      handleContinue(
-                        brand.id,
-                        brand.current_status || "new_brand",
-                      )
-                    }
-                    variant="primary"
-                    className="w-full"
-                  >
-                    Open
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -427,6 +672,14 @@ const BrandList: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Share Hub Modal */}
+      <ShareLinkModal
+        isOpen={!!shareBrand}
+        onClose={() => setShareBrand(null)}
+        brandId={shareBrand?.id || ""}
+        brandName={shareBrand?.name}
+      />
     </div>
   );
 };

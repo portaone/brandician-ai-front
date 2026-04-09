@@ -20,6 +20,10 @@ export interface BrandReduced {
   payment_complete?: number;
   status_description?: string;
   brand_posture?: string;
+  hub_published?: boolean;
+  hub_url?: string;
+  hub_views?: number;
+  hub_email_captures?: number;
 }
 
 export interface Brand extends BrandReduced {
