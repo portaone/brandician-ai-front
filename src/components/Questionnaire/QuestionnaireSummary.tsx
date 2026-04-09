@@ -1,7 +1,6 @@
 import { ArrowRight, Edit2 } from "lucide-react";
 import React, { useEffect, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { scrollToTop } from "../../lib/utils";
+import { useNavigate } from "react-router-dom";
 import { Answer, Question } from "../../types";
 import Button from "../common/Button";
 
@@ -9,16 +8,16 @@ interface QuestionnaireSummaryProps {
   questions: Question[];
   answers: Answer[];
   onEditAnswer: (questionId: string) => void;
-  onComplete: () => void;
+  onComplete: () => Promise<void>;
 }
 
 const QuestionnaireSummary: React.FC<QuestionnaireSummaryProps> = ({
   questions,
   answers,
   onEditAnswer,
+  onComplete,
 }) => {
   const navigate = useNavigate();
-  const { brandId } = useParams<{ brandId: string }>();
 
   const sortedQuestions = useMemo(() => {
     // "Unanswered first": questions with non-empty answers appear last.
@@ -96,9 +95,12 @@ const QuestionnaireSummary: React.FC<QuestionnaireSummaryProps> = ({
         </Button>
 
         <Button
-          onClick={() => {
-            brandId && navigate(`/brands/${brandId}/summary?regenerate=1`);
-            scrollToTop();
+          onClick={async () => {
+            try {
+              await onComplete();
+            } catch (error) {
+              console.error("Failed to complete questionnaire:", error);
+            }
           }}
           size="lg"
           tabIndex={-1}

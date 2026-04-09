@@ -174,7 +174,7 @@ export const useBrandStore = create<BrandState>((set) => ({
     answer: string,
     question: string,
   ) => {
-    set({ isLoading: true, error: null });
+    set({ error: null });
     try {
       const newAnswer = await brands.submitAnswer(
         brandId,
@@ -201,12 +201,11 @@ export const useBrandStore = create<BrandState>((set) => ({
         return {
           answers,
           answersMap,
-          isLoading: false,
         };
       });
     } catch (error) {
       const errorMessage = getErrorMessage(error, "Failed to submit answer");
-      set({ isLoading: false, error: errorMessage });
+      set({ error: errorMessage });
       throw error;
     }
   },

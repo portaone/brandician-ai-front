@@ -12,6 +12,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { brands } from "../../lib/api";
 import Button from "../common/Button";
+import MarkdownPreviewer from "../common/MarkDownPreviewer";
 
 interface QuestionnaireItemProps {
   question: string;
@@ -27,6 +28,7 @@ interface QuestionnaireItemProps {
   submitError?: string | null;
   onRetrySubmit?: () => void;
   onShowSummary: (answer: string) => Promise<void>;
+  onAnswerDraftChange?: (text: string) => void;
 }
 
 const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
@@ -43,6 +45,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   submitError,
   onRetrySubmit,
   onShowSummary,
+  onAnswerDraftChange,
 }) => {
   const [answer, setAnswer] = useState(currentAnswer || "");
   const [aiEnhancedAnswer, setAiEnhancedAnswer] = useState("");
@@ -51,6 +54,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const isEnhancingRef = useRef(false);
   const [recordingError, setRecordingError] = useState<string | null>(null);
   const [hasBeenEdited, setHasBeenEdited] = useState(false);
   const [augmentationError, setAugmentationError] = useState<string | null>(
@@ -82,6 +86,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     setAugmentationWarning(null);
     setNoEnhancementNeeded(false);
     setLastEnhancedText("");
+    onAnswerDraftChange?.(currentAnswer || "");
     // Scroll to question title when question changes
     setTimeout(() => {
       if (questionTitleRef.current) {
@@ -200,6 +205,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
             console.log("🎤 Processing completed:", status.text);
             setAnswer(status.text);
             setHasBeenEdited(true);
+            onAnswerDraftChange?.(status.text);
           } else {
             console.error("🔴 Processing completed but no text returned");
             setRecordingError(
@@ -266,9 +272,13 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     // Set a new timeout for the enhancement request
     console.log("⏰ Setting new timeout for enhancement");
     enhancementTimeoutRef.current = setTimeout(async () => {
-      console.log("⏰ Timeout triggered, checking isEnhancing:", isEnhancing);
-      if (!isEnhancing) {
+      console.log(
+        "⏰ Timeout triggered, checking isEnhancing:",
+        isEnhancingRef.current,
+      );
+      if (!isEnhancingRef.current) {
         console.log("🚀 Starting enhancement process");
+        isEnhancingRef.current = true;
         setIsEnhancing(true);
         try {
           console.log("🎯 Calling augmentAnswer API:", {
@@ -312,6 +322,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
             );
             setAugmentationWarning(null);
             setAiEnhancedAnswer("");
+            setLastEnhancedText("");
           } else if (
             enhancedAnswer &&
             enhancedAnswer.status === "Cannot augment"
@@ -332,6 +343,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
             );
             setAugmentationError(null);
             setAugmentationWarning(null);
+            setLastEnhancedText(text.trim());
             // Try different possible response structures
             const answerText =
               enhancedAnswer?.answer ||
@@ -351,6 +363,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
             console.error("Response status:", error.response.status);
           }
         } finally {
+          isEnhancingRef.current = false;
           setIsEnhancing(false);
         }
       } else {
@@ -367,6 +380,8 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     });
     setAnswer(newAnswer);
     setHasBeenEdited(true);
+    setAugmentationError(null);
+    onAnswerDraftChange?.(newAnswer);
 
     // Clear submit error when user starts typing
     if (onRetrySubmit) {
@@ -380,7 +395,6 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
   const handleEnhanceClick = () => {
     if (answer.trim().length > 10) {
       console.log("🤖 Manual AI enhancement requested");
-      setLastEnhancedText(answer.trim()); // Track trimmed text that was enhanced
       requestAiEnhancement(answer);
     } else {
       // Show error for short answers
@@ -390,6 +404,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
       setAiEnhancedAnswer("");
       setAugmentationWarning(null);
       setNoEnhancementNeeded(false);
+      setLastEnhancedText("");
     }
   };
 
@@ -483,7 +498,9 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
             onClick={handleEnhanceClick}
             disabled={
               isEnhancing ||
-              (lastEnhancedText !== "" && answer.trim() === lastEnhancedText)
+              (lastEnhancedText !== "" &&
+                answer.trim() === lastEnhancedText &&
+                !augmentationError)
             }
             size="md"
             className="mt-3"
@@ -501,7 +518,9 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
             ) : (
               <>
                 <Wand2 className="h-4 w-4 mr-2 inline" />
-                {lastEnhancedText !== "" && answer.trim() === lastEnhancedText
+                {lastEnhancedText !== "" &&
+                answer.trim() === lastEnhancedText &&
+                !augmentationError
                   ? "Already Enhanced"
                   : "Enhance with AI"}
               </>
@@ -550,9 +569,13 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
               ) : augmentationError ? (
                 <span className="text-red-500">{augmentationError}</span>
               ) : augmentationWarning ? (
-                <span style={{ color: "#7F5971" }}>{augmentationWarning}</span>
+                <div style={{ color: "#7F5971" }}>
+                  <MarkdownPreviewer markdown={augmentationWarning} />
+                </div>
               ) : aiEnhancedAnswer ? (
-                <span style={{ color: "#7F5971" }}>{aiEnhancedAnswer}</span>
+                <div style={{ color: "#7F5971" }}>
+                  <MarkdownPreviewer markdown={aiEnhancedAnswer} />
+                </div>
               ) : (
                 <span className="text-gray-400">
                   AI enhancement will appear here...
@@ -656,7 +679,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
               type="button"
               variant="secondary"
               onClick={handleShowSummary}
-              disabled={isSubmitting || isProcessing || !!augmentationError}
+              disabled={isSubmitting || isProcessing}
               size="md"
             >
               {isSubmitting ? (
@@ -668,7 +691,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={isSubmitting || isProcessing || !!augmentationError}
+            disabled={isSubmitting || isProcessing}
             size="md"
           >
             {isSubmitting ? (
