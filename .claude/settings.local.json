@@ -25,7 +25,11 @@
       "mcp__playwright__browser_type",
       "mcp__playwright__browser_wait_for",
       "mcp__playwright__browser_console_messages",
-      "mcp__youtrack__get_issue"
+      "mcp__youtrack__get_issue",
+      "WebFetch(domain:developers.google.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:unpkg.com)"
     ],
     "deny": []
   }

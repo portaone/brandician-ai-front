@@ -4,7 +4,7 @@
  * This hook manages the complete Google Pay lifecycle:
  *
  * 1. INITIALIZATION
- *    - Waits for the pay.js script to load (loaded via <script> in index.html)
+ *    - Dynamically loads pay.js on first use (not loaded globally)
  *    - Creates a single PaymentsClient instance
  *    - Calls isReadyToPay() to check device/browser support
  *
@@ -37,8 +37,41 @@
 import { useCallback, useEffect, useState } from "react";
 
 // ---------------------------------------------------------------------------
+// Dynamic script loader for pay.js
+// Follows the same pattern as Google's official @google-pay/google-pay-button.
+// The script is loaded once on first use and cached for subsequent calls.
+// ---------------------------------------------------------------------------
+
+const GOOGLE_PAY_SCRIPT_URL = "https://pay.google.com/gp/p/js/pay.js";
+
+let loadScriptPromise: Promise<void> | null = null;
+
+function loadGooglePayScript(): Promise<void> {
+  if (loadScriptPromise) return loadScriptPromise;
+
+  loadScriptPromise = new Promise<void>((resolve, reject) => {
+    if (window.google?.payments?.api) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = GOOGLE_PAY_SCRIPT_URL;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => {
+      loadScriptPromise = null;
+      reject(new Error("[GooglePay] Failed to load pay.js"));
+    };
+    document.head.appendChild(script);
+  });
+
+  return loadScriptPromise;
+}
+
+// ---------------------------------------------------------------------------
 // Type declarations for Google Pay JS API (window.google.payments.api)
-// The pay.js script is loaded externally and attaches to window.google.
+// The pay.js script is loaded dynamically by loadGooglePayScript() above.
 // ---------------------------------------------------------------------------
 
 declare global {
@@ -214,8 +247,7 @@ export function useGooglePay({
   // Step 1: Initialize PaymentsClient and check availability
   //
   // Runs once when stripePublishableKey and environment are set.
-  // The pay.js script is loaded asynchronously in index.html, so we poll
-  // for window.google.payments.api (up to 5 seconds) before giving up.
+  // Dynamically loads pay.js on first call (not loaded globally).
   // ---------------------------------------------------------------------------
   useEffect(() => {
     if (!stripePublishableKey) {
@@ -224,22 +256,17 @@ export function useGooglePay({
     }
 
     const initGooglePay = async () => {
-      // Poll for the pay.js script to finish loading
-      let attempts = 0;
-      while (!window.google?.payments?.api && attempts < 50) {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        attempts++;
-      }
-
-      if (!window.google?.payments?.api) {
-        console.warn("[GooglePay] pay.js script not loaded after 5s");
+      try {
+        await loadGooglePayScript();
+      } catch (error) {
+        console.warn("[GooglePay] Failed to load pay.js:", error);
         setIsLoading(false);
         return;
       }
 
       try {
         // Create the single PaymentsClient instance for this session
-        const client = new window.google.payments.api.PaymentsClient({
+        const client = new window.google!.payments.api.PaymentsClient({
           environment,
         });
 
