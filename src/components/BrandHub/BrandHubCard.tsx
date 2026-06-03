@@ -9,115 +9,26 @@ interface PropertyConfidence {
   reasoning?: string;
 }
 
-// ── Color palette renderer (preserves existing logic) ──
-const COLOR_ROLE_LABELS: Record<string, string> = {
-  "main-color": "Main color",
-  "supporting-color": "Supporting color",
-  "accent-color": "Accent color",
-  "body-text-color": "Body text color",
-  "light-color": "Light / Background",
-};
+// ── Combined "Color palette & typography" card (Visual Identity) ──
+// Keyed on color_usage_guidance: `content` carries the usage text, while the
+// presenter + rationales are read from the color_palette / typography JSON.
+// The header confidence/gap pills key off this property: confidence matches by
+// exact key/title (so it reflects only color_usage_guidance, if the backend
+// scores it), while gap counting matches the title fuzzily and therefore
+// aggregates "color palette" + "typography" + usage gaps onto this one card.
+const COLOR_TYPOGRAPHY_KEY = "color_usage_guidance";
 
-const ColorPaletteDisplay: React.FC<{ json: string }> = ({ json }) => {
-  let data: Record<string, string>;
-  try {
-    data = JSON.parse(json);
-  } catch {
-    return <span className="bh-empty">Invalid palette data</span>;
-  }
-
-  const entries = Object.entries(COLOR_ROLE_LABELS)
-    .map(([key, label]) => ({ key, label, hex: data[key] }))
-    .filter((e) => e.hex);
-
-  if (entries.length === 0) {
-    return <span className="bh-empty">No colours found</span>;
-  }
-
-  return (
-    <div>
-      {data.rationale && (
-        <div className="bh-card-body" style={{ marginBottom: 16 }}>
-          <MarkdownPreviewer markdown={data.rationale} />
-        </div>
-      )}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "12px 32px" }}>
-        {entries.map((e) => (
-          <div key={e.key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div
-              style={{
-                width: 24,
-                height: 24,
-                borderRadius: "50%",
-                backgroundColor: e.hex,
-                border: "1px solid rgba(0,0,0,0.1)",
-                flexShrink: 0,
-              }}
-            />
-            <span className="bh-card-body">
-              {e.label}:{" "}
-              <span style={{ fontFamily: "monospace", fontSize: "0.85em", opacity: 0.6 }}>
-                {e.hex}
-              </span>
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// ── Typography renderer (preserves existing logic) ──
-function tryParseTypography(json: string): Record<string, any> | null {
+function parseRationale(json?: string): string | null {
+  if (!json) return null;
   try {
     const data = JSON.parse(json);
-    const roles = ["heading", "body", "accent"].filter((r) => data[r]);
-    return roles.length > 0 ? data : null;
+    return typeof data.rationale === "string" && data.rationale.trim()
+      ? data.rationale
+      : null;
   } catch {
     return null;
   }
 }
-
-const TypographyDisplay: React.FC<{ data: Record<string, any> }> = ({ data }) => {
-  const roles = ["heading", "body", "accent"].filter((r) => data[r]);
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {data.label && (
-        <p className="bh-card-body">
-          Font pairing: <strong>{data.label}</strong>
-        </p>
-      )}
-      {data.rationale && (
-        <div className="bh-card-body">
-          <MarkdownPreviewer markdown={data.rationale} />
-        </div>
-      )}
-      {roles.map((role) => {
-        const font = data[role];
-        return (
-          <div key={role} style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-            <span
-              style={{
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                width: 64,
-                flexShrink: 0,
-              }}
-              className="bh-card-sublabel"
-            >
-              {role}
-            </span>
-            <span className="bh-card-body">
-              <strong>{font.name}</strong>
-            </span>
-            <span className="bh-card-sublabel">{font.style}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
 
 // ── Main Card Component ──
 interface BrandHubCardProps {
@@ -169,6 +80,65 @@ const BrandHubCard: React.FC<BrandHubCardProps> = ({
 
   // Determine which renderer to use
   const renderContent = () => {
+    // Combined Visual Identity card: presenter → color rationale →
+    // color usage guidance → typography rationale. Rendered independent of the
+    // standard empty-state gating so it shows even before usage text exists.
+    if (propKey === COLOR_TYPOGRAPHY_KEY) {
+      const colorRationale = parseRationale(colorPaletteJson);
+      const typographyRationale = parseRationale(typographyJson);
+      const usageGuidance =
+        typeof content === "string" && content.trim().length > 0
+          ? (content as string)
+          : null;
+
+      const emptyHint = (
+        <p className="bh-empty">This section hasn't been populated yet.</p>
+      );
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {(colorPaletteJson || typographyJson) && (
+            <FontColorPresenter
+              colorPaletteJson={colorPaletteJson ?? ""}
+              typographyJson={typographyJson ?? ""}
+            />
+          )}
+          {colorRationale && (
+            <div>
+              <p className="bh-card-sublabel" style={{ marginBottom: 4 }}>
+                Color palette
+              </p>
+              <div className="bh-card-body">
+                <MarkdownPreviewer markdown={colorRationale} />
+              </div>
+            </div>
+          )}
+          <div>
+            <p className="bh-card-sublabel" style={{ marginBottom: 4 }}>
+              Color usage guidance
+            </p>
+            {usageGuidance ? (
+              <div className="bh-card-body">
+                <MarkdownPreviewer markdown={usageGuidance} />
+              </div>
+            ) : (
+              emptyHint
+            )}
+          </div>
+          {typographyRationale && (
+            <div>
+              <p className="bh-card-sublabel" style={{ marginBottom: 4 }}>
+                Typography
+              </p>
+              <div className="bh-card-body">
+                <MarkdownPreviewer markdown={typographyRationale} />
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     if (!hasContent) {
       return <p className="bh-empty">This section hasn't been populated yet.</p>;
     }
@@ -181,26 +151,6 @@ const BrandHubCard: React.FC<BrandHubCardProps> = ({
           mode="draft"
         />
       );
-    }
-
-    if (propKey === "color_palette") {
-      // Show the rich FontColorPresenter if we also have typography data
-      if (typographyJson) {
-        return (
-          <>
-            <ColorPaletteDisplay json={content as string} />
-            <FontColorPresenter
-              colorPaletteJson={content as string}
-              typographyJson={typographyJson}
-            />
-          </>
-        );
-      }
-      return <ColorPaletteDisplay json={content as string} />;
-    }
-
-    if (propKey === "typography" && tryParseTypography(content as string)) {
-      return <TypographyDisplay data={tryParseTypography(content as string)!} />;
     }
 
     return (
@@ -229,7 +179,7 @@ const BrandHubCard: React.FC<BrandHubCardProps> = ({
             </span>
           )}
         </div>
-        {hasContent && propKey !== "palette" && (
+        {hasContent && propKey !== "palette" && propKey !== COLOR_TYPOGRAPHY_KEY && (
           <button
             onClick={handleCopyClick}
             className={`bh-btn-copy ${isCopied ? "copied" : ""}`}
@@ -256,4 +206,3 @@ const BrandHubCard: React.FC<BrandHubCardProps> = ({
 };
 
 export default BrandHubCard;
-export { tryParseTypography, ColorPaletteDisplay, TypographyDisplay };

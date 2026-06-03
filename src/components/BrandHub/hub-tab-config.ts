@@ -50,12 +50,6 @@ export const TAB_CONFIGS: UiTabConfig[] = [
           "The psychological foundation for the brand's personality — primary and secondary archetypes define the emotional tone and behavioural style.",
       },
       {
-        key: "tone_of_voice",
-        title: "Tone of Voice",
-        helper:
-          "How the brand sounds across different contexts — shaped by archetypes, but applied to writing and speech.",
-      },
-      {
         key: "jobs_to_be_done",
         title: "Jobs to be done / Customer Needs summary",
         helper:
@@ -114,15 +108,14 @@ export const TAB_CONFIGS: UiTabConfig[] = [
           "Alternate marks, usage rules, spacing, and application notes appear here once a logo is uploaded.",
       },
       {
-        key: "color_palette",
-        title: "Font & color palette",
+        // Combined card: presenter (swatches + font preview) followed by
+        // color rationale → color usage guidance → typography rationale.
+        // Keyed on color_usage_guidance so `content` carries the new usage text;
+        // hex/fonts and rationales are read from the color_palette/typography JSON.
+        key: "color_usage_guidance",
+        title: "Color palette & typography",
         helper:
-          "Brand colours and font pairing — derived from archetype and emotional positioning.",
-      },
-      {
-        key: "typography",
-        title: "Typography",
-        helper: "Sizing, use cases, and fallback systems for web and print.",
+          "Brand colours and font pairing — derived from archetype and emotional positioning — with usage guidance.",
       },
       {
         key: "imagery_guidelines",
@@ -140,21 +133,33 @@ export const TAB_CONFIGS: UiTabConfig[] = [
     properties: [
       {
         key: "tone_of_voice",
-        title: "Voice overview & language guidelines",
+        title: "Tone of voice",
         helper:
-          "A concise definition of the brand's voice and concrete language guidelines — what to say, what to avoid, and how to stay in character.",
+          "How the brand sounds across different contexts — shaped by archetypes, but applied to writing and speech.",
       },
       {
         key: "language_guidelines",
+        title: "Language guidelines",
+        helper:
+          "Concrete language rules — what to say, what to avoid, and how to stay in character.",
+      },
+      {
+        key: "starter_phrases",
         title: "Starter phrases & framing examples",
         helper:
           "Ready to copy, adapt, or use as inspiration — headlines, email openers, closers, and introductions.",
       },
       {
-        key: "messaging_themes",
+        key: "boilerplate",
         title: "Boilerplate & brand description",
         helper:
           "Ready-to-use text for email signatures, press intros, directories, social bios, and partnership decks.",
+      },
+      {
+        key: "social_media_and_ctas",
+        title: "Social media & CTAs",
+        helper:
+          "Call-to-action patterns and social-channel framing aligned with the brand voice.",
       },
     ],
   },
