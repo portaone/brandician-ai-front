@@ -1,5 +1,10 @@
 import React, { useEffect, useMemo } from "react";
 import "./brandhub.css";
+import {
+  normalizeFontSystem,
+  fontFamilyStack,
+  type FontSystemVM,
+} from "../../lib/fontSystem";
 
 interface BrandThemeProviderProps {
   colorPaletteJson?: string;
@@ -13,13 +18,6 @@ interface ParsedColors {
   accent: string;
   text: string;
   light: string;
-}
-
-interface ParsedFonts {
-  headingFamily: string;
-  bodyFamily: string;
-  headingName: string;
-  bodyName: string;
 }
 
 function parseColors(json?: string): ParsedColors | null {
@@ -38,30 +36,14 @@ function parseColors(json?: string): ParsedColors | null {
   }
 }
 
-function parseFonts(json?: string): ParsedFonts | null {
+/** Parse typography JSON (v3 OR old internal shape) into a unified view model. */
+function parseFonts(json?: string): FontSystemVM | null {
   if (!json) return null;
   try {
-    const data = JSON.parse(json);
-    const heading = data.heading;
-    const body = data.body;
-    if (!heading?.name || !body?.name) return null;
-    return {
-      headingFamily: heading.family || `'${heading.name}', Georgia, serif`,
-      bodyFamily: body.family || `'${body.name}', sans-serif`,
-      headingName: heading.name,
-      bodyName: body.name,
-    };
+    return normalizeFontSystem(JSON.parse(json));
   } catch {
     return null;
   }
-}
-
-function buildGoogleFontsUrl(fonts: ParsedFonts): string {
-  const families = [
-    `${fonts.headingName.replace(/ /g, "+")}:ital,wght@0,400;0,600;1,400;1,600`,
-    `${fonts.bodyName.replace(/ /g, "+")}:wght@400;500;600;700`,
-  ];
-  return `https://fonts.googleapis.com/css2?${families.map((f) => `family=${f}`).join("&")}&display=swap`;
 }
 
 /**
@@ -90,11 +72,11 @@ const BrandThemeProvider: React.FC<BrandThemeProviderProps> = ({
   );
   const fonts = useMemo(() => parseFonts(typographyJson), [typographyJson]);
 
-  // Dynamically load Google Fonts
+  // Dynamically load Google Fonts (URL is computed from the real per-role weights)
   useEffect(() => {
-    if (!fonts) return;
+    if (!fonts || !fonts.googleUrl) return;
 
-    const url = buildGoogleFontsUrl(fonts);
+    const url = fonts.googleUrl;
     const linkId = "brandhub-google-fonts";
 
     // Avoid duplicate link tags
@@ -126,8 +108,8 @@ const BrandThemeProvider: React.FC<BrandThemeProviderProps> = ({
       vars["--brand-light"] = colors.light;
     }
     if (fonts) {
-      vars["--brand-heading-font"] = fonts.headingFamily;
-      vars["--brand-body-font"] = fonts.bodyFamily;
+      vars["--brand-heading-font"] = fontFamilyStack(fonts.primary.name);
+      vars["--brand-body-font"] = fontFamilyStack(fonts.secondary.name);
     }
     return vars as React.CSSProperties;
   }, [colors, fonts]);
@@ -140,5 +122,3 @@ const BrandThemeProvider: React.FC<BrandThemeProviderProps> = ({
 };
 
 export default BrandThemeProvider;
-export type { ParsedColors, ParsedFonts };
-export { parseColors, parseFonts };

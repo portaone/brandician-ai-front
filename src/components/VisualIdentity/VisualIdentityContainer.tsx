@@ -21,82 +21,57 @@ import { LOADER_CONFIGS } from "../../lib/loader-constants";
 import { scrollToTop } from "../../lib/utils";
 import VisualSystemSelector, {
   type BackendPaletteColors,
-  type FontSet,
   type Palette,
   transformPalette,
 } from "./VisualSystemSelector";
+import type { FontSystemV3 } from "../../lib/fontSystem";
 
-// Default font sets — used when the backend returns no font data
-const DEFAULT_FONT_SETS: FontSet[] = [
+// Default font systems — used when the backend returns no font data.
+// v3 shape; System 3 is the archetype system. Keep in sync with
+// _DEFAULT_FONT_SETS in the backend (modules/brand_hub.py).
+const DEFAULT_FONT_SETS: FontSystemV3[] = [
   {
-    id: "A",
-    label: "Editorial",
-    heading: {
-      name: "Bitter",
-      family: "'Bitter', Georgia, serif",
-      style: "Sturdy serif",
-    },
-    body: {
-      name: "Source Sans Pro",
-      family: "'Source Sans Pro', sans-serif",
-      style: "Humanist sans",
-    },
-    accent: {
-      name: "Playfair Display",
-      family: "'Playfair Display', serif",
-      style: "Display serif",
-    },
-    googleUrl:
-      "https://fonts.googleapis.com/css2?family=Bitter:wght@400;700&family=Source+Sans+Pro:ital,wght@0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,700;1,400&display=swap",
+    id: 1,
+    primary_font: "Bitter",
+    primary_weights: "400,700,800",
+    secondary_font: "Source Sans 3",
+    secondary_weights: "400,600",
+    accent_font: "Playfair Display",
+    accent_weights: "700",
+    archetype_fit: "Editorial, grounded",
+    notes:
+      "Sturdy serif headings with a humanist sans body for trustworthy, readable long-form copy.",
   },
   {
-    id: "B",
-    label: "Modern",
-    heading: {
-      name: "DM Serif Display",
-      family: "'DM Serif Display', serif",
-      style: "High-contrast serif",
-    },
-    body: {
-      name: "DM Sans",
-      family: "'DM Sans', sans-serif",
-      style: "Geometric sans",
-    },
-    accent: {
-      name: "DM Serif Display",
-      family: "'DM Serif Display', serif",
-      style: "Italic display",
-    },
-    googleUrl:
-      "https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;700&display=swap",
+    id: 2,
+    primary_font: "DM Serif Display",
+    primary_weights: "400",
+    secondary_font: "DM Sans",
+    secondary_weights: "400,500,700",
+    accent_font: "DM Sans",
+    accent_weights: "500,700",
+    archetype_fit: "Modern, refined",
+    notes:
+      "High-contrast display serif paired with a clean geometric sans for a contemporary, confident tone.",
   },
   {
-    id: "C",
-    label: "Premium",
-    heading: {
-      name: "Cormorant Garamond",
-      family: "'Cormorant Garamond', serif",
-      style: "Classical serif",
-    },
-    body: {
-      name: "Karla",
-      family: "'Karla', sans-serif",
-      style: "Clean grotesque",
-    },
-    accent: {
-      name: "Cormorant Infant",
-      family: "'Cormorant Infant', serif",
-      style: "Companion italic",
-    },
-    googleUrl:
-      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400&family=Cormorant+Infant:ital,wght@0,400;1,400&family=Karla:wght@400;700&display=swap",
+    id: 3,
+    primary_font: "Cormorant Garamond",
+    primary_weights: "600,700",
+    secondary_font: "Karla",
+    secondary_weights: "400,700",
+    accent_font: "Cormorant Infant",
+    accent_weights: "500",
+    archetype_fit: "Premium, classical",
+    notes:
+      "Classical serif headings over a clean grotesque body — an elegant, archetype-leaning system.",
   },
 ];
 
 type VisualOptions = {
   rawMarkdown: string;
   palettes: BackendPaletteColors[];
-  fontSets: FontSet[];
+  fontSets: FontSystemV3[];
 };
 
 const VisualIdentityContainer: React.FC = () => {
@@ -167,7 +142,7 @@ const VisualIdentityContainer: React.FC = () => {
   const applyResponse = (data: {
     raw_markdown: string;
     palettes: BackendPaletteColors[];
-    font_sets: FontSet[];
+    font_sets: FontSystemV3[];
   }) => {
     setVisualOptions({
       rawMarkdown: data.raw_markdown,
@@ -382,7 +357,6 @@ const VisualIdentityContainer: React.FC = () => {
               <VisualSystemSelector
                 palettes={parsedPalettes}
                 fontSets={fontSets}
-                brandName={brandLabel}
                 onSelectionChange={handleSelectionChange}
                 paletteDisabled={usePreviousPalette}
                 overridePalette={
@@ -405,7 +379,6 @@ const VisualIdentityContainer: React.FC = () => {
               <VisualSystemSelector
                 palettes={parsedPalettes}
                 fontSets={fontSets}
-                brandName={brandLabel}
                 onSelectionChange={handleSelectionChange}
               />
             </div>

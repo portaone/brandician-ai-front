@@ -1,4 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  normalizeFontSystem,
+  fontFamilyStack,
+  pickRenderWeight,
+  type FontSystemV3,
+  type FontSystemVM,
+} from "../../lib/fontSystem";
 
 // ── Types ────────────────────────────────────────────────
 
@@ -18,26 +25,9 @@ export interface Palette {
   light: ColorValue;
 }
 
-export interface FontInfo {
-  name: string;
-  family: string;
-  style: string;
-}
-
-export interface FontSet {
-  id: string;
-  label: string;
-  rationale?: string;
-  heading: FontInfo;
-  body: FontInfo;
-  accent: FontInfo;
-  googleUrl: string;
-}
-
 interface VisualSystemSelectorProps {
   palettes: Palette[];
-  fontSets: FontSet[];
-  brandName: string;
+  fontSets: FontSystemV3[];
   onSelectionChange?: (paletteIndex: number, fontIndex: number) => void;
   paletteDisabled?: boolean;
   overridePalette?: Palette;
@@ -150,7 +140,6 @@ const label9Card: React.CSSProperties = {
 const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
   palettes,
   fontSets,
-  brandName,
   onSelectionChange,
   paletteDisabled,
   overridePalette,
@@ -169,8 +158,16 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
     return () => mq.removeEventListener("change", handler);
   }, []);
 
+  const fontVMs = useMemo<FontSystemVM[]>(
+    () =>
+      fontSets
+        .map(normalizeFontSystem)
+        .filter((v): v is FontSystemVM => v !== null),
+    [fontSets],
+  );
+
   const pal = overridePalette && paletteDisabled ? overridePalette : palettes[palIdx];
-  const fnt = fontSets[fntIdx];
+  const fnt = fontVMs[fntIdx];
 
   // Notify parent whenever the selection changes
   useEffect(() => {
@@ -262,15 +259,20 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
       </div>
       <div style={{ ...label9Card }}>Font pairing</div>
       <div style={{ display: "flex", gap: "6px" }}>
-        {fontSets.map((f, i) => (
+        {fontVMs.map((f, i) => (
           <Chip
-            key={f.id}
-            label={f.id}
-            sub={chipSub(f.label)}
+            key={`${f.id}-${i}`}
+            label={VARIANT_LABELS[i] ?? String(f.id)}
+            sub={f.isArchetype ? "Archetype" : "Standard"}
             active={fntIdx === i}
             color={pal?.accent?.hex || UI_FONT_CHIP_ACCENT}
             onClick={() => setFntIdx(i)}
-            title={f.rationale ? stripMarkdown(f.rationale) : undefined}
+            title={
+              [f.archetypeFit, f.notes]
+                .filter(Boolean)
+                .map(stripMarkdown)
+                .join(" — ") || undefined
+            }
           />
         ))}
       </div>
@@ -284,9 +286,9 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
       <div style={{ background: pal.main.hex, padding: "22px 20px 18px" }}>
         <div
           style={{
-            fontFamily: fnt.heading.family,
+            fontFamily: fontFamilyStack(fnt.primary.name),
             fontSize: "22px",
-            fontWeight: 700,
+            fontWeight: pickRenderWeight(fnt.primary.weights, "primary"),
             color: textOn(pal.main.hex),
             lineHeight: 1.2,
             marginBottom: "5px",
@@ -296,9 +298,10 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
         </div>
         <div
           style={{
-            fontFamily: fnt.accent.family,
+            fontFamily: fontFamilyStack(fnt.accent.name),
             fontSize: "12px",
             fontStyle: "italic",
+            fontWeight: pickRenderWeight(fnt.accent.weights, "accent"),
             color: textOn(pal.main.hex),
             opacity: 0.78,
             lineHeight: 1,
@@ -335,9 +338,9 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
       <div style={{ background: "#ffffff", padding: "18px 20px 20px" }}>
         <div
           style={{
-            fontFamily: fnt.heading.family,
+            fontFamily: fontFamilyStack(fnt.primary.name),
             fontSize: "17px",
-            fontWeight: 700,
+            fontWeight: pickRenderWeight(fnt.primary.weights, "primary"),
             color: pal.bodyText.hex,
             marginBottom: "9px",
           }}
@@ -346,8 +349,9 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
         </div>
         <p
           style={{
-            fontFamily: fnt.body.family,
+            fontFamily: fontFamilyStack(fnt.secondary.name),
             fontSize: "14px",
+            fontWeight: pickRenderWeight(fnt.secondary.weights, "secondary"),
             lineHeight: 1.65,
             color: pal.bodyText.hex,
             margin: "0 0 14px",
@@ -358,9 +362,10 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
         </p>
         <div
           style={{
-            fontFamily: fnt.accent.family,
+            fontFamily: fontFamilyStack(fnt.accent.name),
             fontSize: "14px",
             fontStyle: "italic",
+            fontWeight: pickRenderWeight(fnt.accent.weights, "accent"),
             color: pal.main.hex,
             borderLeft: `3px solid ${pal.accent.hex}`,
             paddingLeft: "11px",
@@ -377,9 +382,9 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
             border: "none",
             borderRadius: "50px",
             padding: "10px 24px",
-            fontFamily: fnt.body.family,
+            fontFamily: fontFamilyStack(fnt.accent.name),
             fontSize: "11px",
-            fontWeight: 700,
+            fontWeight: pickRenderWeight(fnt.accent.weights, "accent"),
             letterSpacing: "0.13em",
             textTransform: "uppercase",
             cursor: "pointer",
@@ -473,24 +478,27 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
       {[
         {
           role: "Heading font",
-          font: fnt.heading,
+          roleKey: "primary" as const,
+          name: fnt.primary.name,
+          weights: fnt.primary.weights,
           sample: "Brand strategy & identity",
           size: "19px",
-          weight: "700" as const,
         },
         {
           role: "Body text font",
-          font: fnt.body,
+          roleKey: "secondary" as const,
+          name: fnt.secondary.name,
+          weights: fnt.secondary.weights,
           sample: "Clear thinking. Strategic depth. Honest design.",
           size: "13px",
-          weight: "400" as const,
         },
         {
-          role: "Accent / display font",
-          font: fnt.accent,
+          role: "Accent / UI font",
+          roleKey: "accent" as const,
+          name: fnt.accent.name,
+          weights: fnt.accent.weights,
           sample: "Turn insight into identity.",
           size: "15px",
-          weight: "400" as const,
           italic: true as const,
         },
       ].map((item) => (
@@ -516,9 +524,9 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
           </div>
           <div
             style={{
-              fontFamily: item.font.family,
+              fontFamily: fontFamilyStack(item.name),
               fontSize: item.size,
-              fontWeight: item.weight,
+              fontWeight: pickRenderWeight(item.weights, item.roleKey),
               fontStyle: "italic" in item && item.italic ? "italic" : "normal",
               color: pal.bodyText.hex,
               lineHeight: 1.35,
@@ -528,10 +536,33 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
             {item.sample}
           </div>
           <div style={{ fontSize: "10px", color: "#aaa", lineHeight: 1.35 }}>
-            {item.font.name} · {item.font.style}
+            {item.name}
+            {item.weights.length ? ` · ${item.weights.join(", ")}` : ""}
           </div>
         </div>
       ))}
+      {(fnt.archetypeFit || fnt.notes) && (
+        <div
+          style={{
+            padding: "12px 16px 14px",
+            borderTop: "1px solid #f0f0f0",
+            lineHeight: 1.4,
+          }}
+        >
+          {fnt.archetypeFit ? (
+            <div style={{ fontSize: "11px", color: "#555", marginBottom: "4px" }}>
+              <strong style={{ color: "#1a1a1a" }}>Archetype fit:</strong>{" "}
+              {fnt.archetypeFit}
+            </div>
+          ) : null}
+          {fnt.notes ? (
+            <div style={{ fontSize: "12px", color: "#666" }}>
+              <span style={{ color: "#999" }}>Why this system — </span>
+              {fnt.notes}
+            </div>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 

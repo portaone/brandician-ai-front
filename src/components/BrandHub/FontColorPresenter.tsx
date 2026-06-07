@@ -1,5 +1,11 @@
 import React, { useMemo } from "react";
 import { textOnColor } from "./BrandThemeProvider";
+import {
+  normalizeFontSystem,
+  fontFamilyStack,
+  pickRenderWeight,
+  type FontSystemVM,
+} from "../../lib/fontSystem";
 
 interface FontColorPresenterProps {
   colorPaletteJson: string;
@@ -26,7 +32,7 @@ const FontColorPresenter: React.FC<FontColorPresenterProps> = ({
 }) => {
   const { colors, fonts } = useMemo(() => {
     let parsedColors: ColorEntry[] = [];
-    let parsedFonts: { heading: any; body: any; label?: string } | null = null;
+    let parsedFonts: FontSystemVM | null = null;
 
     try {
       const colorData = JSON.parse(colorPaletteJson);
@@ -43,14 +49,7 @@ const FontColorPresenter: React.FC<FontColorPresenterProps> = ({
     }
 
     try {
-      const fontData = JSON.parse(typographyJson);
-      if (fontData.heading && fontData.body) {
-        parsedFonts = {
-          heading: fontData.heading,
-          body: fontData.body,
-          label: fontData.label,
-        };
-      }
+      parsedFonts = normalizeFontSystem(JSON.parse(typographyJson));
     } catch {
       // ignore
     }
@@ -101,40 +100,82 @@ const FontColorPresenter: React.FC<FontColorPresenterProps> = ({
               <p
                 className="bh-font-display-heading"
                 style={{
-                  fontFamily: `'${fonts.heading.name}', Georgia, serif`,
+                  fontFamily: fontFamilyStack(fonts.primary.name),
+                  fontWeight: pickRenderWeight(fonts.primary.weights, "primary"),
                 }}
               >
-                {fonts.heading.name}
+                {fonts.primary.name}
               </p>
               <p className="bh-font-meta">
-                {fonts.heading.style || "Serif"} · Display & titles
+                {fonts.primary.weights.length
+                  ? `Weights ${fonts.primary.weights.join(", ")}`
+                  : "Display"}{" "}
+                · Display &amp; titles
               </p>
             </div>
             <div className="bh-font-row">
               <p className="bh-font-label">Body font</p>
               <p
                 className="bh-font-display-body"
-                style={{ fontFamily: `'${fonts.body.name}', sans-serif` }}
+                style={{
+                  fontFamily: fontFamilyStack(fonts.secondary.name),
+                  fontWeight: pickRenderWeight(
+                    fonts.secondary.weights,
+                    "secondary",
+                  ),
+                }}
               >
-                {fonts.body.name} — clear, warm, readable at all sizes.
+                {fonts.secondary.name} — clear, warm, readable at all sizes.
               </p>
               <p className="bh-font-meta">
-                {fonts.body.style || "Sans-serif"} · Body, UI, captions
+                {fonts.secondary.weights.length
+                  ? `Weights ${fonts.secondary.weights.join(", ")}`
+                  : "Text"}{" "}
+                · Body, UI, captions
               </p>
             </div>
+            {fonts.accent.name && (
+              <div className="bh-font-row">
+                <p className="bh-font-label">Accent / UI font</p>
+                <p
+                  className="bh-font-display-body"
+                  style={{
+                    fontFamily: fontFamilyStack(fonts.accent.name),
+                    fontWeight: pickRenderWeight(fonts.accent.weights, "accent"),
+                  }}
+                >
+                  {fonts.accent.name} — menus, CTAs, labels.
+                </p>
+                <p className="bh-font-meta">
+                  {fonts.accent.weights.length
+                    ? `Weights ${fonts.accent.weights.join(", ")}`
+                    : "Accent"}{" "}
+                  · UI &amp; emphasis
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="bh-presenter-preview">
             <p className="bh-preview-label">Preview</p>
             <p
               className="bh-preview-heading"
-              style={{ fontFamily: `'${fonts.heading.name}', Georgia, serif` }}
+              style={{
+                fontFamily: fontFamilyStack(fonts.primary.name),
+                fontWeight: pickRenderWeight(fonts.primary.weights, "primary"),
+              }}
             >
               Your brand, in context
             </p>
             <p
               className="bh-preview-body"
-              style={{ fontFamily: `'${fonts.body.name}', sans-serif` }}
+              style={{
+                fontFamily: fontFamilyStack(fonts.secondary.name),
+                fontWeight: pickRenderWeight(
+                  fonts.secondary.weights,
+                  "secondary",
+                ),
+              }}
             >
               This is how your brand's type pairing looks in a real layout.
               Heading and body fonts working together to create a consistent
@@ -143,7 +184,7 @@ const FontColorPresenter: React.FC<FontColorPresenterProps> = ({
             <p
               className="bh-preview-quote"
               style={{
-                fontFamily: `'${fonts.heading.name}', Georgia, serif`,
+                fontFamily: fontFamilyStack(fonts.accent.name || fonts.primary.name),
                 color: primaryColor,
                 borderLeftColor: "var(--brand-accent)",
               }}
@@ -152,11 +193,26 @@ const FontColorPresenter: React.FC<FontColorPresenterProps> = ({
             </p>
             <button
               className="bh-preview-btn"
-              style={{ background: "var(--brand-accent)" }}
+              style={{
+                background: "var(--brand-accent)",
+                fontFamily: fontFamilyStack(fonts.accent.name || fonts.secondary.name),
+                fontWeight: pickRenderWeight(fonts.accent.weights, "accent"),
+              }}
             >
               Example CTA
             </button>
           </div>
+
+          {(fonts.archetypeFit || fonts.notes) && (
+            <div className="bh-font-why">
+              {fonts.archetypeFit && (
+                <p className="bh-font-why-fit">
+                  <strong>Archetype fit:</strong> {fonts.archetypeFit}
+                </p>
+              )}
+              {fonts.notes && <p className="bh-font-why-notes">{fonts.notes}</p>}
+            </div>
+          )}
         </div>
       )}
     </div>
