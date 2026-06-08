@@ -101,7 +101,7 @@ const FontColorPresenter: React.FC<FontColorPresenterProps> = ({
                 className="bh-font-display-heading"
                 style={{
                   fontFamily: fontFamilyStack(fonts.primary.name),
-                  fontWeight: pickRenderWeight(fonts.primary.weights, "primary"),
+                  fontWeight: pickRenderWeight(fonts.primary.weights, "display"),
                 }}
               >
                 {fonts.primary.name}
@@ -121,7 +121,7 @@ const FontColorPresenter: React.FC<FontColorPresenterProps> = ({
                   fontFamily: fontFamilyStack(fonts.secondary.name),
                   fontWeight: pickRenderWeight(
                     fonts.secondary.weights,
-                    "secondary",
+                    "body",
                   ),
                 }}
               >
@@ -162,7 +162,7 @@ const FontColorPresenter: React.FC<FontColorPresenterProps> = ({
               className="bh-preview-heading"
               style={{
                 fontFamily: fontFamilyStack(fonts.primary.name),
-                fontWeight: pickRenderWeight(fonts.primary.weights, "primary"),
+                fontWeight: pickRenderWeight(fonts.primary.weights, "display"),
               }}
             >
               Your brand, in context
@@ -173,7 +173,7 @@ const FontColorPresenter: React.FC<FontColorPresenterProps> = ({
                 fontFamily: fontFamilyStack(fonts.secondary.name),
                 fontWeight: pickRenderWeight(
                   fonts.secondary.weights,
-                  "secondary",
+                  "body",
                 ),
               }}
             >

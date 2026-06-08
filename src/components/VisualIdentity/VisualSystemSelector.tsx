@@ -288,7 +288,7 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
           style={{
             fontFamily: fontFamilyStack(fnt.primary.name),
             fontSize: "22px",
-            fontWeight: pickRenderWeight(fnt.primary.weights, "primary"),
+            fontWeight: pickRenderWeight(fnt.primary.weights, "display"),
             color: textOn(pal.main.hex),
             lineHeight: 1.2,
             marginBottom: "5px",
@@ -340,7 +340,7 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
           style={{
             fontFamily: fontFamilyStack(fnt.primary.name),
             fontSize: "17px",
-            fontWeight: pickRenderWeight(fnt.primary.weights, "primary"),
+            fontWeight: pickRenderWeight(fnt.primary.weights, "heading"),
             color: pal.bodyText.hex,
             marginBottom: "9px",
           }}
@@ -351,7 +351,7 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
           style={{
             fontFamily: fontFamilyStack(fnt.secondary.name),
             fontSize: "14px",
-            fontWeight: pickRenderWeight(fnt.secondary.weights, "secondary"),
+            fontWeight: pickRenderWeight(fnt.secondary.weights, "body"),
             lineHeight: 1.65,
             color: pal.bodyText.hex,
             margin: "0 0 14px",
@@ -478,7 +478,7 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
       {[
         {
           role: "Heading font",
-          roleKey: "primary" as const,
+          level: "display" as const,
           name: fnt.primary.name,
           weights: fnt.primary.weights,
           sample: "Brand strategy & identity",
@@ -486,7 +486,7 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
         },
         {
           role: "Body text font",
-          roleKey: "secondary" as const,
+          level: "body" as const,
           name: fnt.secondary.name,
           weights: fnt.secondary.weights,
           sample: "Clear thinking. Strategic depth. Honest design.",
@@ -494,7 +494,7 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
         },
         {
           role: "Accent / UI font",
-          roleKey: "accent" as const,
+          level: "accent" as const,
           name: fnt.accent.name,
           weights: fnt.accent.weights,
           sample: "Turn insight into identity.",
@@ -526,7 +526,7 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
             style={{
               fontFamily: fontFamilyStack(item.name),
               fontSize: item.size,
-              fontWeight: pickRenderWeight(item.weights, item.roleKey),
+              fontWeight: pickRenderWeight(item.weights, item.level),
               fontStyle: "italic" in item && item.italic ? "italic" : "normal",
               color: pal.bodyText.hex,
               lineHeight: 1.35,

@@ -42,8 +42,18 @@ export interface FontSystemVM {
   googleUrl: string; // computed from real weights — never trusted from the wire
 }
 
-const DEFAULT_RENDER_WEIGHT = { primary: 700, secondary: 400, accent: 600 } as const;
-type FontRole = keyof typeof DEFAULT_RENDER_WEIGHT;
+// Typographic levels, each mapped to a sensible default weight used only when a
+// font ships no weight list. A system specifies a RANGE of weights per role to
+// support in-role hierarchy/contrast (e.g. a heavy display + a lighter heading
+// in the same primary font), so we resolve a level to an actual loaded weight
+// rather than collapsing every level of a role to one weight.
+const DEFAULT_LEVEL_WEIGHT = {
+  display: 700,
+  heading: 600,
+  body: 400,
+  accent: 600,
+} as const;
+type FontLevel = keyof typeof DEFAULT_LEVEL_WEIGHT;
 
 /** Parse "300,600,800" → [300, 600, 800] (sorted, deduped, positive ints only). */
 export function parseWeights(s?: string | null): number[] {
@@ -56,14 +66,31 @@ export function parseWeights(s?: string | null): number[] {
   return [...out].sort((a, b) => a - b);
 }
 
-/** Pick the weight to actually render for a role, given its available weights. */
-export function pickRenderWeight(weights: number[], role: FontRole): number {
-  if (!weights.length) return DEFAULT_RENDER_WEIGHT[role];
-  if (role === "primary") return Math.max(...weights);
-  const target = role === "accent" ? 600 : 400;
-  return weights.reduce((best, w) =>
-    Math.abs(w - target) < Math.abs(best - target) ? w : best,
-  );
+/** Resolve a typographic level to an actual available weight from the list,
+ * honoring the system's intended weight range:
+ *  - display → heaviest available
+ *  - heading → a step below display (so title vs heading differ) when the font
+ *    offers more than one weight, else the only weight
+ *  - body    → closest available to 400
+ *  - accent  → closest available to 600
+ * Falls back to a per-level default when no weights are specified. */
+export function pickRenderWeight(weights: number[], level: FontLevel): number {
+  if (!weights.length) return DEFAULT_LEVEL_WEIGHT[level];
+  const sorted = [...weights].sort((a, b) => a - b);
+  const nearestTo = (target: number) =>
+    sorted.reduce((best, w) =>
+      Math.abs(w - target) < Math.abs(best - target) ? w : best,
+    );
+  switch (level) {
+    case "display":
+      return sorted[sorted.length - 1];
+    case "heading":
+      return sorted.length > 1 ? sorted[sorted.length - 2] : sorted[0];
+    case "body":
+      return nearestTo(400);
+    case "accent":
+      return nearestTo(600);
+  }
 }
 
 /** CSS font-family stack. The Google font name is authoritative; the generic
