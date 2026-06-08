@@ -131,16 +131,12 @@ const HistoryContainer: React.FC = () => {
         description: "Brand questionnaire responses",
         dataLoader: async () => {
           if (!brandId) return null;
-          const questionsResponse = await brands.getQuestions(brandId);
           const answersResponse = await brands.getAnswers(brandId);
-          const questions = Array.isArray(questionsResponse)
-            ? questionsResponse
-            : questionsResponse?.questions || [];
           let answers = answersResponse;
           if (answersResponse?.answers) {
             answers = answersResponse.answers;
           }
-          return { type: "questionnaire", questions, answers };
+          return { type: "questionnaire", answers };
         },
       },
       summary: {
@@ -448,34 +444,35 @@ const HistoryContainer: React.FC = () => {
 
     // Render based on data type
     switch (data.type) {
-      case "questionnaire":
-        // Format Q&A for copying
-        const formatQuestionnaire = () => {
-          if (!data.questions || !Array.isArray(data.questions)) return "";
+      case "questionnaire": {
+        // Normalize answers into an ordered list. Each Answer record carries
+        // the question text that was shown at answer time — render that
+        // rather than re-joining against the live questionnaire, which can
+        // drift (e.g. when the BRAND_QUESTIONNAIRE prompt is updated).
+        const answerList: Array<{
+          id?: string;
+          question?: string;
+          answer?: string;
+        }> = Array.isArray(data.answers)
+          ? data.answers
+          : data.answers
+            ? Object.values(data.answers)
+            : [];
+        const orderedAnswers = [...answerList].sort((a, b) => {
+          const na = parseInt(a.id ?? "", 10);
+          const nb = parseInt(b.id ?? "", 10);
+          if (!isNaN(na) && !isNaN(nb)) return na - nb;
+          return (a.id ?? "").localeCompare(b.id ?? "");
+        });
 
-          return data.questions
-            .map((q: any, idx: number) => {
-              let answer = null;
-              if (data.answers) {
-                if (Array.isArray(data.answers)) {
-                  answer = data.answers.find(
-                    (a: any) =>
-                      a.question_id === q.id ||
-                      a.question_id === q.question_id ||
-                      a.id === q.id,
-                  );
-                } else {
-                  answer = data.answers[q.id] || data.answers[q.question_id];
-                }
-              }
-              const questionText = q.text || q.question_text || q.question;
-              const answerText = answer
-                ? answer.answer || answer.answer_text || "No answer provided"
-                : "No answer recorded";
+        const formatQuestionnaire = () =>
+          orderedAnswers
+            .map((a, idx) => {
+              const questionText = a.question || "(question text not stored)";
+              const answerText = a.answer || "No answer recorded";
               return `${idx + 1}. ${questionText}\n${answerText}`;
             })
             .join("\n\n");
-        };
 
         return (
           <div className="p-4 space-y-4">
@@ -485,71 +482,41 @@ const HistoryContainer: React.FC = () => {
               </h4>
               <CopyButton text={formatQuestionnaire()} />
             </div>
-            {data.questions && Array.isArray(data.questions) ? (
+            {orderedAnswers.length > 0 ? (
               <ol className="space-y-4 list-none">
-                {data.questions.map((q: any, idx: number) => {
-                  // Answers can be an object (dictionary) with question IDs as keys or an array
-                  let answer = null;
-
-                  if (data.answers) {
-                    if (Array.isArray(data.answers)) {
-                      // Array format
-                      answer = data.answers.find(
-                        (a: any) =>
-                          a.question_id === q.id ||
-                          a.question_id === q.question_id ||
-                          a.id === q.id,
-                      );
-                    } else {
-                      // Object/dictionary format - answers[questionId]
-                      answer =
-                        data.answers[q.id] || data.answers[q.question_id];
-                    }
-                  }
-
-                  return (
-                    <li
-                      key={idx}
-                      className="border-l-4 border-primary-300 pl-4 py-3"
-                    >
-                      <div className="flex gap-3">
-                        <span className="font-bold text-primary-600 flex-shrink-0">
-                          {idx + 1}.
-                        </span>
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-900 mb-2">
-                            {q.text || q.question_text || q.question}
+                {orderedAnswers.map((a, idx) => (
+                  <li
+                    key={a.id ?? idx}
+                    className="border-l-4 border-primary-300 pl-4 py-3"
+                  >
+                    <div className="flex gap-3">
+                      <span className="font-bold text-primary-600 flex-shrink-0">
+                        {idx + 1}.
+                      </span>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900 mb-2">
+                          {a.question || "(question text not stored)"}
+                        </p>
+                        {a.answer ? (
+                          <p className="text-gray-700 bg-gray-50 p-3 rounded">
+                            {a.answer}
                           </p>
-                          {answer ? (
-                            <p className="text-gray-700 bg-gray-50 p-3 rounded">
-                              {answer.answer ||
-                                answer.answer_text ||
-                                "No answer provided"}
-                            </p>
-                          ) : (
-                            <p className="text-gray-500 italic text-sm">
-                              No answer recorded
-                            </p>
-                          )}
-                        </div>
+                        ) : (
+                          <p className="text-gray-500 italic text-sm">
+                            No answer recorded
+                          </p>
+                        )}
                       </div>
-                    </li>
-                  );
-                })}
+                    </div>
+                  </li>
+                ))}
               </ol>
             ) : (
-              <div className="bg-gray-50 p-4 rounded">
-                <pre className="whitespace-pre-wrap text-sm text-gray-700">
-                  {JSON.stringify(
-                    { questions: data.questions, answers: data.answers },
-                    null,
-                    2,
-                  )}
-                </pre>
-              </div>
+              <p className="text-gray-500 italic">No answers recorded</p>
             )}
           </div>
         );
+      }
 
       case "jtbd":
         // Format JTBD for copying
