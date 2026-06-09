@@ -3,6 +3,7 @@ import React, { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Answer, Question } from "../../types";
 import Button from "../common/Button";
+import { InlineMarkdown } from "../common/MarkDownPreviewer";
 
 interface QuestionnaireSummaryProps {
   questions: Question[];
@@ -62,7 +63,7 @@ const QuestionnaireSummary: React.FC<QuestionnaireSummaryProps> = ({
             <div key={question.id} className="border-b border-gray-200 pb-6">
               <div className="flex justify-between items-start mb-2">
                 <h3 className="text-lg font-medium text-gray-900">
-                  {question.text}
+                  <InlineMarkdown text={question.text} />
                 </h3>
                 <button
                   onClick={() => onEditAnswer(question.id)}

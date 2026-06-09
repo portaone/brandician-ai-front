@@ -1,5 +1,5 @@
 import React from "react";
-import MarkdownPreviewer from "./MarkDownPreviewer";
+import MarkdownPreviewer, { InlineMarkdown } from "./MarkDownPreviewer";
 
 interface BrandAttributeDisplayProps {
   title: string;
@@ -140,7 +140,9 @@ export const SurveyQuestionsDisplay: React.FC<SurveyQuestionsDisplayProps> = ({
               Q{index + 1}:
             </span>
             <div className="flex-1">
-              <div className="text-gray-800 mb-1">{question.text}</div>
+              <div className="text-gray-800 mb-1">
+                <InlineMarkdown text={question.text} />
+              </div>
               <div className="text-xs text-gray-500">
                 Type: {question.type}
                 {question.options && ` • ${question.options.length} options`}

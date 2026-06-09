@@ -19,6 +19,7 @@ import { Survey, SurveyQuestion, SurveyStatus } from "../../types";
 import SkipSurveyWarning from "../common/SkipSurveyWarning";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
+import { InlineMarkdown } from "../common/MarkDownPreviewer";
 import HistoryButton from "../common/HistoryButton";
 import RegenerateButton from "../common/RegenerateButton";
 import BrandicianLoader from "../common/BrandicianLoader";
@@ -587,7 +588,7 @@ const SurveyContainer: React.FC = () => {
                                 </span>
                               </div>
                               <div className="text-lg font-medium text-neutral-800 whitespace-pre-wrap">
-                                {question.text}
+                                <InlineMarkdown text={question.text} />
                               </div>
                               <p className="text-sm text-neutral-500 mt-1">
                                 Type: {question.type}

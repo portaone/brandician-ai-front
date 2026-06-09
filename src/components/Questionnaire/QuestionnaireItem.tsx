@@ -12,7 +12,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { brands } from "../../lib/api";
 import Button from "../common/Button";
-import MarkdownPreviewer from "../common/MarkDownPreviewer";
+import MarkdownPreviewer, { InlineMarkdown } from "../common/MarkDownPreviewer";
 
 interface QuestionnaireItemProps {
   question: string;
@@ -452,9 +452,13 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
         ref={questionTitleRef}
         className="text-xl font-medium text-gray-800 mb-2"
       >
-        {question}
+        <InlineMarkdown text={question} />
       </h3>
-      {hint && <p className="text-gray-600 mb-4 text-sm">{hint}</p>}
+      {hint && (
+        <p className="text-gray-600 mb-4 text-sm">
+          <InlineMarkdown text={hint} />
+        </p>
+      )}
 
       <div className="mb-6">
         <div className="relative">
