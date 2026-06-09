@@ -516,6 +516,17 @@ export const brands = {
     await api.put(apiPath(`/brands/${brandId}/primary-persona/`), persona);
   },
 
+  overridePrimaryPersona: async (
+    brandId: string,
+    personaId: string,
+  ): Promise<JTBD> => {
+    const response = await api.post(
+      apiPath(`/brands/${brandId}/primary-persona/override`),
+      { persona_id: personaId },
+    );
+    return response.data;
+  },
+
   adjustJTBDPersonas: async (
     brandId: string,
   ): Promise<JTBDPersonaAdjustment[]> => {
@@ -693,19 +704,6 @@ export const brands = {
       apiPath(`/brands/${brandId}/survey/status/`),
     );
     return response.data;
-  },
-
-  analyzeFeedback: async (brandId: string) => {
-    const key = createRequestKey(
-      "POST",
-      apiPath(`/brands/${brandId}/survey-feedback`),
-    );
-    return deduplicate(key, async () => {
-      const response = await api.post(
-        apiPath(`/brands/${brandId}/survey-feedback`),
-      );
-      return response.data;
-    });
   },
 
   adjustSummary: async (brandId: string): Promise<AdjustObject> => {

@@ -35,6 +35,8 @@ export interface Brand extends BrandReduced {
   feedback?: string;
   draft?: BrandNameSuggestion;
   alt_options?: BrandNameSuggestion[];
+  primary_persona?: JTBD;
+  suggested_primary_persona_id?: string;
 }
 
 export interface BrandArchetypeData {
@@ -116,6 +118,8 @@ export interface SuggestedPersona {
 }
 
 /** Full persisted persona with mandatory id */
+export type PersonaTier = "primary" | "secondary" | "contextual";
+
 export interface JTBD {
   id: string;
   name: string;
@@ -125,6 +129,7 @@ export interface JTBD {
   survey_prevalence?: number;
   confidence?: ConfidenceLevel;
   importance?: JTBDImportance;
+  tier?: PersonaTier;
 }
 
 export interface JTBDPersonaIn {

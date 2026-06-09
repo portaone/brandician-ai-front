@@ -1,9 +1,15 @@
-import { Check, Edit2, Loader, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Edit2, Lightbulb, Loader, RotateCcw, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { scrollToTop } from "../../lib/utils";
-import { JTBD, JTBDPersonaIn, PersonaInfo } from "../../types";
+import {
+  ConfidenceLevel,
+  JTBD,
+  JTBDPersonaIn,
+  PersonaInfo,
+  PersonaTier,
+} from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
@@ -13,6 +19,18 @@ import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { useBrandStore } from "../../store/brand";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
+
+const TIER_BADGE_STYLE: Record<PersonaTier, { bg: string; fg: string; label: string }> = {
+  primary: { bg: "#fd615e", fg: "#ffffff", label: "Primary" },
+  secondary: { bg: "rgba(127, 89, 113, 0.15)", fg: "#5a3f50", label: "Secondary" },
+  contextual: { bg: "rgba(191, 172, 184, 0.25)", fg: "#7f5971", label: "Contextual" },
+};
+
+const CONFIDENCE_STYLE: Record<ConfidenceLevel, { bg: string; fg: string }> = {
+  HIGH: { bg: "rgba(45, 122, 79, 0.15)", fg: "#2d7a4f" },
+  MEDIUM: { bg: "rgba(244, 195, 67, 0.2)", fg: "#a0722a" },
+  LOW: { bg: "rgba(253, 97, 94, 0.15)", fg: "#fd615e" },
+};
 
 const PERSONA_INFO_LABELS: Record<string, string> = {
   narrative: "Narrative",
@@ -116,6 +134,111 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
       setIsSaving(false);
     }
     scrollToTop();
+  };
+
+  const [pendingOverride, setPendingOverride] = useState<JTBD | null>(null);
+  const [isOverriding, setIsOverriding] = useState(false);
+  const [selectionRationale, setSelectionRationale] = useState<string | null>(
+    null,
+  );
+  const [rationaleExpanded, setRationaleExpanded] = useState(false);
+  const [jtbdPersonas, setJtbdPersonas] = useState<JTBD[]>([]);
+
+  // Fetch the full JTBD persona list separately — the brand GET endpoint
+  // returns BrandReduced which strips `jtbd` to keep the response light.
+  useEffect(() => {
+    if (!brandId) return;
+    let cancelled = false;
+    brands
+      .getJTBD(brandId)
+      .then((res) => {
+        if (cancelled || !res?.personas) return;
+        setJtbdPersonas(Object.values(res.personas));
+      })
+      .catch(() => {
+        if (!cancelled) setJtbdPersonas([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [brandId, persona?.id]);
+
+  // Fetch the AI's selection rationale (PERSONA_SELECTION hub property)
+  // whenever the persona changes — so users see WHY the AI picked the
+  // current primary alongside the persona itself.
+  useEffect(() => {
+    if (!brandId || !persona?.id) return;
+    let cancelled = false;
+    brands
+      .getBrandHubTab(brandId, "personas")
+      .then((res: any) => {
+        if (cancelled) return;
+        const body = res?.properties?.persona_selection;
+        if (typeof body === "string" && body.trim().length > 0) {
+          setSelectionRationale(body);
+        } else {
+          setSelectionRationale(null);
+        }
+      })
+      .catch(() => {
+        // Best-effort — silently hide the panel if the hub data isn't
+        // available yet.
+        if (!cancelled) setSelectionRationale(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [brandId, persona?.id]);
+
+  const suggestedPersonaId = currentBrand?.suggested_primary_persona_id;
+  // Resolve which JTBD persona is currently primary. After generate, the
+  // returned persona has a fresh UUID, so we fall back to the LLM-saved
+  // suggestion or a name match. After override, persona.id IS a JTBD id,
+  // so the direct match wins.
+  const primaryJtbdId =
+    (persona && jtbdPersonas.find((p) => p.id === persona.id)?.id) ||
+    suggestedPersonaId ||
+    jtbdPersonas.find(
+      (p) => persona && p.name.toLowerCase() === persona.name.toLowerCase(),
+    )?.id;
+  const otherPersonas = jtbdPersonas.filter((p) => p.id !== primaryJtbdId);
+  const suggestedPersona = suggestedPersonaId
+    ? jtbdPersonas.find((p) => p.id === suggestedPersonaId) || null
+    : null;
+  const isOverrideActive =
+    !!suggestedPersonaId && !!primaryJtbdId && primaryJtbdId !== suggestedPersonaId;
+
+  const doOverride = async (target: JTBD) => {
+    if (!brandId || isOverriding) return;
+    setIsOverriding(true);
+    setError(null);
+    try {
+      const data = await brands.overridePrimaryPersona(brandId, target.id);
+      setPersona(data);
+      setPendingOverride(null);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        "Could not switch the primary persona. Please try again.";
+      setError(msg);
+      onError(msg);
+    } finally {
+      setIsOverriding(false);
+    }
+    scrollToTop();
+  };
+
+  const handleChoosePrimary = (target: JTBD) => {
+    if (!target?.id || target.id === primaryJtbdId) return;
+    // Revert to the AI-recommended pick: no warning needed.
+    if (target.id === suggestedPersonaId) {
+      doOverride(target);
+      return;
+    }
+    // Surface the AI's reasoning while the user weighs the override.
+    if (selectionRationale) setRationaleExpanded(true);
+    setPendingOverride(target);
   };
 
   const startEditField = (field: string, currentValue: string) => {
@@ -275,10 +398,23 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
             </div>
 
             {/* Metadata badges */}
-            <div className="flex flex-wrap gap-2 mb-4 text-xs">
+            <div className="flex flex-wrap gap-2 mb-4 text-xs items-center">
+              <span
+                className="px-2 py-1 rounded-full font-semibold uppercase tracking-wide"
+                style={{
+                  backgroundColor: TIER_BADGE_STYLE.primary.bg,
+                  color: TIER_BADGE_STYLE.primary.fg,
+                }}
+              >
+                Primary
+              </span>
               {persona.confidence && (
                 <span
-                  className={`px-2 py-1 rounded-full font-medium bg-purple-100 text-purple-800`}
+                  className="px-2 py-1 rounded-full font-semibold uppercase tracking-wide"
+                  style={{
+                    backgroundColor: CONFIDENCE_STYLE[persona.confidence].bg,
+                    color: CONFIDENCE_STYLE[persona.confidence].fg,
+                  }}
                 >
                   Confidence: {persona.confidence}
                 </span>
@@ -292,6 +428,17 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
                     Matches {persona.survey_prevalence}% of survey responders
                   </span>
                 )}
+              {isOverrideActive && suggestedPersona && (
+                <button
+                  onClick={() => doOverride(suggestedPersona)}
+                  disabled={isOverriding}
+                  className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 underline disabled:opacity-50"
+                  title={`Revert to AI's recommended primary: ${suggestedPersona.name}`}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Override active — revert to recommended
+                </button>
+              )}
             </div>
 
             {/* PersonaInfo fields — each individually editable */}
@@ -359,6 +506,151 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
               )}
             </div>
           </div>
+
+          {/* Why we picked this persona — AI's selection rationale.
+              Hidden when the user has overridden the AI's pick: the
+              rationale describes why the AI chose the recommended
+              persona, which no longer reflects the current primary.
+              Reappears automatically if the user reverts. */}
+          {selectionRationale && !isOverrideActive && (
+            <div className="bg-white rounded-lg shadow-lg mb-6 overflow-hidden">
+              <button
+                onClick={() => setRationaleExpanded((v) => !v)}
+                className="w-full flex items-center gap-3 px-4 sm:px-6 py-4 hover:bg-neutral-50 transition-colors text-left"
+                aria-expanded={rationaleExpanded}
+              >
+                <Lightbulb className="h-5 w-5 text-primary-600 flex-shrink-0" />
+                <span className="font-semibold text-neutral-800 flex-1">
+                  Why we picked this persona
+                </span>
+                <span className="text-xs text-neutral-500 hidden sm:inline">
+                  {rationaleExpanded ? "Hide" : "Show"}
+                </span>
+                {rationaleExpanded ? (
+                  <ChevronDown className="h-4 w-4 text-neutral-400" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-neutral-400" />
+                )}
+              </button>
+              {rationaleExpanded && (
+                <div className="px-4 sm:px-6 pb-5 pt-1 border-t border-neutral-100">
+                  <div className="prose prose-sm max-w-none text-neutral-700">
+                    <MarkdownPreviewer markdown={selectionRationale} />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Other personas — tier-labeled picker */}
+          {otherPersonas.length > 0 && (
+            <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
+              <h3 className="text-lg font-bold text-neutral-800 mb-1">
+                Other personas
+              </h3>
+              <p className="text-sm text-neutral-500 mb-4">
+                The AI tiered every JTBD persona. You can override the primary
+                pick — secondary and contextual personas remain available for
+                campaigns and product variants.
+              </p>
+              <ul className="space-y-3">
+                {otherPersonas.map((p) => {
+                  const tier = p.tier ?? null;
+                  const tierStyle = tier ? TIER_BADGE_STYLE[tier] : null;
+                  const isSuggested = p.id === suggestedPersonaId;
+                  return (
+                    <li
+                      key={p.id}
+                      className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-neutral-200 hover:border-primary-300 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-neutral-800">
+                            {p.name}
+                          </span>
+                          {tierStyle && (
+                            <span
+                              className="px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wide"
+                              style={{
+                                backgroundColor: tierStyle.bg,
+                                color: tierStyle.fg,
+                              }}
+                            >
+                              {tierStyle.label}
+                            </span>
+                          )}
+                          {isSuggested && (
+                            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wide bg-amber-100 text-amber-800">
+                              Recommended
+                            </span>
+                          )}
+                          {p.survey_prevalence !== undefined &&
+                            p.survey_prevalence !== null && (
+                              <span className="text-xs text-neutral-500">
+                                {p.survey_prevalence}% prevalence
+                              </span>
+                            )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleChoosePrimary(p)}
+                        disabled={isOverriding || editingField !== null}
+                        className="text-xs font-semibold uppercase tracking-wide px-3 py-1.5 rounded-md border border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white transition-colors disabled:opacity-50"
+                      >
+                        {isSuggested ? "Revert to this" : "Choose as primary"}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
+          {/* Override warning modal */}
+          {pendingOverride && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl w-full max-w-md p-6">
+                <h3 className="text-lg font-bold text-neutral-800 mb-3">
+                  Switch primary persona?
+                </h3>
+                <p className="text-sm text-neutral-700 leading-relaxed mb-4">
+                  You're selecting{" "}
+                  <span className="font-semibold">{pendingOverride.name}</span>{" "}
+                  as primary instead of{" "}
+                  <span className="font-semibold">
+                    {suggestedPersona?.name ?? "the recommended persona"}
+                  </span>
+                  . Our analysis suggests{" "}
+                  <span className="font-semibold">
+                    {suggestedPersona?.name ?? "the recommended persona"}
+                  </span>{" "}
+                  has stronger alignment with your archetype and higher
+                  strategic value for your brand. You can proceed — just make
+                  sure this choice reflects your target audience, not just who
+                  you relate to most.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setPendingOverride(null)}
+                    disabled={isOverriding}
+                    className="px-3 py-2 rounded-md text-sm font-semibold text-neutral-700 hover:bg-neutral-100 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => doOverride(pendingOverride)}
+                    disabled={isOverriding}
+                    className="px-3 py-2 rounded-md text-sm font-semibold bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isOverriding && (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    )}
+                    Yes, switch primary
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex flex-wrap justify-between items-center gap-3">
