@@ -6,6 +6,7 @@ import {
   type FontSystemV3,
   type FontSystemVM,
 } from "../../lib/fontSystem";
+import { InlineMarkdown } from "../common/MarkDownPreviewer";
 
 // ── Types ────────────────────────────────────────────────
 
@@ -550,15 +551,17 @@ const VisualSystemSelector: React.FC<VisualSystemSelectorProps> = ({
           }}
         >
           {fnt.archetypeFit ? (
-            <div style={{ fontSize: "11px", color: "#555", marginBottom: "4px" }}>
+            <div style={{ fontSize: "14px", color: "#555", marginBottom: "4px" }}>
               <strong style={{ color: "#1a1a1a" }}>Archetype fit:</strong>{" "}
-              {fnt.archetypeFit}
+              <InlineMarkdown text={fnt.archetypeFit} />
             </div>
           ) : null}
           {fnt.notes ? (
-            <div style={{ fontSize: "12px", color: "#666" }}>
-              <span style={{ color: "#999" }}>Why this system — </span>
-              {fnt.notes}
+            <div style={{ fontSize: "14px", color: "#666" }}>
+              <span style={{ color: "#999", fontSize: "inherit" }}>
+                Why this system —{" "}
+              </span>
+              <InlineMarkdown text={fnt.notes} />
             </div>
           ) : null}
         </div>

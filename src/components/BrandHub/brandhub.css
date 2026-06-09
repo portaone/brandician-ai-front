@@ -394,14 +394,14 @@
 
 .bh-font-why-fit {
   font-family: var(--brand-body-font);
-  font-size: 0.6rem;
+  font-size: var(--bh-fs-base);
   color: #555;
   margin-bottom: 4px;
 }
 
 .bh-font-why-notes {
   font-family: var(--brand-body-font);
-  font-size: 0.62rem;
+  font-size: var(--bh-fs-base);
   color: #666;
   line-height: 1.5;
 }

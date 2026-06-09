@@ -8,7 +8,7 @@ const escapeHtml = (text: string) => {
     .replace(/>/g, "&gt;");
 };
 
-const processInline = (text: string) => {
+export const processInline = (text: string) => {
   let result = escapeHtml(text);
 
   // Bold
@@ -181,6 +181,20 @@ export const parseMarkdown = (text: string) => {
 
   return blocks.join("");
 };
+
+/**
+ * Inline markdown renderer — handles bold/italic/code/links without wrapping
+ * the content in block-level elements. Use for `label: text` layouts where the
+ * value must stay on the same line as its label.
+ */
+export const InlineMarkdown: React.FC<{ text: string }> = ({ text }) => (
+  <span
+    // Stay typographically transparent: inherit from the surrounding context
+    // so a global `span { font-size: ... }` rule can't override the parent size.
+    style={{ font: "inherit", color: "inherit" }}
+    dangerouslySetInnerHTML={{ __html: processInline(text || "") }}
+  />
+);
 
 const MarkdownPreviewer: React.FC<{ markdown: string }> = ({ markdown }) => {
   return (

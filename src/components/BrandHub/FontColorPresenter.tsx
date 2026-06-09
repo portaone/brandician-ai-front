@@ -6,6 +6,7 @@ import {
   pickRenderWeight,
   type FontSystemVM,
 } from "../../lib/fontSystem";
+import { InlineMarkdown } from "../common/MarkDownPreviewer";
 
 interface FontColorPresenterProps {
   colorPaletteJson: string;
@@ -207,10 +208,15 @@ const FontColorPresenter: React.FC<FontColorPresenterProps> = ({
             <div className="bh-font-why">
               {fonts.archetypeFit && (
                 <p className="bh-font-why-fit">
-                  <strong>Archetype fit:</strong> {fonts.archetypeFit}
+                  <strong>Archetype fit:</strong>{" "}
+                  <InlineMarkdown text={fonts.archetypeFit} />
                 </p>
               )}
-              {fonts.notes && <p className="bh-font-why-notes">{fonts.notes}</p>}
+              {fonts.notes && (
+                <p className="bh-font-why-notes">
+                  <InlineMarkdown text={fonts.notes} />
+                </p>
+              )}
             </div>
           )}
         </div>
