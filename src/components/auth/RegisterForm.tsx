@@ -19,15 +19,24 @@ const RegisterForm: React.FC = () => {
 
   useAutoFocus([otpId, setEmail]);
 
-  // Handle magic link token from URL
+  // Handle magic link token from URL. The URL is stripped AFTER verification
+  // resolves, not before — otherwise the AuthRouteGate sees an empty
+  // search string with a (possibly stale) persisted user in the store and
+  // redirects to /brands, swallowing this verification mid-flight.
+  // magicLinkAttempted.current already protects against re-runs.
   useEffect(() => {
     const magicToken = searchParams.get("magic");
     if (magicToken && !magicLinkAttempted.current) {
       magicLinkAttempted.current = true;
-      setSearchParams({}, { replace: true });
       verifyMagicLink(magicToken)
-        .then(() => navigate("/brands/new"))
-        .catch(() => { /* error is set in store */ });
+        .then(() => {
+          setSearchParams({}, { replace: true });
+          navigate("/brands/new");
+        })
+        .catch(() => {
+          setSearchParams({}, { replace: true });
+          /* error is set in store */
+        });
     }
   }, [searchParams, verifyMagicLink, navigate, setSearchParams]);
 

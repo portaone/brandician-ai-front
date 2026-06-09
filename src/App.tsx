@@ -52,6 +52,30 @@ function BrandAssetsWrapper() {
   return <BrandAssets brandId={brandId} />;
 }
 
+/**
+ * Auth routes (/start, /login, /register) redirect to /brands when a user
+ * is already in the store, EXCEPT when a magic-link token is present in
+ * the URL. Without this carve-out, returning users whose JWT has expired
+ * but whose persisted `user` is still in localStorage would never see the
+ * auth form mount when clicking a magic link — the redirect would swallow
+ * the ?magic=<token> query string and the verification never runs.
+ */
+function AuthRouteGate({
+  user,
+  children,
+}: {
+  user: unknown;
+  children: React.ReactNode;
+}) {
+  const hasMagicToken =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).has("magic");
+  if (user && !hasMagicToken) {
+    return <Navigate to="/brands" replace />;
+  }
+  return <>{children}</>;
+}
+
 const App: React.FC = () => {
   const { loadUser, user } = useAuthStore();
 
@@ -70,17 +94,25 @@ const App: React.FC = () => {
             <Route
               path="/start"
               element={
-                user ? <Navigate to="/brands" replace /> : <RegisterForm />
+                <AuthRouteGate user={user}>
+                  <RegisterForm />
+                </AuthRouteGate>
               }
             />
             <Route
               path="/login"
-              element={user ? <Navigate to="/brands" replace /> : <LoginForm />}
+              element={
+                <AuthRouteGate user={user}>
+                  <LoginForm />
+                </AuthRouteGate>
+              }
             />
             <Route
               path="/register"
               element={
-                user ? <Navigate to="/brands" replace /> : <RegisterForm />
+                <AuthRouteGate user={user}>
+                  <RegisterForm />
+                </AuthRouteGate>
               }
             />
             <Route
