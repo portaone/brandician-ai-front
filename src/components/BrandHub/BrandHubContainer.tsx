@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { UiTabKey, BACKEND_TAB_FOR_UI, TAB_CONFIGS } from "./hub-tab-config";
 import { API_URL, brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
+import { scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
 import BrandicianLoader from "../common/BrandicianLoader";
 import Button from "../common/Button";
@@ -293,6 +294,10 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
       }));
     } finally {
       setIsGenerating(false);
+      // The Regenerate button lives near the bottom of the page — without
+      // this, the user is left looking at the footer after regeneration
+      // completes instead of the freshly generated content.
+      scrollToTop();
     }
   };
 
