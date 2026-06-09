@@ -12,7 +12,7 @@ import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import RegenerateButton from "../common/RegenerateButton";
-import ShareLinkModal from "../common/ShareLinkModal";
+import ShareHubModal from "../common/ShareHubModal";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
 
 import BrandThemeProvider from "./BrandThemeProvider";
@@ -598,11 +598,13 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
             </div>
 
             {brandId && (
-              <ShareLinkModal
+              <ShareHubModal
                 isOpen={shareModalOpen}
                 onClose={() => setShareModalOpen(false)}
                 brandId={brandId}
                 brandName={currentBrand?.brand_name || currentBrand?.name}
+                initialSlug={currentBrand?.hub_slug ?? null}
+                onActivated={() => brandId && selectBrand(brandId)}
               />
             )}
           </div>

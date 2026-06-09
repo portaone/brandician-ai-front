@@ -33,6 +33,7 @@ import PaymentSuccess from "./components/Payment/PaymentSuccess";
 import PaymentCancel from "./components/Payment/PaymentCancel";
 
 import BrandHubContainer from "./components/BrandHub/BrandHubContainer";
+import PublicHubViewer from "./components/BrandHub/PublicHubViewer";
 import HistoryContainer from "./components/History/HistoryContainer";
 import ColorSchemaPresenter from "./components/ColorSchemaPresenter/ColorSchemaPresenter";
 import MarkdownPage from "./components/MarkdownPage";
@@ -295,6 +296,7 @@ const App: React.FC = () => {
               path="/cookies"
               element={<MarkdownPage filePath="/cookies.md" />}
             />
+            <Route path="/hub/:slug" element={<PublicHubViewer />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AnimatePresence>

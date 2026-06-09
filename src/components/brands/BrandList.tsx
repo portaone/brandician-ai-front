@@ -12,7 +12,7 @@ import { backendConfig } from "../../lib/api";
 import { getRouteForStatus } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
 import Button from "../common/Button";
-import ShareLinkModal from "../common/ShareLinkModal";
+import ShareHubModal from "../common/ShareHubModal";
 import { Brand } from "../../types";
 import BrandicianLoader from "../common/BrandicianLoader";
 
@@ -40,8 +40,7 @@ function getStepBadge(
   brand: Brand,
   statusSequence: Array<{ status: string; description: string }>,
 ): { label: string; isActive: boolean } {
-  const isCompleted =
-    brand.hub_published === true || brand.current_status === "completed";
+  const isCompleted = brand.current_status === "completed";
   if (isCompleted) {
     return { label: "Brand hub", isActive: false };
   }
@@ -93,6 +92,7 @@ const BrandList: React.FC = () => {
   const [shareBrand, setShareBrand] = useState<{
     id: string;
     name: string;
+    slug?: string | null;
   } | null>(null);
   const [statusSequence, setStatusSequence] = useState<
     Array<{ status: string; description: string }>
@@ -361,12 +361,11 @@ const BrandList: React.FC = () => {
                           {/* Group 2: Share hub, Analytics */}
                           <button
                             onClick={() => {
-                              if (brand.hub_published) {
-                                setShareBrand({
-                                  id: brand.id,
-                                  name: brand.name,
-                                });
-                              }
+                              setShareBrand({
+                                id: brand.id,
+                                name: brand.name,
+                                slug: brand.hub_slug ?? null,
+                              });
                               setOpenMenuId(null);
                             }}
                             className="w-full text-left flex items-center gap-2"
@@ -376,13 +375,6 @@ const BrandList: React.FC = () => {
                               fontWeight: 600,
                               color: "var(--color-text)",
                               fontFamily: "'Source Sans 3', sans-serif",
-                              ...(!brand.hub_published
-                                ? {
-                                    opacity: 0.35,
-                                    cursor: "not-allowed",
-                                    pointerEvents: "none" as const,
-                                  }
-                                : {}),
                             }}
                           >
                             <Share2
@@ -390,7 +382,7 @@ const BrandList: React.FC = () => {
                               style={{ color: "var(--color-light)" }}
                             />
                             Share hub
-                            {!brand.hub_published && (
+                            {!brand.hub_slug && (
                               <span
                                 style={{
                                   fontSize: "11px",
@@ -413,7 +405,7 @@ const BrandList: React.FC = () => {
                               fontWeight: 600,
                               color: "var(--color-text)",
                               fontFamily: "'Source Sans 3', sans-serif",
-                              ...(!brand.hub_published
+                              ...(!brand.hub_slug
                                 ? {
                                     opacity: 0.35,
                                     cursor: "not-allowed",
@@ -428,7 +420,7 @@ const BrandList: React.FC = () => {
                               style={{ color: "var(--color-light)" }}
                             />
                             Analytics
-                            {!brand.hub_published && (
+                            {!brand.hub_slug && (
                               <span
                                 style={{
                                   fontSize: "11px",
@@ -531,7 +523,7 @@ const BrandList: React.FC = () => {
                         color: "var(--color-light)",
                       }}
                     >
-                      {brand.hub_published && (
+                      {brand.hub_slug && (
                         <>
                           <span>
                             <strong
@@ -674,11 +666,13 @@ const BrandList: React.FC = () => {
       )}
 
       {/* Share Hub Modal */}
-      <ShareLinkModal
+      <ShareHubModal
         isOpen={!!shareBrand}
         onClose={() => setShareBrand(null)}
         brandId={shareBrand?.id || ""}
         brandName={shareBrand?.name}
+        initialSlug={shareBrand?.slug ?? null}
+        onActivated={() => loadBrands()}
       />
     </div>
   );

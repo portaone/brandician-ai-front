@@ -920,6 +920,37 @@ export const brands = {
     });
   },
 
+  checkHubSlugAvailability: async (brandId: string, slug: string) => {
+    const response = await api.get(
+      apiPath(`/brands/${brandId}/hub/slug-availability`),
+      { params: { slug } },
+    );
+    return response.data as {
+      slug: string;
+      available: boolean;
+      reason?: string | null;
+    };
+  },
+
+  activateHub: async (brandId: string, slug: string) => {
+    const response = await api.post(
+      apiPath(`/brands/${brandId}/hub/activate`),
+      { slug },
+    );
+    return response.data as { slug: string };
+  },
+
+  getPublicHubBySlug: async (slug: string) => {
+    // Public endpoint — no auth header needed, but reusing the same axios
+    // instance is fine; the backend ignores credentials here.
+    const response = await api.get(apiPath(`/hub/by-slug/${slug}`));
+    return response.data as {
+      brand_id: string;
+      brand_name: string;
+      tabs: Record<string, Record<string, unknown>>;
+    };
+  },
+
   generateBrandHub: async (brandId: string) => {
     const key = createRequestKey(
       "POST",
@@ -1075,11 +1106,17 @@ export const backendConfig = {
     stripe_publishable_key: string | null;
     google_pay_merchant_id: string | null;
     google_pay_environment: "TEST" | "PRODUCTION";
+    hub_path: string;
     status_sequence: Array<{ status: string; description: string }>;
   }> => {
-    // Note: /config endpoint is on health router which has no API prefix
-    const response = await api.get("/config");
-    return response.data;
+    // Note: /config endpoint is on health router which has no API prefix.
+    // Deduplicated so concurrent callers (BrandList, History, Payment, the
+    // share modal) share a single in-flight request.
+    const key = createRequestKey("GET", "/config");
+    return deduplicate(key, async () => {
+      const response = await api.get("/config");
+      return response.data;
+    });
   },
 };
 
