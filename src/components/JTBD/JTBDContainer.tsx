@@ -1,4 +1,10 @@
-import { ArrowRight, Edit2, Loader, RefreshCw } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronDown,
+  ChevronUp,
+  Edit2,
+  Loader,
+} from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
@@ -26,6 +32,7 @@ import {
   RANKING_TO_IMPORTANCE,
   JTBDPersonaIn,
   PersonaInfo,
+  PersonaTier,
 } from "../../types";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
@@ -117,6 +124,62 @@ interface PersonaItem {
   survey_prevalence?: number;
   confidence?: string;
   importance?: JTBDImportance;
+  tier?: PersonaTier;
+}
+
+/** Display order for tiers — primary first, then secondary, contextual, untiered last */
+const TIER_ORDER: Record<PersonaTier, number> = {
+  primary: 0,
+  secondary: 1,
+  contextual: 2,
+};
+
+/**
+ * Pre-assigned (user-overridable) importance rating per suggested tier.
+ * Primary → Important, Secondary → Somewhat important, Contextual → Rarely important.
+ */
+const TIER_DEFAULT_IMPORTANCE: Record<PersonaTier, JTBDImportance> = {
+  primary: "important",
+  secondary: "somewhat_important",
+  contextual: "rarely_important",
+};
+
+/** A persona card is expanded by default only for the primary tier (or untiered legacy output) */
+function tierExpandedByDefault(tier?: PersonaTier): boolean {
+  return tier === undefined || tier === "primary";
+}
+
+/**
+ * Reformat a drivers string that was stored collapsed onto a single line
+ * (legacy data: `**Header** - item. - item. **Header** - item.`) into proper
+ * multi-line markdown so it reads well in both the editor and the preview.
+ *
+ * Only runs when the text contains no newlines — already-formatted (multi-line)
+ * drivers are returned unchanged.
+ */
+function normalizeDriversText(text: string): string {
+  if (!text) return text;
+  if (text.includes("\n")) return text; // already formatted — leave as-is
+
+  let t = text.trim();
+  // Put each bold section header on its own line, with a blank line before it
+  t = t.replace(/\s*(\*\*[^*]+\*\*)\s*/g, "\n\n$1\n");
+  // Break before each " - " bullet separator
+  t = t.replace(/\s+-\s+/g, "\n- ");
+  // Collapse any runs of 3+ newlines down to a blank-line separator
+  return t.replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/** Stable sort by tier (primary → secondary → contextual → untiered) */
+function sortPersonasByTier(items: PersonaItem[]): PersonaItem[] {
+  return items
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      const rankA = a.item.tier !== undefined ? TIER_ORDER[a.item.tier] : 99;
+      const rankB = b.item.tier !== undefined ? TIER_ORDER[b.item.tier] : 99;
+      return rankA - rankB || a.index - b.index;
+    })
+    .map(({ item }) => item);
 }
 
 /** Convert a suggested persona (from the backend) to a PersonaItem without id */
@@ -132,6 +195,9 @@ function toSuggestedPersonaItem(data: SuggestedPersona): PersonaItem {
     name: data.name,
     description: data.description,
     info: data.info,
+    tier: data.tier,
+    // Pre-assign an importance rating from the tier (user-overridable)
+    importance: data.tier ? TIER_DEFAULT_IMPORTANCE[data.tier] : undefined,
     // id intentionally absent — not yet persisted
   };
 }
@@ -146,6 +212,7 @@ function toJTBDPersonaIn(persona: PersonaItem): JTBDPersonaIn {
         ? IMPORTANCE_TO_RANKING[persona.importance]
         : undefined),
     survey_prevalence: persona.survey_prevalence,
+    tier: persona.tier,
   };
 }
 
@@ -162,6 +229,7 @@ const JTBDContainer: React.FC = () => {
   } = useBrandStore();
   const [personas, setPersonas] = useState<PersonaItem[]>([]);
   const [drivers, setDrivers] = useState("");
+  const [reasoning, setReasoning] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState<Step>("rating");
   const [editingPersona, setEditingPersona] = useState<PersonaItem | null>(
@@ -172,6 +240,10 @@ const JTBDContainer: React.FC = () => {
   );
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isEditingDrivers, setIsEditingDrivers] = useState(false);
+  // Explicit expand/collapse overrides per persona; absence falls back to the tier default
+  const [expandedOverrides, setExpandedOverrides] = useState<
+    Record<string, boolean>
+  >({});
   const isRegeneratingRef = useRef<boolean>(false);
   const hasInitialized = useRef(false);
 
@@ -204,7 +276,7 @@ const JTBDContainer: React.FC = () => {
           }),
         );
         setPersonas(personasArray);
-        setDrivers(jtbd.drivers || "");
+        setDrivers(normalizeDriversText(jtbd.drivers || ""));
       } else {
         // No persisted JTBD — suggest initial personas
         setIsRegenerating(true);
@@ -214,7 +286,10 @@ const JTBDContainer: React.FC = () => {
             setPersonas(suggestedData.personas.map(toSuggestedPersonaItem));
           }
           if (suggestedData?.drivers) {
-            setDrivers(suggestedData.drivers);
+            setDrivers(normalizeDriversText(suggestedData.drivers));
+          }
+          if (suggestedData?.reasoning) {
+            setReasoning(suggestedData.reasoning);
           }
         } catch (err) {
           console.error("Failed to suggest JTBD:", err);
@@ -226,8 +301,13 @@ const JTBDContainer: React.FC = () => {
     loadData();
   }, [brandId, selectBrand, loadJTBD]);
 
+  // Scroll the editing form into view only when editing STARTS for a persona.
+  // Depend on the persona's key (not the object) so per-keystroke
+  // setEditingPersona() updates don't re-trigger the scroll and yank the view
+  // away from the field being edited.
+  const editingKey = editingPersona?._key;
   useEffect(() => {
-    if (editingPersona) {
+    if (editingKey) {
       setTimeout(() => {
         const scrollElement = document.querySelector(".scroll-object");
         scrollElement?.scrollIntoView({
@@ -236,7 +316,7 @@ const JTBDContainer: React.FC = () => {
         });
       }, 300);
     }
-  }, [editingPersona]);
+  }, [editingKey]);
 
   const handleImportanceChange = (key: string, importance: JTBDImportance) => {
     if (importance === "not_applicable") {
@@ -250,6 +330,14 @@ const JTBDContainer: React.FC = () => {
 
   const handleRemovePersona = (key: string) => {
     setPersonas((prev) => prev.filter((p) => p._key !== key));
+  };
+
+  const isPersonaExpanded = (persona: PersonaItem): boolean =>
+    expandedOverrides[persona._key] ?? tierExpandedByDefault(persona.tier);
+
+  const togglePersonaExpanded = (persona: PersonaItem) => {
+    const current = isPersonaExpanded(persona);
+    setExpandedOverrides((prev) => ({ ...prev, [persona._key]: !current }));
   };
 
   const handleEditPersona = (persona: PersonaItem) => {
@@ -363,6 +451,9 @@ const JTBDContainer: React.FC = () => {
           );
           return [...prev, ...toAdd];
         });
+      }
+      if (suggestedData?.reasoning) {
+        setReasoning(suggestedData.reasoning);
       }
     } catch (error) {
       // Optionally show error
@@ -594,70 +685,117 @@ const JTBDContainer: React.FC = () => {
               </p>
 
               <div className="space-y-6">
-                {personas.map((persona) => (
-                  <div
-                    key={persona._key}
-                    className="border border-neutral-200 rounded-lg p-2"
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-medium text-neutral-800">
-                          {persona.name}
-                        </h3>
-                        <div className="mt-2">
+                {sortPersonasByTier(personas).map((persona) => {
+                  const expanded = isPersonaExpanded(persona);
+                  const isPrimary = persona.tier === "primary";
+                  return (
+                    <div
+                      key={persona._key}
+                      className={`border rounded-lg p-2 ${
+                        isPrimary
+                          ? "border-primary-300 bg-primary-50/30"
+                          : "border-neutral-200"
+                      }`}
+                    >
+                      {/* Header: name + tier badges + expand/collapse toggle */}
+                      <button
+                        type="button"
+                        onClick={() => togglePersonaExpanded(persona)}
+                        aria-expanded={expanded}
+                        className="w-full flex justify-between items-start gap-3 text-left"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center flex-wrap gap-2">
+                            <h3 className="text-lg font-medium text-neutral-800">
+                              {persona.name}
+                            </h3>
+                            {isPrimary && (
+                              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary-600 text-white">
+                                Suggested primary
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-neutral-400 mt-1 shrink-0">
+                          {expanded ? (
+                            <ChevronUp className="h-5 w-5" />
+                          ) : (
+                            <ChevronDown className="h-5 w-5" />
+                          )}
+                        </span>
+                      </button>
+
+                      {/* Reasoning callout — shown on the primary card */}
+                      {isPrimary && reasoning && (
+                        <div className="mt-3 p-3 rounded-md bg-primary-50 border border-primary-200">
+                          <h4 className="text-xs font-semibold text-primary-700 uppercase tracking-wide mb-1">
+                            Why we suggest this as your primary persona
+                          </h4>
+                          <div className="text-sm text-neutral-700">
+                            <MarkdownPreviewer markdown={reasoning} />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Expanded persona detail */}
+                      {expanded && (
+                        <div className="mt-3">
                           {getPersonaDisplayContent(persona)}
                         </div>
-                      </div>
-                    </div>
+                      )}
 
-                    {pendingRemovalKey === persona._key ? (
-                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-4">
-                        <span className="text-2xl">⚠️</span>
-                        <div className="flex-1">
-                          <p className="text-gray-800 font-medium">
-                            Remove this persona? This cannot be undone.
-                          </p>
-                        </div>
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => setPendingRemovalKey(null)}
-                            className="btn btn-ghost"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={() => {
-                              handleRemovePersona(persona._key);
-                              setPendingRemovalKey(null);
-                            }}
-                            className="btn btn-warning"
-                          >
-                            Remove Persona
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        {Object.entries(JTBD_IMPORTANCE_LABELS).map(
-                          ([value, label]) => (
-                            <button
-                              key={value}
-                              onClick={() =>
-                                handleImportanceChange(
-                                  persona._key,
-                                  value as JTBDImportance,
-                                )
-                              }
-                              className={`btn-selection p-2 text-sm rounded-md ${persona.importance === value ? "selected" : ""}`}
-                            >
-                              {label}
-                            </button>
-                          ),
+                      {/* Rating / removal — always visible, even when collapsed */}
+                      <div className="mt-4">
+                        {pendingRemovalKey === persona._key ? (
+                          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-4">
+                            <span className="text-2xl">⚠️</span>
+                            <div className="flex-1">
+                              <p className="text-gray-800 font-medium">
+                                Remove this persona? This cannot be undone.
+                              </p>
+                            </div>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => setPendingRemovalKey(null)}
+                                className="btn btn-ghost"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleRemovePersona(persona._key);
+                                  setPendingRemovalKey(null);
+                                }}
+                                className="btn btn-warning"
+                              >
+                                Remove Persona
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {Object.entries(JTBD_IMPORTANCE_LABELS).map(
+                              ([value, label]) => (
+                                <button
+                                  key={value}
+                                  onClick={() =>
+                                    handleImportanceChange(
+                                      persona._key,
+                                      value as JTBDImportance,
+                                    )
+                                  }
+                                  className={`btn-selection p-2 text-sm rounded-md ${persona.importance === value ? "selected" : ""}`}
+                                >
+                                  {label}
+                                </button>
+                              ),
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  );
+                })}
               </div>
               <div className="flex justify-between items-center mt-8">
                 <RegenerateButton

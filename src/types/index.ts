@@ -110,15 +110,16 @@ export interface PersonaInfo {
 
 export type ConfidenceLevel = "LOW" | "MEDIUM" | "HIGH";
 
+/** Full persisted persona with mandatory id */
+export type PersonaTier = "primary" | "secondary" | "contextual";
+
 /** Suggested persona from the suggest endpoint — no id or server-controlled fields */
 export interface SuggestedPersona {
   name: string;
   description?: string;
   info?: PersonaInfo;
+  tier?: PersonaTier;
 }
-
-/** Full persisted persona with mandatory id */
-export type PersonaTier = "primary" | "secondary" | "contextual";
 
 export interface JTBD {
   id: string;
@@ -138,6 +139,7 @@ export interface JTBDPersonaIn {
   ranking?: number;
   survey_prevalence?: number;
   confidence?: ConfidenceLevel;
+  tier?: PersonaTier;
 }
 
 export type JTBDPersonaAdjustment = [JTBD | null, JTBD];
@@ -151,6 +153,7 @@ export interface JTBDList {
 export interface SuggestedJTBDList {
   personas: SuggestedPersona[];
   drivers?: string;
+  reasoning?: string;
 }
 
 export type JTBDImportance =
