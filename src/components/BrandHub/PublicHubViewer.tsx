@@ -7,6 +7,7 @@ import BrandHubCard from "./BrandHubCard";
 import BrandHubTabBar from "./BrandHubTabBar";
 import BrandHubTabPanel from "./BrandHubTabPanel";
 import BrandThemeProvider from "./BrandThemeProvider";
+import MarkdownPreviewer from "../common/MarkDownPreviewer";
 import {
   TAB_CONFIGS,
   UiTabConfig,
@@ -31,7 +32,7 @@ const PublicHubViewer: React.FC = () => {
   const [data, setData] = useState<PublicHub | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<UiTabKey>("strategy");
+  const [activeTab, setActiveTab] = useState<UiTabKey>("overview");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -154,26 +155,48 @@ const PublicHubViewer: React.FC = () => {
             />
 
             <BrandHubTabPanel description={currentTabConfig.description}>
-              {currentTabConfig.properties.map((prop) => {
-                const value = currentHub[prop.key];
-                return (
-                  <BrandHubCard
-                    key={prop.key}
-                    title={prop.title}
-                    helper={prop.helper}
-                    propKey={prop.key}
-                    content={value}
-                    confidence={null}
-                    gapCount={0}
-                    isGuest={true}
-                    copiedKey={copiedKey}
-                    onCopy={handleCopy}
-                    brandId={data.brand_id}
-                    colorPaletteJson={colorPaletteJson}
-                    typographyJson={typographyJson}
-                  />
-                );
-              })}
+              {activeTab === "overview" ? (
+                /* ── Overview tab: clean prose, no cards/pills/copy ── */
+                (() => {
+                  const overviewText =
+                    typeof currentHub.overview === "string"
+                      ? currentHub.overview
+                      : "";
+                  if (!overviewText.trim()) {
+                    return (
+                      <p className="bh-empty">
+                        This section hasn't been populated yet.
+                      </p>
+                    );
+                  }
+                  return (
+                    <div className="bh-card-body bh-overview-prose">
+                      <MarkdownPreviewer markdown={overviewText} />
+                    </div>
+                  );
+                })()
+              ) : (
+                currentTabConfig.properties.map((prop) => {
+                  const value = currentHub[prop.key];
+                  return (
+                    <BrandHubCard
+                      key={prop.key}
+                      title={prop.title}
+                      helper={prop.helper}
+                      propKey={prop.key}
+                      content={value}
+                      confidence={null}
+                      gapCount={0}
+                      isGuest={true}
+                      copiedKey={copiedKey}
+                      onCopy={handleCopy}
+                      brandId={data.brand_id}
+                      colorPaletteJson={colorPaletteJson}
+                      typographyJson={typographyJson}
+                    />
+                  );
+                })
+              )}
             </BrandHubTabPanel>
 
             <Link

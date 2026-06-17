@@ -554,34 +554,16 @@
 
 /* ── Mobile responsive ── */
 @media (max-width: 640px) {
+  /* Tab-bar layout (grid + row-2 borders) is handled by the ≤1024px block
+     below, which also covers these widths. Here we only tune spacing/scale. */
   .bh-tab-bar {
     padding: 0 16px;
-    flex-wrap: wrap;
     border-radius: 16px 16px 0 0;
-    gap: 0;
   }
 
   .bh-tab {
     padding: 14px 16px 12px;
     font-size: 0.57rem;
-  }
-
-  /* Row 1: first 3 tabs */
-  .bh-tab:nth-child(1),
-  .bh-tab:nth-child(2),
-  .bh-tab:nth-child(3) {
-    flex: 1 1 auto;
-  }
-
-  /* Row 2: tabs 4 and gaps */
-  .bh-tab:nth-child(4) {
-    flex: 1 1 auto;
-    border-top: 1px solid var(--brand-light);
-  }
-
-  .bh-tab.bh-gaps-tab {
-    margin-left: 0;
-    border-top: 1px solid var(--brand-light);
   }
 
   .bh-tab-panel {
@@ -613,5 +595,46 @@
   .bh-presenter-body {
     grid-template-columns: 1fr;
     padding: 16px;
+  }
+}
+
+/* ── Tab-bar reflow ──
+   Tablet (769–1170px): with 6 tabs a single flex row breaks, so the bar becomes
+   a 3-column grid (2 rows); row 2 (tabs 4+) gets a top divider. Below 769px the
+   rigid grid overflows, so tabs wrap freely instead (see the ≤768px block).
+   Above 1170px the base flex row applies (Gaps right-pushed via margin-left:auto). */
+@media (min-width: 769px) and (max-width: 1170px) {
+  .bh-tab-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: stretch;
+  }
+
+  /* Second-row tabs (4th, 5th, 6th cells) get a divider above. */
+  .bh-tab:nth-child(n + 4) {
+    border-top: 1px solid var(--brand-light);
+  }
+
+  /* Gaps is no longer right-pushed — it is simply the 6th grid cell and
+     inherits the nth-child(n+4) border-top above. */
+  .bh-tab.bh-gaps-tab {
+    margin-left: 0;
+  }
+}
+
+/* Phones / small tablets (≤768px): a fixed grid breaks the layout at narrow
+   widths, so let the tabs wrap freely, each growing to fill its row. */
+@media (max-width: 768px) {
+  .bh-tab-bar {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .bh-tab {
+    flex: 1 1 auto;
+  }
+
+  .bh-tab.bh-gaps-tab {
+    margin-left: 0;
   }
 }

@@ -1,4 +1,5 @@
 export type UiTabKey =
+  | "overview"
   | "strategy"
   | "positioning"
   | "visual_identity"
@@ -6,6 +7,7 @@ export type UiTabKey =
   | "gaps";
 
 export const BACKEND_TAB_FOR_UI: Record<UiTabKey, string> = {
+  overview: "overview",
   strategy: "essence",
   positioning: "positioning",
   visual_identity: "visual_identity",
@@ -25,6 +27,18 @@ export interface UiTabConfig {
 }
 
 export const TAB_CONFIGS: UiTabConfig[] = [
+  {
+    key: "overview",
+    label: "Overview",
+    description:
+      "A plain-language summary of this brand — the essentials at a glance, before you dive into the details.",
+    properties: [
+      {
+        key: "overview",
+        title: "Overview",
+      },
+    ],
+  },
   {
     key: "strategy",
     label: "Strategy",

@@ -21,6 +21,7 @@ import BrandHubTabBar from "./BrandHubTabBar";
 import BrandHubTabPanel from "./BrandHubTabPanel";
 import BrandHubCard from "./BrandHubCard";
 import BrandHubGapsPanel from "./BrandHubGapsPanel";
+import MarkdownPreviewer from "../common/MarkDownPreviewer";
 
 type HubMap = Record<
   string,
@@ -101,8 +102,9 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
     progressBrandStatus,
   } = useBrandStore();
 
-  const [activeTab, setActiveTab] = useState<UiTabKey>("strategy");
+  const [activeTab, setActiveTab] = useState<UiTabKey>("overview");
   const [tabData, setTabData] = useState<Record<UiTabKey, HubMap>>({
+    overview: {},
     strategy: {},
     positioning: {},
     visual_identity: {},
@@ -110,13 +112,15 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
     gaps: {},
   });
   const [tabLoading, setTabLoading] = useState<Record<UiTabKey, boolean>>({
-    strategy: true,
+    overview: true,
+    strategy: false,
     positioning: false,
     visual_identity: true,
     voice_content: false,
     gaps: false,
   });
   const [tabError, setTabError] = useState<Record<UiTabKey, string | null>>({
+    overview: null,
     strategy: null,
     positioning: null,
     visual_identity: null,
@@ -271,6 +275,7 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
     try {
       await brands.generateBrandHub(brandId);
       setTabData({
+        overview: {},
         strategy: {},
         positioning: {},
         visual_identity: {},
@@ -496,7 +501,27 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
                   </div>
                 )}
 
-                {activeTab === "gaps" ? (
+                {activeTab === "overview" ? (
+                  /* ── Overview tab: clean prose, no cards/pills/copy ── */
+                  (() => {
+                    const overviewText =
+                      typeof currentHub.overview === "string"
+                        ? currentHub.overview
+                        : "";
+                    if (!overviewText.trim()) {
+                      return (
+                        <p className="bh-empty">
+                          This section hasn't been populated yet.
+                        </p>
+                      );
+                    }
+                    return (
+                      <div className="bh-card-body bh-overview-prose">
+                        <MarkdownPreviewer markdown={overviewText} />
+                      </div>
+                    );
+                  })()
+                ) : activeTab === "gaps" ? (
                   /* ── Gaps tab ── */
                   <BrandHubGapsPanel
                     gaps={gapsData}
