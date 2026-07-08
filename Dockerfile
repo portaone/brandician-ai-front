@@ -7,7 +7,9 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install --legacy-peer-deps
+# npm ci reproduces the committed lockfile exactly; `npm install --legacy-peer-deps`
+# skips peer deps (e.g. @testing-library/dom) and can break the in-container tsc gate
+RUN npm ci
 
 # Copy source code
 COPY . .
