@@ -63,6 +63,10 @@ export interface Answer {
   answer?: string;
   value?: string | string[];
   questionId?: string;
+  // The exact question text shown when this answer was recorded. Persisted by
+  // the backend per answer; used to keep the review screen aligned even if the
+  // live question set later drifts from what was answered.
+  questionText?: string;
 }
 
 export interface BrandAssetSummary {

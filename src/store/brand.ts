@@ -152,6 +152,10 @@ export const useBrandStore = create<BrandState>((set) => ({
           id: questionId,
           question: questionId,
           answer: data.answer,
+          // Preserve the question text the backend stored with this answer so
+          // the review screen can show the question actually answered, even if
+          // the live question set later drifts from it.
+          questionText: data.question,
         }),
       );
 
@@ -188,6 +192,8 @@ export const useBrandStore = create<BrandState>((set) => ({
           id: questionId,
           question: questionId,
           answer: newAnswer.answer,
+          // Bind the answer to the question text it was recorded against.
+          questionText: question,
         };
 
         // Update both array and map efficiently
