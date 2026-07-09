@@ -7,9 +7,10 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-# npm ci reproduces the committed lockfile exactly; `npm install --legacy-peer-deps`
-# skips peer deps (e.g. @testing-library/dom) and can break the in-container tsc gate
-RUN npm ci
+# npm ci reproduces the committed lockfile exactly. --legacy-peer-deps is
+# required because a transitive peer conflict (@schlomoh/react-cookieconsent
+# pins styled-components v5 while the app uses v6) makes a strict npm ci fail.
+RUN npm ci --legacy-peer-deps
 
 # Copy source code
 COPY . .
