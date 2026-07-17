@@ -1,4 +1,4 @@
-import { AlertCircle, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
@@ -18,6 +18,8 @@ import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import MarkdownPreviewer, { parseMarkdown } from "../common/MarkDownPreviewer";
 import BrandicianLoader from "../common/BrandicianLoader";
+import ErrorScreen from "../common/ErrorScreen";
+import { getAppError } from "../../lib/errors";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { useBrandStore } from "../../store/brand";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
@@ -790,14 +792,10 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
       } catch (error: any) {
         if (isMounted) {
           console.error("Failed to load JTBD adjustments:", error);
-          let errorMessage =
-            "Failed to load JTBD adjustments. Please try again.";
-          if (error?.response?.status === 500) {
-            errorMessage =
-              "Server error occurred while analyzing the JTBD. Please try again later.";
-          } else if (error?.response?.data?.message) {
-            errorMessage = error.response.data.message;
-          }
+          const errorMessage = getAppError(
+            error,
+            "Failed to load JTBD adjustments. Please try again.",
+          ).message;
           setError(errorMessage);
           onError(errorMessage);
           clearAdjustmentCache();
@@ -892,10 +890,10 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
       onComplete();
     } catch (error: any) {
       console.error("Failed to update JTBD:", error);
-      let errorMessage = "Failed to update JTBD. Please try again.";
-      if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
+      const errorMessage = getAppError(
+        error,
+        "Failed to update JTBD. Please try again.",
+      ).message;
       setError(errorMessage);
       onError(errorMessage);
     }
@@ -934,21 +932,11 @@ const JTBDAdjustmentContainer: React.FC<JTBDAdjustmentContainerProps> = ({
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Analysis Failed
-          </h2>
-          <p className="text-red-600 mb-6">{error}</p>
-          <button
-            onClick={handleRetry}
-            className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
+      <ErrorScreen
+        error={{ message: error, isNetworkError: false }}
+        title="Analysis Failed"
+        onRetry={handleRetry}
+      />
     );
   }
 

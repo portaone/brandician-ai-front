@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useBrandStore } from "../../store/brand";
+import ErrorScreen from "../common/ErrorScreen";
+import { getAppError, messageOr } from "../../lib/errors";
 import ArchetypeAdjustmentContainer from "./ArchetypeAdjustmentContainer";
 import JTBDAdjustmentContainer from "./JTBDAdjustmentContainer";
 import SummaryAdjustmentContainer from "./SummaryAdjustmentContainer";
@@ -64,26 +66,30 @@ const FeedbackReviewFlowContainer: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [shouldRedirect, setShouldRedirect] = useState<string | null>(null);
 
+  const reloadBrand = useCallback(async () => {
+    if (!brandId) return;
+    setError(null);
+    setIsLoading(true);
+    try {
+      await selectBrand(brandId);
+      const brand = useBrandStore.getState().currentBrand;
+      setCurrentBrand(brand);
+      console.log(
+        "[DEBUG] useEffect: brand.current_status =",
+        brand?.current_status,
+      );
+    } catch (e) {
+      setError(
+        getAppError(e, "Failed to load brand info. Please try again.").message,
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [brandId, selectBrand]);
+
   useEffect(() => {
-    const fetchBrand = async () => {
-      if (!brandId) return;
-      setIsLoading(true);
-      try {
-        await selectBrand(brandId);
-        const brand = useBrandStore.getState().currentBrand;
-        setCurrentBrand(brand);
-        console.log(
-          "[DEBUG] useEffect: brand.current_status =",
-          brand?.current_status,
-        );
-      } catch (e) {
-        setError("Failed to load brand info.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchBrand();
-  }, [brandId]);
+    reloadBrand();
+  }, [reloadBrand]);
 
   // Handle redirects in a separate effect to avoid render-time navigation
   useEffect(() => {
@@ -193,7 +199,7 @@ const FeedbackReviewFlowContainer: React.FC = () => {
       }
       // If still in review flow, the component will re-render with the new status
     } catch (e) {
-      setError("Failed to progress brand status.");
+      setError(messageOr(e, "Failed to progress brand status."));
       console.error("[DEBUG] FeedbackReviewFlow: error progressing status", e);
     }
   };
@@ -207,6 +213,15 @@ const FeedbackReviewFlowContainer: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         Loading...
       </div>
+    );
+  }
+
+  if (error && !currentBrand) {
+    return (
+      <ErrorScreen
+        error={{ message: error, isNetworkError: false }}
+        onRetry={reloadBrand}
+      />
     );
   }
 

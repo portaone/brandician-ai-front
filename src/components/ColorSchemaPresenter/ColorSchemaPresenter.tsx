@@ -1,9 +1,11 @@
 import axios, { AxiosInstance } from "axios";
 import BrandicianLoader from "../common/BrandicianLoader";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useMatch, useParams, useSearchParams } from "react-router-dom";
 import { API_URL, brands } from "../../lib/api";
 import { useBrandStore } from "../../store/brand";
+import { getAppError } from "../../lib/errors";
+import ErrorScreen from "../common/ErrorScreen";
 
 interface BrandColors {
   primary: string;
@@ -196,60 +198,89 @@ const ColorSchemaPresenter: React.FC = () => {
 
   useEffect(() => {
     if (brandId && (!currentBrand || currentBrand.id !== brandId)) {
-      selectBrand(brandId, guestApi);
+      // Catch the brand-load failure: otherwise currentBrand stays null,
+      // reloadPalette early-returns without clearing the loader, and the page
+      // hangs on a spinner forever.
+      selectBrand(brandId, guestApi).catch((e) => {
+        setError(
+          getAppError(e, "We couldn't load this palette. Please try again.")
+            .message,
+        );
+        setIsLoadingStatus(false);
+      });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brandId, currentBrand, selectBrand]);
 
-  useEffect(() => {
+  const reloadPalette = useCallback(async () => {
     if (!currentBrand || !brandId) return;
-
-    let cancelled = false;
-    const load = async () => {
-      setIsLoadingStatus(true);
-      setError(null);
-      try {
-        let colors: BrandColors;
-        if (isDraft) {
-          colors = await loadDraftPalette(brandId, variantIndex);
-        } else {
-          colors = await loadAssetPalette(brandId, variantIndex, DEFAULT_BRAND_COLORS, guestApi);
-        }
-        if (!cancelled) setBrandColors(colors);
-      } catch (err: any) {
-        console.error("Failed to load brand colors:", err);
-        if (!cancelled) {
-          if (isDraft) {
-            setError(
-              err?.response?.data?.detail ||
-                "Failed to load draft palette. Please try again.",
-            );
-          }
-          // Asset mode: keep default colors silently (existing behavior)
-        }
-      } finally {
-        if (!cancelled) setIsLoadingStatus(false);
+    setIsLoadingStatus(true);
+    setError(null);
+    try {
+      let colors: BrandColors;
+      if (isDraft) {
+        colors = await loadDraftPalette(brandId, variantIndex);
+      } else {
+        colors = await loadAssetPalette(
+          brandId,
+          variantIndex,
+          DEFAULT_BRAND_COLORS,
+          guestApi,
+        );
       }
-    };
-
-    load();
-    return () => { cancelled = true; };
+      setBrandColors(colors);
+    } catch (err: any) {
+      console.error("Failed to load brand colors:", err);
+      if (isDraft) {
+        setError(
+          getAppError(err, "Failed to load draft palette. Please try again.")
+            .message,
+        );
+      }
+      // Asset mode: keep default colors silently (existing behavior)
+    } finally {
+      setIsLoadingStatus(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentBrand, brandId, isDraft, variantIndex]);
+
+  useEffect(() => {
+    reloadPalette();
+  }, [reloadPalette]);
+
+  // Error guard BEFORE the loader guard so a failure can never be shadowed by
+  // a spinner.
+  if (error) {
+    return (
+      <ErrorScreen
+        error={{ message: error, isNetworkError: false }}
+        title="Couldn't load palette"
+        showDashboard={false}
+        onRetry={() => {
+          setError(null);
+          if (currentBrand && currentBrand.id === brandId) {
+            reloadPalette();
+          } else if (brandId) {
+            setIsLoadingStatus(true);
+            selectBrand(brandId, guestApi).catch((e) => {
+              setError(
+                getAppError(
+                  e,
+                  "We couldn't load this palette. Please try again.",
+                ).message,
+              );
+              setIsLoadingStatus(false);
+            });
+          }
+        }}
+      />
+    );
+  }
 
   if (isLoadingStatus) {
     return (
       <div className="loader-container">
         <BrandicianLoader />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center p-8">
-          <p className="text-red-600 text-lg mb-2">Error loading palette</p>
-          <p className="text-neutral-600">{error}</p>
-        </div>
       </div>
     );
   }

@@ -1,11 +1,13 @@
 import { CreditCard } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { backendConfig, brands } from "../../lib/api";
 import { useGooglePay } from "../../hooks/useGooglePay";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
 import BrandicianLoader from "../common/BrandicianLoader";
+import ErrorScreen from "../common/ErrorScreen";
+import { getAppError, messageOr } from "../../lib/errors";
 import GooglePayMark from "../icons/GooglePayMark";
 import PaymentAmountStep from "./PaymentAmountStep";
 import PaymentMethodStep from "./PaymentMethodStep";
@@ -66,14 +68,33 @@ const PaymentContainer: React.FC = () => {
   // Form validation and error handling
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  // Blocking error for the initial brand load (distinct from paymentError,
+  // which is an inline, retryable-on-the-same-form charge failure).
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const isZeroAmount = paymentAmount !== "" && parseFloat(paymentAmount) === 0;
 
+  const loadBrand = useCallback(async () => {
+    if (!brandId) return;
+    setLoadError(null);
+    try {
+      await selectBrand(brandId);
+    } catch (error) {
+      console.error("Failed to load brand for payment:", error);
+      setLoadError(
+        messageOr(
+          error,
+          "We couldn't load your payment details. Please try again.",
+        ),
+      );
+    }
+  }, [brandId]);
+
   useEffect(() => {
     if (brandId && (!currentBrand || currentBrand.id !== brandId)) {
-      selectBrand(brandId);
+      loadBrand();
     }
-  }, [brandId, currentBrand, selectBrand]);
+  }, [brandId, currentBrand, loadBrand]);
 
   // Check for payment error from URL params
   useEffect(() => {
@@ -276,14 +297,24 @@ const PaymentContainer: React.FC = () => {
       window.location.href = paymentSession.checkout_url;
     } catch (error: any) {
       console.error("Payment submission failed:", error);
-      const errorMessage =
-        error?.response?.data?.detail ||
-        "Failed to process payment. Please try again.";
+      const errorMessage = getAppError(
+        error,
+        "Failed to process payment. Please try again.",
+      ).message;
       setErrors({ payment: errorMessage });
       setPaymentError(errorMessage);
       setIsProcessingPayment(false);
     }
   };
+
+  if (loadError && !currentBrand) {
+    return (
+      <ErrorScreen
+        error={{ message: loadError, isNetworkError: false }}
+        onRetry={loadBrand}
+      />
+    );
+  }
 
   if (isLoading || !currentBrand) {
     return (

@@ -1,5 +1,5 @@
 import { ArrowRight, ChevronDown, Loader } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import {
@@ -18,6 +18,8 @@ import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import MarkdownPreviewer from "../common/MarkDownPreviewer";
 import RegenerateButton from "../common/RegenerateButton";
+import ErrorScreen from "../common/ErrorScreen";
+import { getAppError, messageOr } from "../../lib/errors";
 
 const BrandArchetype: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -35,31 +37,37 @@ const BrandArchetype: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const hasInitialized = useRef(false);
 
-  const updateArchetype = (data: BrandArchetypeData) => {
+  const updateArchetype = useCallback((data: BrandArchetypeData) => {
     setArchetypeData(data);
     setParsed(parseArchetypeResponse(data));
-  };
+  }, []);
+
+  const loadArchetype = useCallback(async () => {
+    if (!brandId) return;
+    // Mark initialized so the mount effect won't re-fire under StrictMode's
+    // double-invoke. onRetry calls this callback directly, so a retry still
+    // performs a real re-fetch regardless of this guard.
+    hasInitialized.current = true;
+    setError(null);
+    setIsGenerating(true);
+    try {
+      await selectBrand(brandId);
+      const data = await brands.getArchetype(brandId!);
+      updateArchetype(data);
+    } catch (e) {
+      console.error("Failed to load archetype:", e);
+      setError(
+        getAppError(e, "Failed to load archetype. Please try again.").message,
+      );
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [brandId, selectBrand, updateArchetype]);
 
   useEffect(() => {
-    const initialize = async () => {
-      if (!brandId) return;
-      if (hasInitialized.current) return;
-      hasInitialized.current = true;
-
-      try {
-        await selectBrand(brandId);
-        const data = await brands.getArchetype(brandId);
-        updateArchetype(data);
-      } catch (err) {
-        console.error("Failed to load archetype:", err);
-        setError("Failed to load archetype. Please try again.");
-      } finally {
-        setIsGenerating(false);
-      }
-    };
-
-    initialize();
-  }, [brandId, selectBrand]);
+    if (hasInitialized.current) return;
+    loadArchetype();
+  }, [loadArchetype]);
 
   const handleRegenerate = async () => {
     if (!brandId) return;
@@ -70,7 +78,7 @@ const BrandArchetype: React.FC = () => {
       updateArchetype(data);
     } catch (err) {
       console.error("Failed to regenerate archetype:", err);
-      setError("Failed to regenerate archetype. Please try again.");
+      setError(messageOr(err, "Failed to regenerate archetype. Please try again."));
     } finally {
       setIsRegenerating(false);
     }
@@ -85,43 +93,27 @@ const BrandArchetype: React.FC = () => {
       navigateAfterProgress(navigate, brandId, statusUpdate);
     } catch (err) {
       console.error("Failed to progress:", err);
-      setError("Failed to proceed. Please try again.");
+      setError(messageOr(err, "Failed to proceed. Please try again."));
     } finally {
       setIsProgressing(false);
     }
     scrollToTop();
   };
 
-  if (isGenerating) {
+  if (error && !archetypeData) {
     return (
-      <BrandicianLoader config={LOADER_CONFIGS.archetype} isComplete={false} />
+      <ErrorScreen
+        error={{ message: error, isNetworkError: false }}
+        title="Generation Failed"
+        onRetry={loadArchetype}
+        onGoToDashboard={() => navigate("/brands")}
+      />
     );
   }
 
-  if (error && !archetypeData) {
+  if (isGenerating) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="text-red-600 mb-4">{error}</div>
-        <div className="flex space-x-4">
-          <Button
-            onClick={() => {
-              setError(null);
-              setIsGenerating(true);
-              hasInitialized.current = false;
-            }}
-            size="md"
-          >
-            Try again
-          </Button>
-          <Button
-            onClick={() => navigate("/brands")}
-            variant="secondary"
-            size="md"
-          >
-            Exit
-          </Button>
-        </div>
-      </div>
+      <BrandicianLoader config={LOADER_CONFIGS.archetype} isComplete={false} />
     );
   }
 

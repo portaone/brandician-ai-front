@@ -6,6 +6,7 @@ import React, { useState } from "react";
 import { brands } from "../../lib/api";
 import { TAB_CONFIGS, BACKEND_TAB_FOR_UI } from "../BrandHub/hub-tab-config";
 import Button from "./Button";
+import { useToast } from "./Toast";
 
 interface DownloadAllButtonProps {
   brandId: string;
@@ -27,6 +28,7 @@ const DownloadAllButton: React.FC<DownloadAllButtonProps> = ({
   guestApi,
 }) => {
   const [isDownloading, setIsDownloading] = useState(false);
+  const { toast } = useToast();
 
   const handleDownloadAll = async () => {
     try {
@@ -37,7 +39,7 @@ const DownloadAllButton: React.FC<DownloadAllButtonProps> = ({
       const assets = response.assets;
 
       if (!assets || assets.length === 0) {
-        alert("No assets available to download");
+        toast.info("No assets available to download");
         return;
       }
 
@@ -58,7 +60,7 @@ const DownloadAllButton: React.FC<DownloadAllButtonProps> = ({
 
       if (!brandFolder) {
         console.error("Failed to create folder in ZIP");
-        alert("Failed to create ZIP archive. Please try again.");
+        toast.error("Failed to create ZIP archive. Please try again.");
         return;
       }
 
@@ -164,7 +166,7 @@ Visit https://brandician.ai for more information.
       saveAs(zipBlob, `${brandName}-brand-assets.zip`);
     } catch (error) {
       console.error("Failed to create ZIP archive:", error);
-      alert("Failed to create ZIP archive. Please try again.");
+      toast.error("Failed to create ZIP archive. Please try again.");
     } finally {
       setIsDownloading(false);
     }

@@ -9,6 +9,8 @@ import QuestionnaireItem from "./QuestionnaireItem";
 import QuestionnaireSummary from "./QuestionnaireSummary";
 import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
+import ErrorScreen from "../common/ErrorScreen";
+import { getAppError } from "../../lib/errors";
 
 const QuestionnaireContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -152,9 +154,9 @@ const QuestionnaireContainer: React.FC = () => {
 
   if (error || !currentBrand || !brandId) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-600">{error || "Brand not found"}</div>
-      </div>
+      <ErrorScreen
+        error={{ message: error || "Brand not found", isNetworkError: false }}
+      />
     );
   }
 
@@ -179,9 +181,7 @@ const QuestionnaireContainer: React.FC = () => {
     } catch (error: any) {
       console.error("Failed to submit answer:", error);
       setSubmitError(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Failed to submit answer. Please try again.",
+        getAppError(error, "Failed to submit answer. Please try again.").message,
       );
       return "failed";
     }

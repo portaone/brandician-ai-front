@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { brands } from "../../lib/api";
+import { getAppError } from "../../lib/errors";
 import BrandHubCard from "./BrandHubCard";
 import BrandHubTabBar from "./BrandHubTabBar";
 import BrandHubTabPanel from "./BrandHubTabPanel";
@@ -52,8 +53,8 @@ const PublicHubViewer: React.FC = () => {
         setError(
           status === 404
             ? "This hub isn't available."
-            : err?.response?.data?.detail ??
-                "We couldn't load this hub. Please try again.",
+            : getAppError(err, "We couldn't load this hub. Please try again.")
+                .message,
         );
       })
       .finally(() => {

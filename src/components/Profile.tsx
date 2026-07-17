@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { useAuthStore } from "../store/auth";
 import Button from "./common/Button";
+import { getAppError } from "../lib/errors";
 import { useAutoFocus } from "../hooks/useAutoFocus";
 
 const Profile: React.FC = () => {
@@ -54,8 +55,7 @@ const Profile: React.FC = () => {
     } catch (err: any) {
       console.error("Failed to update profile:", err);
       setError(
-        err.response?.data?.message ||
-          "Failed to update profile. Please try again.",
+        getAppError(err, "Failed to update profile. Please try again.").message,
       );
     } finally {
       setIsLoading(false);

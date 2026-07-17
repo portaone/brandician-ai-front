@@ -1,15 +1,18 @@
-import { AlertCircle, CheckCircle, LifeBuoy, X } from "lucide-react";
+import { AlertCircle, CheckCircle, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { auth } from "../../lib/api";
 import { getFormattedLogs } from "../../lib/requestLogger";
 import { useAuthStore } from "../../store/auth";
 import Button from "./Button";
+import { getAppError } from "../../lib/errors";
 
 interface GetHelpButtonProps {
   variant?: "primary" | "secondary" | "tertiary";
   size?: "sm" | "md" | "lg";
   className?: string;
+  /** Seed the issue-details field (e.g. from an error screen) when nothing is cached yet. */
+  prefillMessage?: string;
 }
 
 // Session storage keys for form persistence
@@ -64,6 +67,7 @@ const GetHelpButton: React.FC<GetHelpButtonProps> = ({
   variant = "secondary",
   size = "lg",
   className = "",
+  prefillMessage,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useAuthStore();
@@ -76,9 +80,10 @@ const GetHelpButton: React.FC<GetHelpButtonProps> = ({
     const cachedName = getPersistedValue("name", userId, false);
     return cachedName || user?.name || "";
   });
-  // Issue details are cached per-page per-user using sessionStorage
+  // Issue details are cached per-page per-user using sessionStorage.
+  // Seed from prefillMessage (e.g. an error screen) when nothing is cached.
   const [issueDetails, setIssueDetails] = useState(
-    getPersistedValue("issueDetails", userId, true),
+    () => getPersistedValue("issueDetails", userId, true) || prefillMessage || "",
   );
   const [isSending, setIsSending] = useState(false);
   const [showResultModal, setShowResultModal] = useState(false);
@@ -160,9 +165,10 @@ const GetHelpButton: React.FC<GetHelpButtonProps> = ({
       setIsModalOpen(false);
     } catch (error: any) {
       console.error("Failed to send help request:", error);
-      const errorMessage =
-        error.response?.data?.detail ||
-        "Failed to send help request. Please try again.";
+      const errorMessage = getAppError(
+        error,
+        "Failed to send help request. Please try again.",
+      ).message;
       setResultType("error");
       setResultMessage(errorMessage);
       setShowResultModal(true);

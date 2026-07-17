@@ -13,6 +13,7 @@ import {
 } from "../types";
 import { config } from "../config";
 import { recordRequestEnd } from "./requestLogger";
+import { parseError } from "./errors";
 
 // Extend axios config to include our metadata
 declare module "axios" {
@@ -212,6 +213,7 @@ api.interceptors.response.use(
       if (!config.url?.includes("/users/help-request")) {
         recordRequestEnd(config, undefined, error);
       }
+      (error as any).appError = parseError(error);
       return Promise.reject(error);
     }
 
@@ -244,12 +246,14 @@ api.interceptors.response.use(
         if (!originalRequest.url?.includes("/users/help-request")) {
           recordRequestEnd(originalRequest, undefined, refreshError);
         }
+        (refreshError as any).appError = parseError(refreshError);
         return Promise.reject(refreshError);
       }
     }
     if (!originalRequest?.url?.includes("/users/help-request")) {
       recordRequestEnd(originalRequest, error.response, error);
     }
+    (error as any).appError = parseError(error);
     return Promise.reject(error);
   },
 );

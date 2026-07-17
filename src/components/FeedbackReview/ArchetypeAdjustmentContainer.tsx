@@ -1,4 +1,4 @@
-import { AlertCircle, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
@@ -14,6 +14,8 @@ import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { useBrandStore } from "../../store/brand";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
+import ErrorScreen from "../common/ErrorScreen";
+import { getAppError } from "../../lib/errors";
 import {
   ArchetypeAdjustmentResponse,
   ArchetypeChangeSegment,
@@ -142,14 +144,10 @@ const ArchetypeAdjustmentContainer: React.FC<
         }
       } catch (error: any) {
         if (isMounted) {
-          let errorMessage =
-            "Failed to load archetype adjustment. Please try again.";
-          if (error?.response?.status === 500) {
-            errorMessage =
-              "Server error occurred while analyzing the archetype. Please try again later.";
-          } else if (error?.response?.data?.message) {
-            errorMessage = error.response.data.message;
-          }
+          const errorMessage = getAppError(
+            error,
+            "Failed to load archetype adjustment. Please try again.",
+          ).message;
           setError(errorMessage);
           onError(errorMessage);
         }
@@ -200,10 +198,10 @@ const ArchetypeAdjustmentContainer: React.FC<
       await brands.updateArchetype(brandId, adjustment.new_text);
       onComplete();
     } catch (error: any) {
-      let errorMessage = "Failed to update archetype. Please try again.";
-      if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
+      const errorMessage = getAppError(
+        error,
+        "Failed to update archetype. Please try again.",
+      ).message;
       setError(errorMessage);
       onError(errorMessage);
     }
@@ -364,21 +362,11 @@ const ArchetypeAdjustmentContainer: React.FC<
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Analysis Failed
-          </h2>
-          <p className="text-red-600 mb-6">{error}</p>
-          <button
-            onClick={handleRetry}
-            className="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
+      <ErrorScreen
+        error={{ message: error, isNetworkError: false }}
+        title="Analysis Failed"
+        onRetry={handleRetry}
+      />
     );
   }
 

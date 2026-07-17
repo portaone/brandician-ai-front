@@ -15,6 +15,8 @@ import HistoryButton from "../common/HistoryButton";
 import RegenerateButton from "../common/RegenerateButton";
 import ShareHubModal from "../common/ShareHubModal";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
+import { messageOr } from "../../lib/errors";
+import ErrorScreen from "../common/ErrorScreen";
 
 import BrandThemeProvider from "./BrandThemeProvider";
 import BrandHubTabBar from "./BrandHubTabBar";
@@ -138,6 +140,23 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
       ),
     [tabData],
   );
+  // Content produced by hub generation. visual_identity comes from the earlier
+  // Visual Identity step and gaps is derived, so they're excluded — this lets
+  // us distinguish an ungenerated hub from one that merely inherited
+  // visual-identity data.
+  const hasGeneratedContent = useMemo(
+    () =>
+      (["overview", "strategy", "positioning", "voice_content"] as UiTabKey[]).some(
+        (t) =>
+          Object.values(tabData[t] || {}).some(
+            (v) =>
+              (typeof v === "string" && v.trim().length > 0) ||
+              (v && typeof v === "object" && Object.keys(v).length > 0),
+          ),
+      ),
+    [tabData],
+  );
+  const [generateError, setGenerateError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProgressing, setIsProgressing] = useState(false);
   const [gapsData, setGapsData] = useState<Gap[]>([]);
@@ -231,9 +250,7 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
       console.error("Failed to load Brand Hub tab:", e);
       setTabError((prev) => ({
         ...prev,
-        [tabKey]:
-          e?.response?.data?.detail ||
-          "Failed to load this Brand Hub tab. Please try again.",
+        [tabKey]: messageOr(e, "We couldn't load this section. Please try again."),
       }));
     } finally {
       setTabLoading((prev) => ({ ...prev, [tabKey]: false }));
@@ -272,6 +289,7 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
   const generateHub = async () => {
     if (!brandId) return;
     setIsGenerating(true);
+    setGenerateError(null);
     try {
       await brands.generateBrandHub(brandId);
       setTabData({
@@ -291,12 +309,12 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
       await loadGaps();
     } catch (e: any) {
       console.error("Failed to generate Brand Hub:", e);
-      setTabError((prev) => ({
-        ...prev,
-        [activeTab]:
-          e?.response?.data?.detail ||
-          "Failed to generate Brand Hub. Please try again.",
-      }));
+      const msg = messageOr(
+        e,
+        "We couldn't generate your Brand Hub. The AI service may be temporarily unavailable — please try again in a moment.",
+      );
+      setGenerateError(msg);
+      setTabError((prev) => ({ ...prev, [activeTab]: msg }));
     } finally {
       setIsGenerating(false);
       // The Regenerate button lives near the bottom of the page — without
@@ -316,9 +334,10 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
       console.error("Failed to progress from Brand Hub:", e);
       setTabError((prev) => ({
         ...prev,
-        [activeTab]:
-          e?.response?.data?.detail ||
-          "Failed to move to the next step. Please try again.",
+        [activeTab]: messageOr(
+          e,
+          "We couldn't move to the next step. Please try again.",
+        ),
       }));
     } finally {
       setIsProgressing(false);
@@ -376,6 +395,19 @@ const BrandHubContainer: React.FC<{ isComplete?: boolean }> = ({
     typeof viData.color_palette === "string" ? viData.color_palette : undefined;
   const typographyJson =
     typeof viData.typography === "string" ? viData.typography : undefined;
+
+  // A failed generation with no generated hub content to fall back on is a
+  // BLOCKING error — take over with the full error screen instead of an empty
+  // hub. (When a hub already exists, a failed regenerate stays inline below.)
+  if (generateError && !hasGeneratedContent) {
+    return (
+      <ErrorScreen
+        error={{ message: generateError, isNetworkError: false }}
+        title="Brand Hub unavailable"
+        onRetry={generateHub}
+      />
+    );
+  }
 
   return (
     <BrandThemeProvider

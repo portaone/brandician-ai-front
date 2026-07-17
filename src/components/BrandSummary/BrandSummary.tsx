@@ -1,5 +1,5 @@
 import { ArrowRight, Loader } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { scrollToTop } from "../../lib/utils";
 import { useBrandStore } from "../../store/brand";
@@ -11,6 +11,8 @@ import BrandicianLoader from "../common/BrandicianLoader";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
+import ErrorScreen from "../common/ErrorScreen";
+import { AppError, toDisplayError } from "../../lib/errors";
 
 const BrandSummary: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -22,15 +24,13 @@ const BrandSummary: React.FC = () => {
     updateBrandSummary,
     generateBrandSummary,
     loadSummary,
-    isLoading,
-    error: _error,
   } = useBrandStore();
   const [summary, setSummary] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(true);
   const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [errorState, setError] = useState<string | null>(null);
+  const [errorState, setError] = useState<AppError | null>(null);
   const [errorType, setErrorType] = useState<"generation" | "save" | null>(
     null,
   );
@@ -73,7 +73,12 @@ const BrandSummary: React.FC = () => {
         }
       } catch (error) {
         console.error("❌ Failed to initialize summary:", error);
-        setError("Failed to generate summary. Please try again.");
+        setError(
+          toDisplayError(
+            error,
+            "We couldn't generate your brand summary right now. Please try again.",
+          ),
+        );
         setErrorType("generation");
       } finally {
         setIsGenerating(false);
@@ -113,7 +118,7 @@ const BrandSummary: React.FC = () => {
       navigate(`/brands/${brandId}/jtbd`);
     } catch (error) {
       console.error("Failed to update summary:", error);
-      setError("Failed to save summary. Please try again.");
+      setError(toDisplayError(error, "Failed to save summary. Please try again."));
       setErrorType("save");
     } finally {
       setIsSubmitting(false);
@@ -122,69 +127,50 @@ const BrandSummary: React.FC = () => {
     scrollToTop();
   };
 
+  // Real re-fetch for the blocking generation failure. Resets the
+  // attempted-generation flag and re-runs generateBrandSummary.
+  const retryGenerate = useCallback(async () => {
+    if (!brandId) return;
+    setError(null);
+    setErrorType(null);
+    setIsGenerating(true);
+    setHasAttemptedGeneration(false);
+    try {
+      await generateBrandSummary(brandId);
+    } catch (error) {
+      console.error("Failed to generate summary:", error);
+      setError(
+        toDisplayError(
+          error,
+          "We couldn't generate your brand summary right now. Please try again.",
+        ),
+      );
+      setErrorType("generation");
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [brandId, generateBrandSummary]);
+
+  // Blocking failure: generation failed with no summary to show. A SAVE
+  // failure keeps the summary on screen, so it stays inline (see below) rather
+  // than taking over the whole screen.
+  if (errorState && errorType === "generation") {
+    return (
+      <ErrorScreen
+        error={errorState}
+        title="Generation Failed"
+        onRetry={retryGenerate}
+        onGoToDashboard={() => navigate("/brands")}
+      />
+    );
+  }
+
   if (isGenerating) {
     return (
       <BrandicianLoader
         config={LOADER_CONFIGS.brandSummary}
         isComplete={false}
       />
-    );
-  }
-
-  if (errorState) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="text-red-600 mb-4">{errorState}</div>
-        <div className="flex space-x-4">
-          <Button
-            onClick={async () => {
-              setError(null);
-              setErrorType(null);
-
-              if (errorType === "save") {
-                // Retry saving the current summary
-                setIsSubmitting(true);
-                try {
-                  await updateBrandSummary(brandId!, summary);
-                  navigate(`/brands/${brandId}/jtbd`);
-                } catch (error) {
-                  console.error("Failed to update summary:", error);
-                  setError("Failed to save summary. Please try again.");
-                  setErrorType("save");
-                } finally {
-                  setIsSubmitting(false);
-                }
-              } else {
-                // Retry generating a new summary
-                setIsGenerating(true);
-                setHasAttemptedGeneration(false);
-                try {
-                  if (brandId) {
-                    await generateBrandSummary(brandId);
-                  }
-                } catch (error) {
-                  console.error("Failed to generate summary:", error);
-                  setError("Failed to generate summary. Please try again.");
-                  setErrorType("generation");
-                } finally {
-                  setIsGenerating(false);
-                }
-              }
-            }}
-            disabled={isSubmitting}
-            size="md"
-          >
-            {isSubmitting ? "Saving..." : "Try again"}
-          </Button>
-          <Button
-            onClick={() => navigate("/brands")}
-            variant="secondary"
-            size="md"
-          >
-            Exit
-          </Button>
-        </div>
-      </div>
     );
   }
 
@@ -251,6 +237,12 @@ const BrandSummary: React.FC = () => {
                 </div>
               )}
             </div>
+
+            {errorState && errorType === "save" && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {errorState.message}
+              </div>
+            )}
 
             <div className="flex justify-between items-center gap-3 flex-wrap">
               <Button

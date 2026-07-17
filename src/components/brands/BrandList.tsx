@@ -15,6 +15,9 @@ import Button from "../common/Button";
 import ShareHubModal from "../common/ShareHubModal";
 import { Brand } from "../../types";
 import BrandicianLoader from "../common/BrandicianLoader";
+import ErrorScreen from "../common/ErrorScreen";
+import { useToast } from "../common/Toast";
+import { getAppError } from "../../lib/errors";
 
 // Short names for step badge display
 const STEP_SHORT_NAMES: Record<string, string> = {
@@ -76,6 +79,7 @@ const BrandList: React.FC = () => {
     error,
   } = useBrandStore();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [deleteConfirm, setDeleteConfirm] = useState<{
     brandId: string;
     brandName: string;
@@ -157,10 +161,8 @@ const BrandList: React.FC = () => {
       setRenameValue("");
     } catch (error: any) {
       console.error("Failed to rename brand:", error);
-      alert(
-        `Failed to rename brand: ${
-          error.response?.data?.detail || error.message
-        }`,
+      toast.error(
+        `Couldn't rename brand: ${getAppError(error, "please try again.").message}`,
       );
     } finally {
       setIsRenaming(false);
@@ -176,7 +178,13 @@ const BrandList: React.FC = () => {
   }
 
   if (error) {
-    return <div className="text-center text-red-600 p-4">{error}</div>;
+    return (
+      <ErrorScreen
+        error={{ message: error, isNetworkError: false }}
+        showDashboard={false}
+        onRetry={() => loadBrands()}
+      />
+    );
   }
 
   return (

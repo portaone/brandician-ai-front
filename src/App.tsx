@@ -10,6 +10,7 @@ import { AnimatePresence } from "framer-motion";
 import { useAuthStore } from "./store/auth";
 import TopMenu from "./components/common/TopMenu";
 import ErrorBoundary from "./components/common/ErrorBoundary";
+import { ToastProvider } from "./components/common/Toast";
 import LandingPage from "./components/LandingPage";
 import LoginForm from "./components/auth/LoginForm";
 import RegisterForm from "./components/auth/RegisterForm";
@@ -86,9 +87,10 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <Router>
-        <RouterActions />
-        <TopMenu />
+      <ToastProvider>
+        <Router>
+          <RouterActions />
+          <TopMenu />
         <AnimatePresence mode="wait">
           <Routes>
             <Route path="/" element={<LandingPage />} />
@@ -336,7 +338,8 @@ const App: React.FC = () => {
         </AnimatePresence>
         <CookieConsent />
         <Footer />
-      </Router>
+        </Router>
+      </ToastProvider>
     </ErrorBoundary>
   );
 };

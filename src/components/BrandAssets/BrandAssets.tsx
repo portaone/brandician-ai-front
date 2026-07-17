@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
+import { messageOr } from "../../lib/errors";
 import { useBrandStore } from "../../store/brand";
 import {
   BrandAsset,
@@ -15,6 +16,7 @@ import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import RegenerateButton from "../common/RegenerateButton";
 import BrandicianLoader from "../common/BrandicianLoader";
+import ErrorScreen from "../common/ErrorScreen";
 
 interface BrandAssetsProps {
   brandId: string;
@@ -71,7 +73,7 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
       }, 3000);
     } catch (error: any) {
       console.error("❌ Failed to regenerate assets:", error);
-      setError("Failed to regenerate assets. Please try again.");
+      setError(messageOr(error, "Failed to regenerate assets. Please try again."));
       setIsGeneratingAssets(false);
       isGeneratingRef.current = false;
     }
@@ -278,29 +280,15 @@ const BrandAssets: React.FC<BrandAssetsProps> = ({ brandId }) => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="text-red-600 mb-4">{error}</div>
-        <div className="flex gap-4">
-          {!isGeneratingAssets && (
-            <Button
-              onClick={startAssetGeneration}
-              variant="primary"
-              size="md"
-              leftIcon={<RefreshCw className="h-4 w-4" />}
-            >
-              Start Asset Generation
-            </Button>
-          )}
-          <Button
-            onClick={() => window.location.reload()}
-            variant="secondary"
-            size="md"
-            leftIcon={<RefreshCw className="h-4 w-4" />}
-          >
-            Refresh Page
-          </Button>
-        </div>
-      </div>
+      <ErrorScreen
+        error={{ message: error, isNetworkError: false }}
+        title="Couldn't load your assets"
+        // Retry re-fetches (a safe reload) rather than the destructive
+        // delete-and-regenerate in startAssetGeneration — a load error must
+        // never wipe existing assets. Regeneration stays behind the explicit
+        // RegenerateButton / empty-state flow.
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 

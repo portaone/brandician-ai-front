@@ -1,6 +1,7 @@
 import { Check, Copy, Loader2, Share2, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { backendConfig, brands } from "../../lib/api";
+import { getAppError } from "../../lib/errors";
 
 interface ShareHubModalProps {
   isOpen: boolean;
@@ -135,7 +136,7 @@ const ShareHubModal: React.FC<ShareHubModalProps> = ({
       } catch (err: any) {
         setAvailable(false);
         setAvailabilityReason(
-          err?.response?.data?.detail ?? "Could not check availability",
+          getAppError(err, "Could not check availability").message,
         );
       } finally {
         setIsChecking(false);
@@ -160,8 +161,7 @@ const ShareHubModal: React.FC<ShareHubModalProps> = ({
       // making the Copy-link state never visible. We notify on close.
     } catch (err: any) {
       setActivationError(
-        err?.response?.data?.detail ??
-          "Could not activate the hub. Try again.",
+        getAppError(err, "Could not activate the hub. Try again.").message,
       );
     } finally {
       setIsActivating(false);

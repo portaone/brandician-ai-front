@@ -19,6 +19,8 @@ import BrandicianLoader from "../common/BrandicianLoader";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { useBrandStore } from "../../store/brand";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
+import ErrorScreen from "../common/ErrorScreen";
+import { getAppError } from "../../lib/errors";
 
 const TIER_BADGE_STYLE: Record<PersonaTier, { bg: string; fg: string; label: string }> = {
   primary: { bg: "#fd615e", fg: "#ffffff", label: "Primary" },
@@ -84,10 +86,10 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
         setPersona(data);
       } catch (err: any) {
         console.error("Failed to generate primary persona:", err);
-        const errorMessage =
-          err?.response?.data?.message ||
-          err?.response?.data?.detail ||
-          "Failed to generate primary persona. Please try again.";
+        const errorMessage = getAppError(
+          err,
+          "Failed to generate primary persona. Please try again.",
+        ).message;
         setError(errorMessage);
         onError(errorMessage);
       } finally {
@@ -107,10 +109,10 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
       setPersona(data);
     } catch (err: any) {
       console.error("Failed to regenerate primary persona:", err);
-      const errorMessage =
-        err?.response?.data?.message ||
-        "Failed to regenerate primary persona. Please try again.";
-      setError(errorMessage);
+      setError(
+        getAppError(err, "Failed to regenerate primary persona. Please try again.")
+          .message,
+      );
     } finally {
       setIsRegenerating(false);
     }
@@ -125,9 +127,10 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
       onComplete();
     } catch (err: any) {
       console.error("Failed to save primary persona:", err);
-      const errorMessage =
-        err?.response?.data?.message ||
-        "Failed to save primary persona. Please try again.";
+      const errorMessage = getAppError(
+        err,
+        "Failed to save primary persona. Please try again.",
+      ).message;
       setError(errorMessage);
       onError(errorMessage);
     } finally {
@@ -217,10 +220,10 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
       setPersona(data);
       setPendingOverride(null);
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.detail ||
-        err?.response?.data?.message ||
-        "Could not switch the primary persona. Please try again.";
+      const msg = getAppError(
+        err,
+        "Could not switch the primary persona. Please try again.",
+      ).message;
       setError(msg);
       onError(msg);
     } finally {
@@ -276,39 +279,24 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
 
   if (error && !persona) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Generation Failed
-          </h2>
-          <p className="text-red-600 mb-6">{error}</p>
-          <Button
-            className="btn btn-primary"
-            onClick={() => {
-              hasLoadedRef.current = false;
-              setError(null);
-              setIsLoading(true);
-              const loadAgain = async () => {
-                try {
-                  const data = await brands.generatePrimaryPersona(brandId!);
-                  setPersona(data);
-                } catch (err: any) {
-                  setError(
-                    err?.response?.data?.message ||
-                      "Failed to generate primary persona.",
-                  );
-                } finally {
-                  setIsLoading(false);
-                }
-              };
-              loadAgain();
-            }}
-            size="md"
-          >
-            Try Again
-          </Button>
-        </div>
-      </div>
+      <ErrorScreen
+        error={{ message: error, isNetworkError: false }}
+        title="Generation Failed"
+        onRetry={() => {
+          hasLoadedRef.current = false;
+          setError(null);
+          setIsLoading(true);
+          brands
+            .generatePrimaryPersona(brandId!)
+            .then((data) => setPersona(data))
+            .catch((err: any) =>
+              setError(
+                getAppError(err, "Failed to generate primary persona.").message,
+              ),
+            )
+            .finally(() => setIsLoading(false));
+        }}
+      />
     );
   }
 

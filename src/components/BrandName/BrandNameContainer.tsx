@@ -12,6 +12,7 @@ import HistoryButton from "../common/HistoryButton";
 import BrandicianLoader from "../common/BrandicianLoader";
 import MarkdownPreviewer from "../common/MarkDownPreviewer";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
+import { messageOr } from "../../lib/errors";
 
 interface BrandNameSuggestion {
   name: string;
@@ -56,7 +57,9 @@ const BrandNameContainer: React.FC = () => {
         const nameOptions = await brands.pickName(brandId);
         setCurrentDraft(nameOptions.draft || null);
       } catch (error) {
-        setError("Failed to generate brand name suggestions");
+        setError(
+          messageOr(error, "We couldn't load brand name suggestions right now. Please try again."),
+        );
       } finally {
         setIsLoading(false);
       }
@@ -109,7 +112,7 @@ const BrandNameContainer: React.FC = () => {
       navigateAfterProgress(navigate, brandId, statusUpdate);
     } catch (error) {
       console.error("Failed to proceed to asset creation:", error);
-      setError("Failed to progress to asset creation");
+      setError(messageOr(error, "Failed to progress to asset creation. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -132,7 +135,7 @@ const BrandNameContainer: React.FC = () => {
         : [];
       setSuggestions(newSuggestions);
     } catch (error) {
-      setError("Failed to generate new suggestions");
+      setError(messageOr(error, "We couldn't generate new suggestions right now. Please try again."));
     } finally {
       setIsGenerating(false);
     }

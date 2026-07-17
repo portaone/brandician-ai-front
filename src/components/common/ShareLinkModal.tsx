@@ -2,6 +2,7 @@ import { AlertCircle, Check, Copy, Loader2, Share2, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { brands } from "../../lib/api";
 import Button from "./Button";
+import { getAppError } from "../../lib/errors";
 
 interface ShareLinkModalProps {
   isOpen: boolean;
@@ -57,7 +58,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
       }
     } catch (err: any) {
       console.error("Failed to generate share link:", err);
-      setError(err.response?.data?.detail || "Failed to generate share link");
+      setError(getAppError(err, "Failed to generate share link").message);
     } finally {
       setIsLoading(false);
     }

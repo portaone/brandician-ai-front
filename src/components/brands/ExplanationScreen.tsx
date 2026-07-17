@@ -10,6 +10,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { getAppError } from "../../lib/errors";
 import api from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { scrollToTop } from "../../lib/utils";
@@ -149,8 +150,8 @@ const ExplanationScreen: React.FC = () => {
     } catch (error: any) {
       console.error("Failed to upload document:", error);
       setUploadError(
-        error.response?.data?.message ||
-          "Failed to upload document. Please try again.",
+        getAppError(error, "Failed to upload document. Please try again.")
+          .message,
       );
     } finally {
       setIsUploading(false);
@@ -182,8 +183,7 @@ const ExplanationScreen: React.FC = () => {
     } catch (error: any) {
       console.error("Failed to process text:", error);
       setUploadError(
-        error.response?.data?.message ||
-          "Failed to process text. Please try again.",
+        getAppError(error, "Failed to process text. Please try again.").message,
       );
     } finally {
       setIsProcessingText(false);

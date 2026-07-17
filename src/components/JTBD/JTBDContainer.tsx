@@ -5,7 +5,7 @@ import {
   Edit2,
   Loader,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
@@ -43,6 +43,8 @@ import { useAutoFocus } from "../../hooks/useAutoFocus";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
 import RegenerateButton from "../common/RegenerateButton";
+import ErrorScreen from "../common/ErrorScreen";
+import { getAppError } from "../../lib/errors";
 
 type Step = "rating" | "editing" | "drivers";
 
@@ -225,7 +227,6 @@ const JTBDContainer: React.FC = () => {
     loadJTBD,
     progressBrandStatus,
     isLoading,
-    error,
   } = useBrandStore();
   const [personas, setPersonas] = useState<PersonaItem[]>([]);
   const [drivers, setDrivers] = useState("");
@@ -239,6 +240,13 @@ const JTBDContainer: React.FC = () => {
     null,
   );
   const [isRegenerating, setIsRegenerating] = useState(false);
+  // Local error for the blocking mount-time persona generation. Kept separate
+  // from the shared store `error` so a non-blocking Continue/progress failure
+  // (store error, content present) never triggers the full-screen ErrorScreen.
+  const [suggestError, setSuggestError] = useState<string | null>(null);
+  // Inline (non-blocking) error for the Continue/save action — content is on
+  // screen, so this must NOT take over the page.
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isEditingDrivers, setIsEditingDrivers] = useState(false);
   // Explicit expand/collapse overrides per persona; absence falls back to the tier default
   const [expandedOverrides, setExpandedOverrides] = useState<
@@ -249,11 +257,18 @@ const JTBDContainer: React.FC = () => {
 
   useAutoFocus([editingPersona, isEditingDrivers]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      if (!brandId || hasInitialized.current) return;
-      hasInitialized.current = true;
+  const loadPersonas = useCallback(async () => {
+    if (!brandId) return;
+    // Mark initialized so the mount effect won't re-fire under StrictMode's
+    // double-invoke. onRetry calls this callback directly, so a retry always
+    // re-runs the full sequence regardless of this guard.
+    hasInitialized.current = true;
+    // Clear BOTH error channels before re-running: the local suggest error and
+    // the shared store error (selectBrand/loadJTBD failures live there).
+    setSuggestError(null);
+    useBrandStore.setState({ error: null });
 
+    try {
       await selectBrand(brandId);
       await loadJTBD(brandId);
 
@@ -293,13 +308,31 @@ const JTBDContainer: React.FC = () => {
           }
         } catch (err) {
           console.error("Failed to suggest JTBD:", err);
+          setSuggestError(
+            getAppError(
+              err,
+              "We couldn't generate your personas. The AI service may be temporarily unavailable — please try again.",
+            ).message,
+          );
         } finally {
           setIsRegenerating(false);
         }
       }
-    };
-    loadData();
+    } catch (err) {
+      // selectBrand / loadJTBD failed — surface it as the blocking load error
+      // (local, so a non-blocking Continue failure can never trigger it).
+      console.error("Failed to load JTBD data:", err);
+      setSuggestError(
+        getAppError(err, "We couldn't load your personas. Please try again.")
+          .message,
+      );
+    }
   }, [brandId, selectBrand, loadJTBD]);
+
+  useEffect(() => {
+    if (hasInitialized.current) return;
+    loadPersonas();
+  }, [loadPersonas]);
 
   // Scroll the editing form into view only when editing STARTS for a persona.
   // Depend on the persona's key (not the object) so per-keystroke
@@ -424,6 +457,10 @@ const JTBDContainer: React.FC = () => {
         navigateAfterProgress(navigate, brandId, statusUpdate);
       } catch (error) {
         console.error("Failed to update JTBD:", error);
+        setSubmitError(
+          getAppError(error, "Couldn't save your changes. Please try again.")
+            .message,
+        );
       } finally {
         setIsSubmitting(false);
       }
@@ -465,41 +502,27 @@ const JTBDContainer: React.FC = () => {
     scrollToTop();
   };
 
+  // Blocking failure: a mount-time load/generation failed AND we have no
+  // personas to show. Non-blocking failures (e.g. a Continue/progress error
+  // that sets the store `error` while personas are present) fall through and
+  // stay inline.
+  if (suggestError && personas.length === 0) {
+    return (
+      <ErrorScreen
+        error={{ message: suggestError, isNetworkError: false }}
+        title="Generation Failed"
+        onRetry={loadPersonas}
+        onGoToDashboard={() => navigate("/brands")}
+      />
+    );
+  }
+
   if (isLoading || (isRegenerating && personas.length === 0)) {
     return (
       <BrandicianLoader
         config={LOADER_CONFIGS.jtbdSuggest}
         isComplete={false}
       />
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <div className="text-red-600 mb-4">{error}</div>
-        <div className="flex space-x-4">
-          <Button
-            onClick={async () => {
-              hasInitialized.current = false;
-              if (brandId) {
-                await selectBrand(brandId);
-                await loadJTBD(brandId);
-              }
-            }}
-            size="md"
-          >
-            Try again
-          </Button>
-          <Button
-            onClick={() => navigate("/brands")}
-            variant="secondary"
-            size="md"
-          >
-            Exit
-          </Button>
-        </div>
-      </div>
     );
   }
 
@@ -918,6 +941,11 @@ const JTBDContainer: React.FC = () => {
               </p>
             )}
 
+            {submitError && (
+              <div className="mb-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {submitError}
+              </div>
+            )}
             <Button
               onClick={handleProceed}
               disabled={

@@ -3,36 +3,11 @@ import { brands } from "../lib/api";
 import { Brand, Question, Answer, JTBDList, JTBDPersonaIn } from "../types";
 import { BrandStatus } from "../lib/navigation";
 import { AxiosInstance } from "axios";
+import { parseError } from "../lib/errors";
 
-// Helper function to get user-friendly error messages
-const getErrorMessage = (error: any, defaultMessage: string): string => {
-  // Check for network/connection errors
-  if (
-    error.code === "ERR_NETWORK" ||
-    error.code === "ERR_CONNECTION_REFUSED" ||
-    error.message?.includes("Network Error") ||
-    !error.response
-  ) {
-    return "Unable to connect to the server. Please check your internet connection and try again.";
-  }
-
-  // Check for server errors (5xx)
-  if (error.response?.status >= 500) {
-    return "The server is experiencing issues. Please try again later.";
-  }
-
-  // Check for specific error messages from the API
-  if (error.response?.data?.message) {
-    return error.response.data.message;
-  }
-
-  if (error.response?.data?.detail) {
-    return error.response.data.detail;
-  }
-
-  // Default fallback
-  return defaultMessage;
-};
+// Delegates to the shared error parser (single source of truth for messages).
+const getErrorMessage = (error: any, defaultMessage: string): string =>
+  parseError(error, defaultMessage).message;
 
 interface BrandState {
   brands: Brand[];
@@ -229,7 +204,7 @@ export const useBrandStore = create<BrandState>((set) => ({
         isLoading: false,
       }));
     } catch (error) {
-      set({ isLoading: false, error: "Failed to update brand status" });
+      set({ isLoading: false, error: getErrorMessage(error, "Failed to update brand status") });
       throw error;
     }
   },
@@ -250,7 +225,7 @@ export const useBrandStore = create<BrandState>((set) => ({
       }));
       return statusUpdate;
     } catch (error) {
-      set({ isLoading: false, error: "Failed to progress brand status" });
+      set({ isLoading: false, error: getErrorMessage(error, "Failed to progress brand status") });
       throw error;
     }
   },
@@ -275,7 +250,7 @@ export const useBrandStore = create<BrandState>((set) => ({
         response: error.response?.data,
         status: error.response?.status,
       });
-      set({ isLoading: false, error: "Failed to load JTBD data" });
+      set({ isLoading: false, error: getErrorMessage(error, "Failed to load JTBD data") });
       throw error;
     }
   },
@@ -295,7 +270,7 @@ export const useBrandStore = create<BrandState>((set) => ({
         isLoading: false,
       }));
     } catch (error) {
-      set({ isLoading: false, error: "Failed to update JTBD" });
+      set({ isLoading: false, error: getErrorMessage(error, "Failed to update JTBD") });
       throw error;
     }
   },
@@ -344,7 +319,7 @@ export const useBrandStore = create<BrandState>((set) => ({
       }));
     } catch (error: any) {
       console.error("❌ Failed to generate summary:", error);
-      set({ isLoading: false, error: "Failed to generate brand summary" });
+      set({ isLoading: false, error: getErrorMessage(error, "Failed to generate brand summary") });
       throw error;
     }
   },
@@ -364,7 +339,7 @@ export const useBrandStore = create<BrandState>((set) => ({
       }));
       return summaryData.summary;
     } catch (error: any) {
-      set({ isLoading: false, error: "Failed to load brand summary" });
+      set({ isLoading: false, error: getErrorMessage(error, "Failed to load brand summary") });
       throw error;
     }
   },
@@ -384,7 +359,7 @@ export const useBrandStore = create<BrandState>((set) => ({
         isLoading: false,
       }));
     } catch (error: any) {
-      set({ isLoading: false, error: "Failed to update brand summary" });
+      set({ isLoading: false, error: getErrorMessage(error, "Failed to update brand summary") });
       throw error;
     }
   },
@@ -403,7 +378,7 @@ export const useBrandStore = create<BrandState>((set) => ({
         isLoading: false,
       }));
     } catch (error: any) {
-      set({ isLoading: false, error: "Failed to load archetype data" });
+      set({ isLoading: false, error: getErrorMessage(error, "Failed to load archetype data") });
       throw error;
     }
   },
@@ -423,7 +398,7 @@ export const useBrandStore = create<BrandState>((set) => ({
         isLoading: false,
       }));
     } catch (error: any) {
-      set({ isLoading: false, error: "Failed to update archetype" });
+      set({ isLoading: false, error: getErrorMessage(error, "Failed to update archetype") });
       throw error;
     }
   },

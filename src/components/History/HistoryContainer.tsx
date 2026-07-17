@@ -1,5 +1,5 @@
 import { ChevronDown, Loader, Share2 } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import MarkdownPreviewer from "../common/MarkDownPreviewer";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands, backendConfig } from "../../lib/api";
@@ -12,6 +12,9 @@ import CopyButton from "../common/CopyButton";
 import GetHelpButton from "../common/GetHelpButton";
 import ShareLinkModal from "../common/ShareLinkModal";
 import BrandicianLoader from "../common/BrandicianLoader";
+import { useToast } from "../common/Toast";
+import { getAppError, messageOr } from "../../lib/errors";
+import ErrorScreen from "../common/ErrorScreen";
 
 interface HistoryStep {
   number: number;
@@ -50,6 +53,7 @@ const HistoryContainer: React.FC = () => {
     selectBrand,
     isLoading: brandLoading,
   } = useBrandStore();
+  const { toast } = useToast();
 
   const [expandedSteps, setExpandedSteps] = useState<{
     [key: number]: boolean;
@@ -81,27 +85,37 @@ const HistoryContainer: React.FC = () => {
   const [statusSequence, setStatusSequence] = useState<
     Array<{ status: string; description: string }>
   >([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Always reload brand data when entering history page to ensure we have the latest status
-    if (brandId) {
-      selectBrand(brandId);
+  // Load the brand and the config (dev mode + status sequence) together. Both
+  // are required to render the page and the loader gates on all of them, so a
+  // failure of EITHER must surface as a blocking error instead of a perpetual
+  // spinner. Reused as ErrorScreen's onRetry to re-run the whole load.
+  const loadHistory = useCallback(async () => {
+    if (!brandId) return;
+    setLoadError(null);
+    try {
+      // Always reload brand data so we have the latest status.
+      const [, configData] = await Promise.all([
+        selectBrand(brandId),
+        backendConfig.getConfig(),
+      ]);
+      setDevMode(configData.dev_mode);
+      setStatusSequence(configData.status_sequence);
+    } catch (error) {
+      console.error("Failed to load brand history:", error);
+      setLoadError(
+        messageOr(
+          error,
+          "We couldn't load this brand's history. Please try again.",
+        ),
+      );
     }
-  }, [brandId, selectBrand]);
+  }, [brandId]);
 
-  // Fetch config (dev mode + status sequence)
   useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const configData = await backendConfig.getConfig();
-        setDevMode(configData.dev_mode);
-        setStatusSequence(configData.status_sequence);
-      } catch (error) {
-        console.error("Failed to fetch config:", error);
-      }
-    };
-    fetchConfig();
-  }, []);
+    loadHistory();
+  }, [loadHistory]);
 
   // Get current step index from the status sequence
   const getCurrentStepNumber = (status: string): number => {
@@ -376,10 +390,8 @@ const HistoryContainer: React.FC = () => {
       navigate(`/brands/${brandId}${route}`);
     } catch (error: any) {
       console.error("Failed to revert brand:", error);
-      alert(
-        `Failed to revert: ${
-          error.response?.data?.message || error.message || "Unknown error"
-        }`,
+      toast.error(
+        `Couldn't revert: ${getAppError(error, "please try again.").message}`,
       );
     } finally {
       setIsReverting(false);
@@ -668,7 +680,7 @@ const HistoryContainer: React.FC = () => {
             document.body.removeChild(a);
           } catch (error) {
             console.error("Failed to download CSV:", error);
-            alert("Failed to download survey responses");
+            toast.error("Failed to download survey responses");
           }
         };
 
@@ -994,6 +1006,15 @@ const HistoryContainer: React.FC = () => {
         );
     }
   };
+
+  if (loadError && (!currentBrand || statusSequence.length === 0)) {
+    return (
+      <ErrorScreen
+        error={{ message: loadError, isNetworkError: false }}
+        onRetry={loadHistory}
+      />
+    );
+  }
 
   if (brandLoading || !currentBrand || statusSequence.length === 0) {
     return (

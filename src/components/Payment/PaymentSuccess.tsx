@@ -5,6 +5,7 @@ import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
 import BrandicianLoader from "../common/BrandicianLoader";
+import { getAppError } from "../../lib/errors";
 
 const MAX_RETRY_ATTEMPTS = 20;
 const RETRY_DELAY_MS = 10000; // 10 seconds between retries (200 seconds total)
@@ -89,8 +90,8 @@ const PaymentSuccess: React.FC = () => {
             );
           } else if (err.response?.status === 400) {
             setError(
-              err.response?.data?.detail ||
-                "Brand is not ready for payment completion."
+              getAppError(err, "Brand is not ready for payment completion.")
+                .message,
             );
           } else {
             setError(

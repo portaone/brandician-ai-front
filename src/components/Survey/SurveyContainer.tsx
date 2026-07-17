@@ -20,6 +20,8 @@ import SkipSurveyWarning from "../common/SkipSurveyWarning";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import { InlineMarkdown } from "../common/MarkDownPreviewer";
+import ErrorScreen from "../common/ErrorScreen";
+import { getAppError } from "../../lib/errors";
 import HistoryButton from "../common/HistoryButton";
 import RegenerateButton from "../common/RegenerateButton";
 import BrandicianLoader from "../common/BrandicianLoader";
@@ -116,8 +118,8 @@ const SurveyContainer: React.FC = () => {
         if (isMounted) {
           console.error("Failed to load survey data:", error);
           setSurveyError(
-            error?.response?.data?.message ||
-              "Failed to load survey. Please try again.",
+            getAppError(error, "Failed to load survey. Please try again.")
+              .message,
           );
           setErrorType("load");
         }
@@ -339,8 +341,7 @@ const SurveyContainer: React.FC = () => {
     } catch (error: any) {
       console.error("Failed to save survey:", error);
       setSurveyError(
-        error?.response?.data?.message ||
-          "Failed to save survey. Please try again.",
+        getAppError(error, "Failed to save survey. Please try again.").message,
       );
       setErrorType("save");
     } finally {
@@ -403,8 +404,8 @@ const SurveyContainer: React.FC = () => {
         } catch (error: any) {
           console.error("Failed to load survey data:", error);
           setSurveyError(
-            error?.response?.data?.message ||
-              "Failed to load survey. Please try again.",
+            getAppError(error, "Failed to load survey. Please try again.")
+              .message,
           );
           setErrorType("load");
         } finally {
@@ -439,8 +440,8 @@ const SurveyContainer: React.FC = () => {
     } catch (error: any) {
       console.error("Failed to regenerate survey:", error);
       setSurveyError(
-        error?.response?.data?.detail ||
-          "Failed to regenerate survey. Please try again.",
+        getAppError(error, "Failed to regenerate survey. Please try again.")
+          .message,
       );
       setErrorType("load");
     } finally {
@@ -465,38 +466,17 @@ const SurveyContainer: React.FC = () => {
   }
 
   if (brandError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-600">
-        {brandError}
-      </div>
-    );
+    return <ErrorScreen error={{ message: brandError, isNetworkError: false }} />;
   }
 
   if (surveyError) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-red-600">{surveyError}</p>
-        <div className="flex space-x-4">
-          <Button
-            onClick={handleRetry}
-            disabled={isSubmitting || isLoadingSurvey}
-            size="md"
-          >
-            {(isSubmitting || isLoadingSurvey) && (
-              <Loader className="animate-spin h-5 w-5 mr-2 inline" />
-            )}
-            <RefreshCw className="h-5 w-5 mr-2 inline" />
-            {errorType === "save" ? "Retry Save" : "Try Again"}
-          </Button>
-          <Button
-            onClick={() => navigate("/brands")}
-            variant="secondary"
-            size="md"
-          >
-            Exit
-          </Button>
-        </div>
-      </div>
+      <ErrorScreen
+        error={{ message: surveyError, isNetworkError: false }}
+        title={errorType === "save" ? "Save Failed" : "Survey Error"}
+        onRetry={handleRetry}
+        onGoToDashboard={() => navigate("/brands")}
+      />
     );
   }
 

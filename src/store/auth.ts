@@ -4,50 +4,13 @@ import { auth } from "../lib/api";
 import { User } from "../types";
 import { initClarity } from "../lib/clarity";
 import { getConsentCookies } from "../lib/utils";
+import { parseError } from "../lib/errors";
 
-// Helper function to get user-friendly error messages
-const getErrorMessage = (error: any): string => {
-  // Check for network/connection errors
-  if (
-    error.code === "ECONNREFUSED" ||
-    error.code === "ERR_CONNECTION_REFUSED" ||
-    error.message?.includes("ERR_CONNECTION_REFUSED") ||
-    error.message?.includes("Network Error") ||
-    !error.response
-  ) {
-    return "Unable to connect to the server. Please check your internet connection or try again later.";
-  }
-
-  // Check for server errors (5xx)
-  if (error.response?.status >= 500) {
-    return "The server is experiencing issues. Please try again later.";
-  }
-
-  // Check for client errors (4xx)
-  if (error.response?.status >= 400 && error.response?.status < 500) {
-    const serverMessage =
-      error.response?.data?.message || error.response?.data?.detail;
-    if (serverMessage) {
-      return serverMessage;
-    }
-
-    switch (error.response?.status) {
-      case 400:
-        return "Invalid request. Please check your input and try again.";
-      case 401:
-        return "Invalid credentials. Please check your email and try again.";
-      case 403:
-        return "Access denied. Please contact support if this persists.";
-      case 404:
-        return "Service not found. Please try again later.";
-      default:
-        return "An error occurred. Please try again.";
-    }
-  }
-
-  // Default fallback
-  return "An unexpected error occurred. Please try again.";
-};
+// Delegates to the shared error parser (single source of truth for messages).
+// The backend now returns specific messages (e.g. "Invalid OTP"), so we surface
+// those instead of the old blanket status-based copy.
+const getErrorMessage = (error: any): string =>
+  parseError(error, "An unexpected error occurred. Please try again.").message;
 
 interface AuthState {
   user: User | null;

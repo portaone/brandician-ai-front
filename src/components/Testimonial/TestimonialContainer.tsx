@@ -7,13 +7,15 @@ import {
   Star,
   Loader,
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
+import { messageOr } from "../../lib/errors";
 import { useAuthStore } from "../../store/auth";
 import { useBrandStore } from "../../store/brand";
 import BrandicianLoader from "../common/BrandicianLoader";
+import ErrorScreen from "../common/ErrorScreen";
 
 const TestimonialContainer: React.FC = () => {
   const { brandId } = useParams<{ brandId: string }>();
@@ -34,12 +36,27 @@ const TestimonialContainer: React.FC = () => {
   // Form validation
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Blocking error for the initial brand load (errors.submit stays inline).
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const loadBrand = useCallback(async () => {
+    if (!brandId) return;
+    setLoadError(null);
+    try {
+      await selectBrand(brandId);
+    } catch (error) {
+      console.error("Failed to load brand:", error);
+      setLoadError(
+        messageOr(error, "We couldn't load this page. Please try again."),
+      );
+    }
+  }, [brandId]);
 
   useEffect(() => {
     if (brandId && (!currentBrand || currentBrand.id !== brandId)) {
-      selectBrand(brandId);
+      loadBrand();
     }
-  }, [brandId, currentBrand, selectBrand]);
+  }, [brandId, currentBrand, loadBrand]);
 
   const maskUserName = (name: string): string => {
     if (!name) return "A*** F***";
@@ -109,6 +126,15 @@ const TestimonialContainer: React.FC = () => {
     setTestimonial(e.target.value);
     setErrors({ ...errors, testimonial: "" });
   };
+
+  if (loadError && !currentBrand) {
+    return (
+      <ErrorScreen
+        error={{ message: loadError, isNetworkError: false }}
+        onRetry={loadBrand}
+      />
+    );
+  }
 
   if (isLoading || !currentBrand) {
     return (

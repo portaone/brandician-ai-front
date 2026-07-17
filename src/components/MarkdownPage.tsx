@@ -1,7 +1,7 @@
-import { AlertCircle } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import MarkdownPreviewer from "./common/MarkDownPreviewer";
 import BrandicianLoader from "./common/BrandicianLoader";
+import ErrorScreen from "./common/ErrorScreen";
 
 interface MarkdownPageProps {
   filePath: string;
@@ -13,7 +13,7 @@ const MarkdownPage: React.FC<MarkdownPageProps> = ({ filePath, className }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const reloadContent = useCallback(() => {
     setIsLoading(true);
     setError(null);
     fetch(filePath)
@@ -31,6 +31,10 @@ const MarkdownPage: React.FC<MarkdownPageProps> = ({ filePath, className }) => {
       });
   }, [filePath]);
 
+  useEffect(() => {
+    reloadContent();
+  }, [reloadContent]);
+
   if (isLoading) {
     return (
       <div className="loader-container">
@@ -42,10 +46,12 @@ const MarkdownPage: React.FC<MarkdownPageProps> = ({ filePath, className }) => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <AlertCircle className="h-8 w-8 text-red-500 mr-2" />
-        <span className="text-red-600">{error}</span>
-      </div>
+      <ErrorScreen
+        error={{ message: error, isNetworkError: false }}
+        title="Couldn't load this page"
+        showDashboard={false}
+        onRetry={reloadContent}
+      />
     );
   }
 

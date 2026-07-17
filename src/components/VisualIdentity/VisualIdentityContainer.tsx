@@ -10,12 +10,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 import { navigateAfterProgress } from "../../lib/navigation";
 import { useBrandStore } from "../../store/brand";
+import { getAppError } from "../../lib/errors";
 import AssetContent from "../common/AssetContent";
 import Button from "../common/Button";
 import GetHelpButton from "../common/GetHelpButton";
 import HistoryButton from "../common/HistoryButton";
 import RegenerateButton from "../common/RegenerateButton";
 import BrandicianLoader from "../common/BrandicianLoader";
+import ErrorScreen from "../common/ErrorScreen";
 import BrandNameDisplay from "../BrandName/BrandNameDisplay";
 import { LOADER_CONFIGS } from "../../lib/loader-constants";
 import { scrollToTop } from "../../lib/utils";
@@ -175,8 +177,8 @@ const VisualIdentityContainer: React.FC = () => {
     } catch (e: any) {
       console.error("Failed to load visual identity:", e);
       setError(
-        e?.response?.data?.detail ||
-          "Failed to load visual identity. Please try again.",
+        getAppError(e, "Failed to load visual identity. Please try again.")
+          .message,
       );
     } finally {
       setIsLoading(false);
@@ -200,8 +202,8 @@ const VisualIdentityContainer: React.FC = () => {
     } catch (e: any) {
       console.error("Failed to regenerate visual identity:", e);
       setError(
-        e?.response?.data?.detail ||
-          "Failed to regenerate visual identity. Please try again.",
+        getAppError(e, "Failed to regenerate visual identity. Please try again.")
+          .message,
       );
     } finally {
       setIsGenerating(false);
@@ -235,8 +237,7 @@ const VisualIdentityContainer: React.FC = () => {
     } catch (e: any) {
       console.error("Failed to save and progress from Visual Identity:", e);
       setError(
-        e?.response?.data?.detail ||
-          "Failed to save and proceed. Please try again.",
+        getAppError(e, "Failed to save and proceed. Please try again.").message,
       );
     } finally {
       setIsProgressing(false);
@@ -283,6 +284,16 @@ const VisualIdentityContainer: React.FC = () => {
       secondHeading > 0 ? content.slice(0, secondHeading).trim() : content;
     return { content: trimmed, type: "visual_style" as const };
   }, [visualOptions?.rawMarkdown]);
+
+  if (error && !hasAnyVisual) {
+    return (
+      <ErrorScreen
+        error={{ message: error, isNetworkError: false }}
+        title="Visual identity unavailable"
+        onRetry={() => loadVisualIdentity({ allowGenerate: true })}
+      />
+    );
+  }
 
   if (!brandId || brandLoading || !currentBrand || !hasAnyVisual) {
     return (

@@ -1,5 +1,6 @@
-import { AlertTriangle, RefreshCw } from "lucide-react";
 import React, { Component, ReactNode } from "react";
+import { AppError } from "../../lib/errors";
+import ErrorScreen from "./ErrorScreen";
 
 interface Props {
   children: ReactNode;
@@ -35,51 +36,23 @@ class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
+      // Render errors are caught outside the Router, so ErrorScreen must not
+      // rely on router context: no Get Help (needs useParams), Dashboard via a
+      // hard navigation. The raw error is logged to the console above.
+      const appError: AppError = {
+        message:
+          "The app ran into an unexpected error. You can try again or head back to your dashboard.",
+        isNetworkError: false,
+        raw: this.state.error,
+      };
+
       return (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="max-w-md mx-auto text-center p-6">
-            <div className="flex justify-center mb-4">
-              <AlertTriangle className="h-12 w-12 text-red-500" />
-            </div>
-
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Something went wrong
-            </h2>
-
-            <p className="text-gray-600 mb-6">
-              We encountered an unexpected error. This has been logged and our
-              team will investigate.
-            </p>
-
-            <div className="space-y-3">
-              <button
-                onClick={this.handleRetry}
-                className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Try Again
-              </button>
-
-              <button
-                onClick={() => (window.location.href = "/brands")}
-                className="block px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-              >
-                Return to Brands
-              </button>
-            </div>
-
-            {process.env.NODE_ENV === "development" && this.state.error && (
-              <details className="mt-6 text-left bg-gray-100 rounded p-3">
-                <summary className="cursor-pointer text-sm font-medium">
-                  Error Details (Development Only)
-                </summary>
-                <pre className="mt-2 text-xs text-red-600 whitespace-pre-wrap">
-                  {this.state.error.stack}
-                </pre>
-              </details>
-            )}
-          </div>
-        </div>
+        <ErrorScreen
+          error={appError}
+          title="Something went wrong"
+          onRetry={this.handleRetry}
+          showHelp={false}
+        />
       );
     }
 
