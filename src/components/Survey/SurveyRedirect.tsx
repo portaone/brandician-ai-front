@@ -5,6 +5,21 @@ import { Link, useParams } from "react-router-dom";
 import { brands } from "../../lib/api";
 
 /**
+ * Only http(s) destinations are safe to hand to window.location. This blocks a
+ * `javascript:`/`data:` URI ever reaching the navigation sink. Defense in
+ * depth — the backend only ever stores Google Forms https links today, but the
+ * resolve response should never be trusted blindly at the sink.
+ */
+const isSafeHttpUrl = (value: string): boolean => {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Public landing page for a short survey link (`/survey/:code`).
  *
  * Resolves the code to its destination via the public backend endpoint, then
@@ -26,8 +41,9 @@ const SurveyRedirect: React.FC = () => {
       .resolveSurveyShortCode(code)
       .then((res) => {
         if (cancelled) return;
-        if (res?.target_url) {
-          window.location.replace(res.target_url);
+        const dest = res?.target_url;
+        if (dest && isSafeHttpUrl(dest)) {
+          window.location.replace(dest);
         } else {
           setNotFound(true);
         }
