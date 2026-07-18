@@ -949,6 +949,13 @@ export const brands = {
     };
   },
 
+  resolveSurveyShortCode: async (code: string) => {
+    // Public endpoint — resolves a short survey code to its destination URL.
+    // No auth header required; a 404 means the code is unknown/unavailable.
+    const response = await api.get(apiPath(`/survey/resolve/${code}`));
+    return response.data as { target_url: string };
+  },
+
   generateBrandHub: async (brandId: string) => {
     const key = createRequestKey(
       "POST",

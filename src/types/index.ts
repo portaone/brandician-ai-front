@@ -229,6 +229,10 @@ export interface SubmissionLink {
   url: string;
   expires_at?: string;
   created_at?: string;
+  // Short public code that redirects to `url`. The full shareable link is
+  // composed client-side as `${window.location.origin}/survey/${short_code}`
+  // so it matches whatever host the app is served from.
+  short_code?: string;
 }
 
 export interface SurveyStatus {

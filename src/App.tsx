@@ -34,6 +34,7 @@ import PaymentCancel from "./components/Payment/PaymentCancel";
 
 import BrandHubContainer from "./components/BrandHub/BrandHubContainer";
 import PublicHubViewer from "./components/BrandHub/PublicHubViewer";
+import SurveyRedirect from "./components/Survey/SurveyRedirect";
 import HistoryContainer from "./components/History/HistoryContainer";
 import ColorSchemaPresenter from "./components/ColorSchemaPresenter/ColorSchemaPresenter";
 import MarkdownPage from "./components/MarkdownPage";
@@ -329,6 +330,7 @@ const App: React.FC = () => {
               element={<MarkdownPage filePath="/cookies.md" />}
             />
             <Route path="/hub/:slug" element={<PublicHubViewer />} />
+            <Route path="/survey/:code" element={<SurveyRedirect />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AnimatePresence>

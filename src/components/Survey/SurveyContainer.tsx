@@ -52,6 +52,8 @@ const SurveyContainer: React.FC = () => {
   const [surveyError, setSurveyError] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<"load" | "save" | null>(null);
   const [surveyUrl, setSurveyUrl] = useState<string>("");
+  // Short shareable link, composed from the backend-issued code + current host.
+  const [shortUrl, setShortUrl] = useState<string>("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [surveyStatus, setSurveyStatus] = useState<SurveyStatus | null>(null);
   const [isLoadingStatus, setIsLoadingStatus] = useState(false);
@@ -82,6 +84,11 @@ const SurveyContainer: React.FC = () => {
             if (existingSurvey?.results?.url) {
               setSurvey(existingSurvey);
               setSurveyUrl(existingSurvey.results.url);
+              if (existingSurvey.results.short_code) {
+                setShortUrl(
+                  `${window.location.origin}/survey/${existingSurvey.results.short_code}`,
+                );
+              }
               setShowSuccess(true);
               return;
             }
@@ -317,6 +324,13 @@ const SurveyContainer: React.FC = () => {
           response,
         );
         setSurveyUrl(`${window.location.origin}/survey/${brandId}`);
+      }
+
+      // Compose the short shareable link from the backend-issued code.
+      if (response?.short_code) {
+        setShortUrl(
+          `${window.location.origin}/survey/${response.short_code}`,
+        );
       }
 
       setShowSuccess(true);
@@ -754,9 +768,33 @@ const SurveyContainer: React.FC = () => {
                 </div>
               )}
 
-              <div className="mb-6">
-                <SurveyUrlBar url={surveyUrl} />
-              </div>
+              {shortUrl ? (
+                <div className="mb-6 space-y-4">
+                  <div>
+                    <SurveyUrlBar
+                      url={shortUrl}
+                      label="Short link — best for social media"
+                    />
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Clean, short, and easy to share. Redirects to your survey.
+                    </p>
+                  </div>
+                  <div>
+                    <SurveyUrlBar
+                      url={surveyUrl}
+                      label="Direct Google Forms link"
+                    />
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Prefer a well-known domain? Share this direct Google link
+                      instead.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-6">
+                  <SurveyUrlBar url={surveyUrl} />
+                </div>
+              )}
 
               <div className="flex justify-center mb-6">
                 <Button
