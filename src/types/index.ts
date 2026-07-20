@@ -69,6 +69,26 @@ export interface Answer {
   questionText?: string;
 }
 
+// Proposed realignment of previously-collected answers onto the current
+// question set (returned by GET /brands/{id}/answers/realignment).
+export interface RealignmentEntry {
+  question_id: string;
+  question_text: string;
+  answer: string;
+  source_question: string | null;
+}
+
+export interface UnmappedAnswer {
+  question: string;
+  answer: string;
+}
+
+export interface RealignmentProposal {
+  needs_realignment: boolean;
+  mapping: RealignmentEntry[];
+  unmapped: UnmappedAnswer[];
+}
+
 export interface BrandAssetSummary {
   id: string;
   type: BrandAssetType;

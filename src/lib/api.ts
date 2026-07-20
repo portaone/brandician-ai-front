@@ -10,6 +10,7 @@ import {
   JTBDPersonaIn,
   JTBDPersonaAdjustment,
   ArchetypeAdjustmentResponse,
+  RealignmentProposal,
 } from "../types";
 import { config } from "../config";
 import { recordRequestEnd } from "./requestLogger";
@@ -414,6 +415,15 @@ export const brands = {
 
   updateAnswers: async (brandId: string, answers: Record<string, any>) => {
     await api.put(apiPath(`/brands/${brandId}/answers/`), answers);
+  },
+
+  getAnswerRealignment: async (
+    brandId: string,
+  ): Promise<RealignmentProposal> => {
+    const response = await api.get(
+      apiPath(`/brands/${brandId}/answers/realignment`),
+    );
+    return response.data as RealignmentProposal;
   },
 
   getAnswer: async (brandId: string, answerId: string) => {

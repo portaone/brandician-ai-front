@@ -27,6 +27,10 @@ const QuestionnaireContainer: React.FC = () => {
     error,
     loadQuestions,
     loadAnswers,
+    realignment,
+    realignmentLoading,
+    loadRealignment,
+    applyRealignment,
   } = useBrandStore();
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(-1); // Start at -1 for intro screen
@@ -71,6 +75,11 @@ const QuestionnaireContainer: React.FC = () => {
             loadAnswers(brandId),
           ]);
           setDataLoaded(true);
+          // Non-blocking: the realignment check can hit a slow LLM call on the
+          // backend, so it must NOT gate the initial render (otherwise the user
+          // is stuck on the intro screen while it runs). When it resolves, the
+          // dedicated effect below surfaces the review if one is needed.
+          loadRealignment(brandId);
         } catch (error) {
           console.error("Failed to load brand data:", error);
         }
@@ -78,7 +87,19 @@ const QuestionnaireContainer: React.FC = () => {
 
       loadAllData();
     }
-  }, [brandId, selectBrand, loadQuestions, loadAnswers]);
+  }, [brandId, selectBrand, loadQuestions, loadAnswers, loadRealignment]);
+
+  // Surface the realignment review whenever a proposal says it's needed —
+  // independent of the normal first-unanswered navigation, and robust to the
+  // proposal arriving after the initial render (it's loaded non-blocking).
+  useEffect(() => {
+    if (dataLoaded && realignment?.needs_realignment) {
+      setShowSummary(true);
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 300);
+    }
+  }, [dataLoaded, realignment]);
 
   useEffect(() => {
     console.log("🔍 Checking navigation logic:", {
@@ -395,12 +416,29 @@ const QuestionnaireContainer: React.FC = () => {
               </header>
 
               {showSummary ? (
-                <QuestionnaireSummary
-                  questions={questions}
-                  answers={answers}
-                  onEditAnswer={handleEditAnswer}
-                  onComplete={handleComplete}
-                />
+                realignmentLoading ? (
+                  <BrandicianLoader
+                    config={{
+                      loadingText: "Realigning your answers…",
+                      steps: [
+                        "Checking them against the current questionnaire",
+                        "Re-matching where the questions changed",
+                        "Please wait — don’t edit your answers until this finishes",
+                      ],
+                    }}
+                  />
+                ) : (
+                  <QuestionnaireSummary
+                    questions={questions}
+                    answers={answers}
+                    realignment={realignment}
+                    onApplyRealignment={(rebuilt) =>
+                      applyRealignment(brandId!, rebuilt)
+                    }
+                    onEditAnswer={handleEditAnswer}
+                    onComplete={handleComplete}
+                  />
+                )
               ) : currentQuestion ? (
                 <QuestionnaireItem
                   question={currentQuestion.text}

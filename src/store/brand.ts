@@ -1,6 +1,13 @@
 import { create } from "zustand";
 import { brands } from "../lib/api";
-import { Brand, Question, Answer, JTBDList, JTBDPersonaIn } from "../types";
+import {
+  Brand,
+  Question,
+  Answer,
+  JTBDList,
+  JTBDPersonaIn,
+  RealignmentProposal,
+} from "../types";
 import { BrandStatus } from "../lib/navigation";
 import { AxiosInstance } from "axios";
 import { parseError } from "../lib/errors";
@@ -9,12 +16,19 @@ import { parseError } from "../lib/errors";
 const getErrorMessage = (error: any, defaultMessage: string): string =>
   parseError(error, defaultMessage).message;
 
+// De-dupe concurrent realignment fetches (the questionnaire mounts more than
+// once — e.g. React StrictMode — and the check hits a slow LLM-backed endpoint,
+// so without this several identical long requests pile up).
+let realignmentInFlightFor: string | null = null;
+
 interface BrandState {
   brands: Brand[];
   currentBrand: Brand | null;
   questions: Question[];
   answers: Answer[];
   answersMap: Map<string, Answer>; // More efficient for lookups
+  realignment: RealignmentProposal | null;
+  realignmentLoading: boolean;
   isLoading: boolean;
   error: string | null;
   loadBrands: () => Promise<void>;
@@ -26,6 +40,11 @@ interface BrandState {
   selectBrand: (brandId: string, currentApi?: AxiosInstance) => Promise<void>;
   loadQuestions: (brandId: string) => Promise<void>;
   loadAnswers: (brandId: string) => Promise<void>;
+  loadRealignment: (brandId: string) => Promise<void>;
+  applyRealignment: (
+    brandId: string,
+    answers: Record<string, { id: string; question: string; answer: string }>,
+  ) => Promise<void>;
   submitAnswer: (
     brandId: string,
     questionId: string,
@@ -54,12 +73,14 @@ interface BrandState {
   ) => Promise<void>;
 }
 
-export const useBrandStore = create<BrandState>((set) => ({
+export const useBrandStore = create<BrandState>((set, get) => ({
   brands: [],
   currentBrand: null,
   questions: [],
   answers: [],
   answersMap: new Map(),
+  realignment: null,
+  realignmentLoading: false,
   isLoading: false,
   error: null,
 
@@ -144,6 +165,57 @@ export const useBrandStore = create<BrandState>((set) => ({
       const errorMessage = getErrorMessage(error, "Failed to load answers");
       set({ error: errorMessage });
       throw error;
+    }
+  },
+
+  // Ask the backend whether saved answers still line up with the current
+  // questions, and if not, fetch a proposed re-mapping (built from the
+  // original question text stored on each answer). Read-only — nothing is
+  // saved until the user confirms via applyRealignment.
+  loadRealignment: async (brandId: string) => {
+    // Skip if a fetch for this brand is already in flight (avoids piling up
+    // several slow, identical requests across re-mounts).
+    if (realignmentInFlightFor === brandId) return;
+    realignmentInFlightFor = brandId;
+    set({ realignmentLoading: true });
+    try {
+      const proposal = await brands.getAnswerRealignment(brandId);
+      set({ realignment: proposal ?? null });
+    } catch (error) {
+      // Non-fatal: the summary still works without a realignment proposal.
+      console.error(getErrorMessage(error, "Failed to check answer alignment"));
+      set({ realignment: null });
+    } finally {
+      if (realignmentInFlightFor === brandId) realignmentInFlightFor = null;
+      set({ realignmentLoading: false });
+    }
+  },
+
+  // Persist a user-confirmed realignment: replace the whole answers dict with
+  // answers re-keyed to current question ids (storing current question text so
+  // it can never drift again), then reload and clear the proposal.
+  applyRealignment: async (
+    brandId: string,
+    answers: Record<string, { id: string; question: string; answer: string }>,
+  ) => {
+    try {
+      await brands.updateAnswers(brandId, answers);
+    } catch (error) {
+      // Re-throw so the summary can surface a recoverable, inline error. We do
+      // NOT set the global store `error` here: that would trip the container's
+      // full-screen ErrorScreen and unmount the review UI (a save failure is
+      // recoverable, not a blocking step failure).
+      throw error;
+    }
+    // The write succeeded — clear the proposal. Refresh the answer list, but
+    // isolate a reload failure so it can't set the global error / unmount the
+    // review for an operation that actually succeeded (the list self-corrects
+    // on the next load).
+    set({ realignment: null });
+    try {
+      await get().loadAnswers(brandId);
+    } catch (error) {
+      console.error("Realignment saved but answer reload failed:", error);
     }
   },
 
