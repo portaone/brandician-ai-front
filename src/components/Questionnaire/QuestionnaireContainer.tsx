@@ -8,6 +8,7 @@ import QuestionnaireHeader from "./QuestionnaireHeader";
 import QuestionnaireItem from "./QuestionnaireItem";
 import QuestionnaireSummary from "./QuestionnaireSummary";
 import BrandicianLoader from "../common/BrandicianLoader";
+import { LOADER_CONFIGS } from "../../lib/loader-constants";
 import { useAutoFocus } from "../../hooks/useAutoFocus";
 import ErrorScreen from "../common/ErrorScreen";
 import { getAppError } from "../../lib/errors";
@@ -165,6 +166,26 @@ const QuestionnaireContainer: React.FC = () => {
     loadAnswers,
   ]);
 
+  if (error) {
+    return (
+      <ErrorScreen
+        error={{ message: error, isNetworkError: false }}
+      />
+    );
+  }
+
+  // Initial load (incl. the blocking, LLM-backed GET /questions) — show a
+  // descriptive loader instead of a bare header + empty question area.
+  if (!dataLoaded) {
+    return (
+      <div className="loader-container">
+        <BrandicianLoader config={LOADER_CONFIGS.questionnaire} />
+      </div>
+    );
+  }
+
+  // Other in-flight transitions (e.g. progressing to the next step) keep the
+  // existing plain loader.
   if (isLoading) {
     return (
       <div className="loader-container">
@@ -173,10 +194,10 @@ const QuestionnaireContainer: React.FC = () => {
     );
   }
 
-  if (error || !currentBrand || !brandId) {
+  if (!currentBrand || !brandId) {
     return (
       <ErrorScreen
-        error={{ message: error || "Brand not found", isNetworkError: false }}
+        error={{ message: "Brand not found", isNetworkError: false }}
       />
     );
   }
@@ -301,7 +322,7 @@ const QuestionnaireContainer: React.FC = () => {
   };
 
   const progress =
-    currentQuestionIndex === -1
+    currentQuestionIndex === -1 || questions.length === 0
       ? 0
       : ((currentQuestionIndex + 1) / questions.length) * 100;
   const currentQuestion = questions[currentQuestionIndex];

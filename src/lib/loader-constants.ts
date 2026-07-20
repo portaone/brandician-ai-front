@@ -4,6 +4,16 @@ export interface LoaderConfig {
 }
 
 export const LOADER_CONFIGS: Record<string, LoaderConfig> = {
+  // Step 1: Questionnaire generation (blocking LLM call in GET /questions)
+  questionnaire: {
+    loadingText: "Loading questionnaire...",
+    steps: [
+      "Analyzing your brand details",
+      "Tailoring questions to your brand vision",
+      "Preparing your discovery journey",
+    ],
+  },
+
   // Step 2: Brand Summary Generation
   brandSummary: {
     loadingText: "Building your brand summary...",
