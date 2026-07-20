@@ -146,9 +146,13 @@ const TIER_DEFAULT_IMPORTANCE: Record<PersonaTier, JTBDImportance> = {
   contextual: "rarely_important",
 };
 
-/** A persona card is expanded by default only for the primary tier (or untiered legacy output) */
-function tierExpandedByDefault(tier?: PersonaTier): boolean {
-  return tier === undefined || tier === "primary";
+/**
+ * Persona cards are expanded by default regardless of tier, so the definition
+ * of each persona is visible immediately without the user having to discover
+ * the expand toggle. Users can still collapse any card manually.
+ */
+function tierExpandedByDefault(_tier?: PersonaTier): boolean {
+  return true;
 }
 
 /**
