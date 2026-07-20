@@ -18,7 +18,7 @@ interface QuestionnaireItemProps {
   question: string;
   hint?: string;
   onNext: (answer: string) => void | Promise<void>;
-  onPrevious: () => void | Promise<void>;
+  onPrevious: (answer: string) => void | Promise<void>;
   questionNumber: number;
   totalQuestions: number;
   isLastQuestion: boolean;
@@ -419,6 +419,16 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
     }
   };
 
+  const handlePreviousClick = async () => {
+    const finalAnswer = useAiAnswer ? aiEnhancedAnswer : answer;
+    setIsSubmitting(true);
+    try {
+      await onPrevious(finalAnswer);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleShowSummary = async () => {
     const finalAnswer = useAiAnswer ? aiEnhancedAnswer : answer;
     if (augmentationError) return;
@@ -664,7 +674,7 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
       <div className="flex justify-between items-center flex-wrap gap-2">
         <Button
           type="button"
-          onClick={onPrevious}
+          onClick={handlePreviousClick}
           disabled={questionNumber === 1 || isSubmitting}
           variant="secondary"
           size="md"
