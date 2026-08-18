@@ -774,14 +774,14 @@ const JTBDContainer: React.FC = () => {
                       {/* Rating / removal — always visible, even when collapsed */}
                       <div className="mt-4">
                         {pendingRemovalKey === persona._key ? (
-                          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-4">
+                          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex flex-wrap items-center gap-4">
                             <span className="text-2xl">⚠️</span>
                             <div className="flex-1">
                               <p className="text-gray-800 font-medium">
                                 Remove this persona? This cannot be undone.
                               </p>
                             </div>
-                            <div className="flex gap-3">
+                            <div className="ml-auto flex flex-wrap justify-end gap-3">
                               <button
                                 onClick={() => setPendingRemovalKey(null)}
                                 className="btn btn-ghost"
@@ -811,7 +811,7 @@ const JTBDContainer: React.FC = () => {
                                       value as JTBDImportance,
                                     )
                                   }
-                                  className={`btn-selection p-2 text-sm rounded-md ${persona.importance === value ? "selected" : ""}`}
+                                  className={`btn-selection p-2 text-[0.675rem] sm:text-sm rounded-md ${persona.importance === value ? "selected" : ""}`}
                                 >
                                   {label}
                                 </button>

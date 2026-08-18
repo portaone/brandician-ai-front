@@ -175,7 +175,7 @@ const TestimonialContainer: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Rate your experience
                   </label>
-                  <div className="flex items-center space-x-1">
+                  <div className="flex flex-wrap items-center gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
@@ -194,7 +194,7 @@ const TestimonialContainer: React.FC = () => {
                         />
                       </button>
                     ))}
-                    <span className="ml-2 text-sm text-gray-600">
+                    <span className="text-sm text-gray-600">
                       {rating > 0 && `${rating} star${rating !== 1 ? "s" : ""}`}
                     </span>
                   </div>

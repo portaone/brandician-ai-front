@@ -387,19 +387,17 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                 </div>
               )}
 
-              <div className="flex justify-between pt-4">
-                {step > 1 ? (
+              <div className="flex flex-wrap justify-end gap-2 pt-4">
+                {step > 1 && (
                   <button
                     type="button"
                     onClick={handlePrevious}
                     disabled={isSubmitting}
-                    className="flex items-center px-4 py-2 border border-neutral-300 rounded-md text-neutral-700 hover:bg-neutral-50 transition-colors"
+                    className="mr-auto flex items-center px-4 py-2 border border-neutral-300 rounded-md text-neutral-700 hover:bg-neutral-50 transition-colors"
                   >
                     <ArrowLeft className="h-5 w-5 mr-1" />
                     Back
                   </button>
-                ) : (
-                  <div></div> // Empty div for spacing
                 )}
 
                 <button

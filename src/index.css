@@ -380,11 +380,56 @@
   align-items: center;
   background-color: #fff;
   inset: 0;
-  position: absolute;
+  /* `fixed`, not `absolute`: `TopMenu` and `Footer` render at App level outside
+     `Routes` (App.tsx), so a route that early-returns only this overlay still
+     leaves a ~750px footer in the document while the overlay itself, being
+     out of flow, contributes no height. On a phone that makes the document
+     ~842px against a 667px viewport - 175px of page scroll - and a
+     document-anchored overlay slides up with it and exposes the footer.
+     Anchoring to the viewport keeps it covering the screen at any scroll
+     offset. Desktop never showed this: there the viewport is taller than
+     header + footer, so there was nothing to scroll. */
+  position: fixed;
   z-index: 100;
   top: 88px;
+  /* Keep content off the viewport edges - at 320px there is no slack, and the
+     step list would otherwise sit flush at x=0 with its bullets clipped. */
+  padding: 16px 16px 24px;
+  /* The box height is pinned to `viewportHeight - 88`, so anything taller has
+     to scroll: five wrapped steps need ~370px, which does not fit a landscape
+     phone (~232-272px of room). Both axes are declared because CSS promotes a
+     lone `visible` axis to `auto` when the other one is not visible, so
+     `overflow-y: auto` on its own would also turn on horizontal scrolling. */
+  overflow: hidden auto;
 }
 
+/* `BrandicianLoader` renders its own `.loader-container`, but roughly half the
+   call sites also wrap it in one. Because the outer box is positioned, the inner
+   one resolved its own `top: 88px` against it and landed at 176px, dragging the
+   content down and its padding out of alignment. Collapse the inner one into a
+   plain flex item so nesting renders like a single overlay. */
+.loader-container .loader-container {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  padding: 0;
+  overflow: visible;
+  background-color: transparent;
+  max-width: 100%;
+}
+
+/* Centre on the block axis with auto margins instead of relying on
+   `align-items` alone. Once the content is taller than the box the auto margins
+   resolve to 0, so the content starts at the padding edge and every pixel stays
+   reachable; `align-items: center` would instead push the top out of the
+   scrollable region, because a scroll container never extends towards
+   block-start. Block axis only - horizontal auto margins would swallow the free
+   space between siblings and outrank their margin utilities, which is exactly
+   the loader and the "Loading..." label that `MarkdownPage` puts side by side.
+   There is deliberately no optical lift above true centre: expressing one as a
+   transform put the lifted top outside the scrollable region, and expressing it
+   as bottom padding left a landscape phone scrolling through ~200px of empty
+   space, so the loader is simply centred in the area below the header. */
 .loader-container > * {
-  transform: translateY(-90px);
+  margin-block: auto;
 }

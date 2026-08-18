@@ -373,14 +373,14 @@ const PersonaWidget: React.FC<PersonaWidgetProps> = ({
             )}
           </div>
         ) : (
-          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-4">
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex flex-wrap items-center gap-4">
             <span className="text-2xl">⚠️</span>
             <div className="flex-1">
               <p className="text-gray-800 font-medium">
                 Remove this persona? This cannot be undone.
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="ml-auto flex flex-wrap justify-end gap-3">
               <button
                 onClick={() => setShowRemovalConfirmation(false)}
                 className="btn btn-ghost"

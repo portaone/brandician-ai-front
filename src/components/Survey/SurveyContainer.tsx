@@ -330,9 +330,7 @@ const SurveyContainer: React.FC = () => {
 
       // Compose the short shareable link from the backend-issued code.
       if (response?.short_code) {
-        setShortUrl(
-          `${window.location.origin}/survey/${response.short_code}`,
-        );
+        setShortUrl(`${window.location.origin}/survey/${response.short_code}`);
       }
 
       setShowSuccess(true);
@@ -466,7 +464,9 @@ const SurveyContainer: React.FC = () => {
   }
 
   if (brandError) {
-    return <ErrorScreen error={{ message: brandError, isNetworkError: false }} />;
+    return (
+      <ErrorScreen error={{ message: brandError, isNetworkError: false }} />
+    );
   }
 
   if (surveyError) {
@@ -613,14 +613,33 @@ const SurveyContainer: React.FC = () => {
                                   key={optionIndex}
                                   className="text-neutral-600 pl-4"
                                 >
-                                  • {question.other_specify && option.trim().toLowerCase() === "other" ? <>Other (<span className="underline bg-neutral-200 rounded px-0.5">free-text answer</span>)</> : option}
+                                  •{" "}
+                                  {question.other_specify &&
+                                  option.trim().toLowerCase() === "other" ? (
+                                    <>
+                                      Other (
+                                      <span className="underline bg-neutral-200 rounded px-0.5">
+                                        free-text answer
+                                      </span>
+                                      )
+                                    </>
+                                  ) : (
+                                    option
+                                  )}
                                 </div>
                               ))}
-                              {question.other_specify && !question.options?.some((o) => o.trim().toLowerCase() === "other") && (
-                                <div className="text-neutral-600 pl-4">
-                                  • Other (<span className="underline bg-neutral-200 rounded px-0.5">free-text answer</span>)
-                                </div>
-                              )}
+                              {question.other_specify &&
+                                !question.options?.some(
+                                  (o) => o.trim().toLowerCase() === "other",
+                                ) && (
+                                  <div className="text-neutral-600 pl-4">
+                                    • Other (
+                                    <span className="underline bg-neutral-200 rounded px-0.5">
+                                      free-text answer
+                                    </span>
+                                    )
+                                  </div>
+                                )}
                             </div>
                           )}
                         </div>
@@ -809,26 +828,25 @@ const SurveyContainer: React.FC = () => {
                 />
               )}
 
-              <div className="flex justify-between items-center">
-                <div className="flex gap-3">
-                  {hasEnoughResponses(surveyStatus) ? (
-                    <Button
-                      onClick={() => setShowSkipWarning(true)}
-                      variant="secondary"
-                      size="lg"
-                    >
-                      Skip Analysis
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => setShowSkipWarning(true)}
-                      variant="secondary"
-                      size="lg"
-                    >
-                      Skip Survey
-                    </Button>
-                  )}
-                </div>
+              <div className="flex gap-3 flex-wrap justify-between items-center">
+                {hasEnoughResponses(surveyStatus) ? (
+                  <Button
+                    onClick={() => setShowSkipWarning(true)}
+                    variant="secondary"
+                    size="lg"
+                  >
+                    Skip Analysis
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => setShowSkipWarning(true)}
+                    variant="secondary"
+                    size="lg"
+                  >
+                    Skip Survey
+                  </Button>
+                )}
+
                 <Button
                   onClick={handleProceed}
                   disabled={

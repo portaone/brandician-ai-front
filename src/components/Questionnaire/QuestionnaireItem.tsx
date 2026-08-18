@@ -642,8 +642,8 @@ const QuestionnaireItem: React.FC<QuestionnaireItemProps> = ({
       {submitError && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
           <div className="flex items-center">
-            <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
-            <div className="flex-1">
+            <AlertCircle className="h-5 w-5 shrink-0 text-red-500 mr-2" />
+            <div className="flex-1 min-w-0">
               <p className="text-red-700 font-medium">
                 Failed to submit answer
               </p>

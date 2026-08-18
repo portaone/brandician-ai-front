@@ -343,11 +343,14 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
             <div className="mb-4 group">
               {editingField === "name" ? (
                 <div className="flex items-center gap-2">
+                  {/* min-w-0 lets flex-1 actually shrink: an input's default
+                      intrinsic min-width otherwise pushes this row ~215px past
+                      a 360px container (and ~287px past a 320px one). */}
                   <input
                     type="text"
                     value={editingValue}
                     onChange={(e) => setEditingValue(e.target.value)}
-                    className="text-xl font-bold text-neutral-800 flex-1 p-1 border border-primary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="text-xl font-bold text-neutral-800 flex-1 min-w-0 p-1 border border-primary-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                     autoFocus
                     onKeyDown={(e) => {
                       if (e.key === "Enter") saveEditField();
@@ -617,7 +620,7 @@ const PrimaryPersonaContainer: React.FC<PrimaryPersonaContainerProps> = ({
                   sure this choice reflects your target audience, not just who
                   you relate to most.
                 </p>
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-wrap justify-end gap-2">
                   <button
                     onClick={() => setPendingOverride(null)}
                     disabled={isOverriding}
